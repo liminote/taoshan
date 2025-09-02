@@ -39,7 +39,7 @@ export default function UploadPage() {
     }
   }
 
-  const handleProductData = async (data: any[]) => {
+  const handleProductData = async (data: Record<string, any>[]) => {
     const response = await fetch('/api/upload/products', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -51,7 +51,7 @@ export default function UploadPage() {
     }
   }
 
-  const handleOrderData = async (data: any[]) => {
+  const handleOrderData = async (data: Record<string, any>[]) => {
     const response = await fetch('/api/upload/orders', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

@@ -10,7 +10,7 @@ export async function POST(request: Request) {
     }
 
     // 批量插入訂單資料
-    const ordersData = excelData.map((row: any) => ({
+    const ordersData = excelData.map((row: Record<string, any>) => ({
       order_number: row['原始單號'] || '',
       external_order_number: row['外部單號'] || '',
       invoice_number: row['發票號碼'] || '',
