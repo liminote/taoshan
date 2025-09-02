@@ -20,7 +20,7 @@ export async function POST(request: Request) {
       order_source: row['訂單來源'] || '',
       order_type: row['訂單種類'] || '',
       table_number: row['桌號'] || '',
-      invoice_amount: parseFloat(row['發票金額'] || '0'),
+      invoice_amount: parseFloat(String(row['發票金額'] || '0')),
       current_status: row['目前概況'] || ''
     }))
 
