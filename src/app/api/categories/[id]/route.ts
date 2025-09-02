@@ -1,13 +1,13 @@
 import { NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
 
-interface Params {
-  id: string
-}
-
-export async function DELETE(request: Request, { params }: { params: Params }) {
+export async function DELETE(
+  request: Request,
+  context: { params: Promise<{ id: string }> }
+) {
+  const { id: idParam } = await context.params
   try {
-    const id = parseInt(params.id)
+    const id = parseInt(idParam)
     
     if (isNaN(id)) {
       return NextResponse.json({ error: '無效的分類 ID' }, { status: 400 })
