@@ -23,9 +23,9 @@ export default function UploadPage() {
 
         // 判斷檔案類型並處理
         if (file.name.includes('商品報表') || file.name.includes('product')) {
-          await handleProductData(jsonData)
+          await handleProductData(jsonData as Record<string, string | number>[])
         } else if (file.name.includes('訂單報表') || file.name.includes('order')) {
-          await handleOrderData(jsonData)
+          await handleOrderData(jsonData as Record<string, string | number>[])
         } else {
           setMessage(`無法識別檔案類型: ${file.name}`)
           continue
