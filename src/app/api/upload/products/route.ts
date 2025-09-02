@@ -10,7 +10,7 @@ export async function POST(request: Request) {
     }
 
     // 批量插入商品銷售資料
-    const salesData = excelData.map((row: Record<string, any>) => ({
+    const salesData = excelData.map((row: Record<string, string | number>) => ({
       product_original_name: row['商品名稱'] || '',
       invoice_number: row['發票號碼'] || '',
       carrier_code: row['載具／捐贈碼'] || '',
@@ -35,7 +35,7 @@ export async function POST(request: Request) {
     }
 
     // 取得所有獨特的商品名稱
-    const uniqueProducts = [...new Set(excelData.map((row: Record<string, any>) => row['商品名稱']).filter(Boolean))]
+    const uniqueProducts = [...new Set(excelData.map((row: Record<string, string | number>) => row['商品名稱']).filter(Boolean))]
     
     // 檢查哪些商品不存在於比對表中
     const { data: existingProducts } = await supabase
