@@ -29,7 +29,7 @@ export default function CleanupPage() {
         throw new Error('清理失敗')
       }
 
-      const result = await response.json()
+      await response.json()
       setMessage('✅ 所有資料已清空')
       setStats({orderCount: 0, salesCount: 0, productsCount: 0})
       

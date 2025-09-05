@@ -68,7 +68,7 @@ export async function GET() {
     const categoryStats: { [key: string]: number } = {}
     let totalAmount = 0
     let matchedCount = 0
-    let unmatchedProducts: string[] = []
+    const unmatchedProducts: string[] = []
 
     productSales.forEach((record) => {
       const smallCategory = productMapping[record.productName] || '未分類'

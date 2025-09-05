@@ -57,7 +57,7 @@ export async function GET() {
     
     const productData = productLines.slice(1).map(line => {
       const values = line.split(',').map(v => v.replace(/"/g, '').trim())
-      const record: any = {}
+      const record: Record<string, string> = {}
       productHeaders.forEach((header, index) => {
         record[header] = values[index] || ''
       })

@@ -10,7 +10,7 @@ export default function ImportPage() {
   // 播放完成提示音
   const playNotificationSound = (isSuccess = true) => {
     try {
-      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)()
+      const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)()
       const oscillator = audioContext.createOscillator()
       const gainNode = audioContext.createGain()
       

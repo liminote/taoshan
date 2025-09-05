@@ -5,7 +5,7 @@ interface CacheItem<T> {
 }
 
 class MemoryCache {
-  private cache = new Map<string, CacheItem<any>>()
+  private cache = new Map<string, CacheItem<unknown>>()
   
   set<T>(key: string, data: T, ttlMinutes: number = 30): void {
     const now = Date.now()
