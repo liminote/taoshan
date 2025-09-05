@@ -70,13 +70,12 @@ export async function POST(request: Request) {
 // 4. 試算表的寫入權限
 
 // 示範如何使用 Google Sheets API 的函數（需要設定認證）
-// async function writeToGoogleSheets(spreadsheetId: string, range: string, values: unknown[][]) {
+/*
+async function writeToGoogleSheets(spreadsheetId: string, range: string, values: unknown[][]) {
   // 這個函數需要 Google Sheets API 認證
   // const { google } = require('googleapis');
   // const sheets = google.sheets('v4');
   
-  // 目前先註解掉，等設定好認證後再啟用
-  /*
   try {
     const response = await sheets.spreadsheets.values.append({
       spreadsheetId,
@@ -91,14 +90,14 @@ export async function POST(request: Request) {
     console.error('Google Sheets API 錯誤:', error);
     throw error;
   }
-  */
   
   console.log('Google Sheets API 寫入功能需要認證設定')
   return null
 }
 
-// async function updateGoogleSheets(spreadsheetId: string, range: string, values: unknown[][]) {
+async function updateGoogleSheets(spreadsheetId: string, range: string, values: unknown[][]) {
   // 同樣需要認證設定
   console.log('Google Sheets API 更新功能需要認證設定')
   return null
 }
+*/
