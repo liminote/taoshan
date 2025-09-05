@@ -101,7 +101,10 @@ export async function GET() {
       }))
       .sort((a, b) => b.amount - a.amount) // 按金額排序，最高在前
 
-    return NextResponse.json(result)
+    return NextResponse.json({
+      success: true,
+      data: result
+    })
 
   } catch (error) {
     console.error('處理分類分布報表時發生錯誤:', error)

@@ -85,15 +85,15 @@ export default function CategoriesPage() {
 
   const getCategoryColor = (categoryId: number) => {
     const colors = [
-      'from-red-500 to-pink-600',
-      'from-blue-500 to-cyan-600', 
-      'from-green-500 to-emerald-600',
-      'from-yellow-500 to-orange-600',
-      'from-purple-500 to-indigo-600',
-      'from-pink-500 to-rose-600',
-      'from-teal-500 to-green-600',
-      'from-orange-500 to-red-600',
-      'from-gray-500 to-slate-600'
+      'bg-melon',
+      'bg-sky_blue', 
+      'bg-tea_green',
+      'bg-lemon_chiffon',
+      'bg-periwinkle',
+      'bg-lavender_blush',
+      'bg-mint_green',
+      'bg-fawn',
+      'bg-mauve'
     ]
     return colors[(categoryId - 1) % colors.length]
   }
@@ -191,7 +191,7 @@ export default function CategoriesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-pink-50 py-8 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-6xl mx-auto">
         {/* 標題區域 */}
         <div className="mb-8">

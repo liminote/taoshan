@@ -156,7 +156,10 @@ export async function GET() {
       productItemCount: monthlyStats[month].productItemCount
     }))
 
-    return NextResponse.json(result)
+    return NextResponse.json({
+      success: true,
+      data: result
+    })
 
   } catch (error) {
     console.error('處理月銷售報表時發生錯誤:', error)

@@ -1,110 +1,319 @@
+'use client'
+
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 
-export default function Home() {
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 py-8 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-lg mx-auto">
-        {/* 主標題 */}
-        <div className="text-center mb-12">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl mb-6 shadow-lg">
-            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-            </svg>
-          </div>
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent mb-3">
-            餐廳管理系統
-          </h1>
-          <p className="text-gray-600 text-lg">簡化你的餐廳營運管理</p>
-        </div>
-        
-        {/* 主要功能卡片 */}
-        <div className="space-y-4 mb-8">
-          <Link 
-            href="/reports" 
-            className="group block w-full bg-white/70 backdrop-blur-sm border border-white/50 rounded-2xl p-6 hover:bg-white/90 hover:shadow-xl hover:scale-[1.02] transition-all duration-300"
-          >
-            <div className="flex items-center space-x-4">
-              <div className="flex-shrink-0 w-12 h-12 bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl flex items-center justify-center">
-                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                </svg>
-              </div>
-              <div className="flex-1">
-                <h3 className="text-xl font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">報表管理</h3>
-                <p className="text-gray-600 text-sm mt-1">查看銷售報表與數據分析</p>
-              </div>
-              <svg className="w-5 h-5 text-gray-400 group-hover:text-blue-500 group-hover:translate-x-1 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </div>
-          </Link>
+interface ImportantItem {
+  id: string
+  date: string
+  content: string
+  assignee: string
+  completed: boolean
+  completedAt?: string
+  createdAt: string
+}
 
-          <Link 
-            href="/categories" 
-            className="group block w-full bg-white/70 backdrop-blur-sm border border-white/50 rounded-2xl p-6 hover:bg-white/90 hover:shadow-xl hover:scale-[1.02] transition-all duration-300"
-          >
-            <div className="flex items-center space-x-4">
-              <div className="flex-shrink-0 w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-600 rounded-xl flex items-center justify-center">
-                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-                </svg>
-              </div>
-              <div className="flex-1">
-                <h3 className="text-xl font-semibold text-gray-900 group-hover:text-purple-600 transition-colors">商品分類管理</h3>
-                <p className="text-gray-600 text-sm mt-1">管理商品的主分類和子分類</p>
-              </div>
-              <svg className="w-5 h-5 text-gray-400 group-hover:text-purple-500 group-hover:translate-x-1 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </div>
-          </Link>
-          
-          <Link 
-            href="/products-master-sheets" 
-            className="group block w-full bg-white/70 backdrop-blur-sm border border-white/50 rounded-2xl p-6 hover:bg-white/90 hover:shadow-xl hover:scale-[1.02] transition-all duration-300"
-          >
-            <div className="flex items-center space-x-4">
-              <div className="flex-shrink-0 w-12 h-12 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center">
-                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                </svg>
-              </div>
-              <div className="flex-1">
-                <h3 className="text-xl font-semibold text-gray-900 group-hover:text-indigo-600 transition-colors">商品主檔管理</h3>
-                <p className="text-gray-600 text-sm mt-1">從Google Sheets管理商品分類，偵測未分類商品</p>
-              </div>
-              <svg className="w-5 h-5 text-gray-400 group-hover:text-indigo-500 group-hover:translate-x-1 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </div>
-          </Link>
-        </div>
+export default function Home() {
+  const [pendingItems, setPendingItems] = useState<ImportantItem[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [showAddForm, setShowAddForm] = useState(false)
+  const [formData, setFormData] = useState({
+    date: new Date().toISOString().split('T')[0],
+    content: '',
+    assignee: ''
+  })
+  const [availableTags, setAvailableTags] = useState(['Allen', 'Luis', '香師傅', 'Vanny'])
+  const [newTag, setNewTag] = useState('')
+
+  const fetchPendingItems = async () => {
+    try {
+      setIsLoading(true)
+      const response = await fetch('/api/important-items')
+      const result = await response.json()
+      
+      if (result.success) {
+        const pending = result.data.filter((item: ImportantItem) => !item.completed)
+        setPendingItems(pending.sort((a: ImportantItem, b: ImportantItem) => 
+          new Date(a.date).getTime() - new Date(b.date).getTime()
+        ))
+      }
+    } catch (error) {
+      console.error('獲取重要事項失敗:', error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleToggleComplete = async (id: string) => {
+    try {
+      const response = await fetch('/api/important-items', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          action: 'toggle',
+          data: { id }
+        })
+      })
+      
+      if (response.ok) {
+        fetchPendingItems()
+      }
+    } catch (error) {
+      console.error('更新事項失敗:', error)
+    }
+  }
+
+  const handleAddItem = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    if (!formData.content.trim() || !formData.assignee.trim()) {
+      alert('請填寫完整資訊')
+      return
+    }
+    
+    try {
+      const response = await fetch('/api/important-items', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          action: 'add',
+          data: formData
+        })
+      })
+      
+      if (response.ok) {
+        setFormData({
+          date: new Date().toISOString().split('T')[0],
+          content: '',
+          assignee: ''
+        })
+        setShowAddForm(false)
+        fetchPendingItems()
+      }
+    } catch (error) {
+      console.error('新增事項失敗:', error)
+    }
+  }
+
+  const getAssigneeColor = (assignee: string) => {
+    const colors = {
+      'Allen': 'bg-pink-200 text-pink-800',
+      'Luis': 'bg-orange-200 text-orange-800',
+      '香師傅': 'bg-yellow-200 text-yellow-800',
+      'Vanny': 'bg-green-200 text-green-800'
+    }
+    return colors[assignee as keyof typeof colors] || 'bg-gray-100 text-gray-800'
+  }
+
+  const addNewTag = () => {
+    if (newTag.trim() && !availableTags.includes(newTag.trim())) {
+      setAvailableTags([...availableTags, newTag.trim()])
+      setNewTag('')
+    }
+  }
+
+  const removeTag = (tagToRemove: string) => {
+    setAvailableTags(availableTags.filter(tag => tag !== tagToRemove))
+  }
+
+  useEffect(() => {
+    fetchPendingItems()
+  }, [])
+  return (
+    <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-lg mx-auto">
         
-        {/* 重要事項卡片 */}
-        <div className="bg-white/70 backdrop-blur-sm border border-white/50 rounded-2xl p-6 shadow-lg">
-          <div className="flex items-center space-x-3 mb-4">
-            <div className="w-8 h-8 bg-gradient-to-r from-orange-400 to-pink-500 rounded-lg flex items-center justify-center">
-              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
-              </svg>
+        
+        {/* 重要事項清單 */}
+        <div className="bg-white rounded-2xl shadow-lg border border-gray-200">
+          <div className="p-6 border-b border-gray-200/50">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center space-x-3">
+                <div className="w-8 h-8 bg-periwinkle rounded-lg flex items-center justify-center">
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <h2 className="text-xl font-semibold text-gray-900">近期重要事項</h2>
+                <span className="text-sm text-gray-500">({pendingItems.length} 項待處理)</span>
+              </div>
+              <button 
+                onClick={() => setShowAddForm(!showAddForm)}
+                className="px-4 py-2 bg-pink-400 text-white text-sm rounded-lg hover:shadow-lg transition-all duration-300 hover:scale-105 flex items-center space-x-2"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+                <span>新增事項</span>
+              </button>
             </div>
-            <h2 className="text-xl font-semibold text-gray-900">今日重要事項</h2>
+
+            {/* 新增表單 */}
+            {showAddForm && (
+              <form onSubmit={handleAddItem} className="bg-yellow-50 border border-gray-200 rounded-xl p-4 mb-4">
+                <div className="grid grid-cols-1 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">日期</label>
+                    <input
+                      type="date"
+                      value={formData.date}
+                      onChange={(e) => setFormData({...formData, date: e.target.value})}
+                      className="w-full p-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">內容</label>
+                    <input
+                      type="text"
+                      value={formData.content}
+                      onChange={(e) => setFormData({...formData, content: e.target.value})}
+                      placeholder="請輸入重要事項內容..."
+                      className="w-full p-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder-gray-500"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">負責人</label>
+                    <div className="space-y-3">
+                      {/* 標籤選擇區域 */}
+                      <div className="flex flex-wrap gap-2 p-3 bg-lemon_chiffon-50 border border-gray-300 rounded-lg min-h-[50px]">
+                        {availableTags.map(tag => (
+                          <div key={tag} className="flex items-center space-x-1">
+                            <button
+                              type="button"
+                              onClick={() => setFormData({...formData, assignee: tag})}
+                              className={`px-3 py-1 rounded-full text-sm font-medium transition-all ${
+                                formData.assignee === tag 
+                                  ? 'bg-melon text-white' 
+                                  : 'bg-white border border-gray-300 hover:bg-gray-50 text-gray-700'
+                              }`}
+                            >
+                              {tag}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => removeTag(tag)}
+                              className="w-4 h-4 rounded-full bg-red-500 text-white hover:bg-red-600 transition-colors flex items-center justify-center text-xs"
+                              title="刪除標籤"
+                            >
+                              ×
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                      
+                      {/* 新增標籤區域 */}
+                      <div className="flex space-x-2">
+                        <input
+                          type="text"
+                          value={newTag}
+                          onChange={(e) => setNewTag(e.target.value)}
+                          placeholder="輸入新標籤名稱..."
+                          className="flex-1 p-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky_blue focus:border-transparent text-sm text-gray-900 placeholder-gray-500"
+                          onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addNewTag())}
+                        />
+                        <button
+                          type="button"
+                          onClick={addNewTag}
+                          className="px-3 py-2 bg-tea_green text-white text-sm rounded-lg hover:bg-tea_green-600 transition-colors"
+                        >
+                          +
+                        </button>
+                      </div>
+                      
+                      {/* 已選擇顯示 */}
+                      {formData.assignee && (
+                        <div className="text-sm text-gray-600">
+                          已選擇：<span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getAssigneeColor(formData.assignee)}`}>
+                            {formData.assignee}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                <div className="flex space-x-2 mt-4">
+                  <button
+                    type="submit"
+                    className="px-4 py-2 bg-melon text-white rounded-lg hover:bg-melon-600 transition-colors"
+                  >
+                    新增
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowAddForm(false)}
+                    className="px-4 py-2 bg-fawn text-gray-700 rounded-lg hover:bg-fawn-300 transition-colors"
+                  >
+                    取消
+                  </button>
+                </div>
+              </form>
+            )}
           </div>
-          <textarea 
-            className="w-full p-4 bg-white/50 border border-gray-200/50 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent placeholder-gray-500 transition-all" 
-            rows={4}
-            placeholder="記錄今天需要注意的重要事項..."
-          />
-          <div className="flex justify-between items-center mt-4">
-            <span className="text-sm text-gray-500 flex items-center space-x-2">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
-              <span>{new Date().toLocaleDateString('zh-TW')}</span>
-            </span>
-            <button className="px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white text-sm rounded-lg hover:shadow-lg transition-all duration-300 hover:scale-105">
-              儲存
-            </button>
+
+          <div className="p-6">
+            {/* 待處理事項列表 */}
+            {isLoading ? (
+              <div className="text-center py-8 text-gray-500">
+                載入中...
+              </div>
+            ) : pendingItems.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                <svg className="w-12 h-12 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <p>目前沒有待處理的重要事項</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {pendingItems.map((item) => (
+                  <div key={item.id} className="flex items-center space-x-3 p-3 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-all">
+                    <button
+                      onClick={() => handleToggleComplete(item.id)}
+                      className="w-6 h-6 border-2 border-sky_blue rounded-full hover:border-melon transition-colors flex items-center justify-center group"
+                    >
+                      <svg className="w-4 h-4 text-white opacity-0 group-hover:opacity-100 transition-opacity" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    </button>
+                    
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between">
+                        <p className="text-gray-900 font-medium truncate">{item.content}</p>
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ml-2 ${getAssigneeColor(item.assignee)}`}>
+                          {item.assignee}
+                        </span>
+                      </div>
+                      <p className="text-sm text-gray-500 mt-1">
+                        {new Date(item.date).toLocaleDateString('zh-TW', {
+                          year: 'numeric',
+                          month: 'short',
+                          day: 'numeric'
+                        })}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* 歷史記錄連結 */}
+            <div className="mt-6 pt-4 border-t border-gray-200/50">
+              <Link 
+                href="/history"
+                className="inline-flex items-center space-x-2 text-blue-500 hover:text-blue-700 transition-colors"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span>查看歷史記錄</span>
+              </Link>
+            </div>
           </div>
         </div>
       </div>

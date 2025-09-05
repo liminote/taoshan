@@ -82,7 +82,10 @@ export async function GET() {
       discountAmount: Math.round(monthlyStats[month] * 100) / 100
     }))
 
-    return NextResponse.json(result)
+    return NextResponse.json({
+      success: true,
+      data: result
+    })
 
   } catch (error) {
     console.error('處理折扣趨勢報表時發生錯誤:', error)

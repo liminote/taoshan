@@ -1,0 +1,37 @@
+[
+  {
+    "id": "1",
+    "date": "2025-01-15",
+    "content": "檢查庫存低於安全存量的商品",
+    "assignee": "店長",
+    "completed": true,
+    "createdAt": "2025-01-15T08:00:00Z",
+    "completedAt": "2025-09-05T16:00:19.139Z"
+  },
+  {
+    "id": "2",
+    "date": "2025-01-16",
+    "content": "更新菜單價格",
+    "assignee": "經理",
+    "completed": true,
+    "createdAt": "2025-01-15T09:00:00Z",
+    "completedAt": "2025-09-05T16:00:19.923Z"
+  },
+  {
+    "id": "3",
+    "date": "2025-01-10",
+    "content": "月度財務報表製作",
+    "assignee": "會計",
+    "completed": true,
+    "completedAt": "2025-01-12T10:30:00Z",
+    "createdAt": "2025-01-10T08:00:00Z"
+  },
+  {
+    "id": "1757088064371",
+    "date": "2025-09-09",
+    "content": "再確認一次年菜的宣傳時程",
+    "assignee": "Allen",
+    "completed": false,
+    "createdAt": "2025-09-05T16:01:04.371Z"
+  }
+]
