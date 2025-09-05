@@ -353,15 +353,15 @@ export default function ReportsPage() {
               </div>
               
               {categoryData.length > 0 ? (
-                <div className="h-80 flex flex-col items-center">
+                <div className="h-96 flex flex-col items-center">
                   {/* 圓餅圖 */}
-                  <div className="relative w-48 h-48 mb-4">
-                    <svg width="192" height="192" className="transform -rotate-90">
+                  <div className="relative w-64 h-64 mb-4">
+                    <svg width="256" height="256" className="transform -rotate-90">
                       {(() => {
                         let currentAngle = 0
-                        const radius = 80
-                        const centerX = 96
-                        const centerY = 96
+                        const radius = 110
+                        const centerX = 128
+                        const centerY = 128
                         
                         return categoryData.slice(0, 8).map((item, index) => {
                           const angle = (item.percentage / 100) * 360
@@ -382,14 +382,18 @@ export default function ReportsPage() {
                           const pathData = `M ${centerX} ${centerY} L ${x1} ${y1} A ${radius} ${radius} 0 ${largeArcFlag} 1 ${x2} ${y2} Z`
                           
                           return (
-                            <path
-                              key={index}
-                              d={pathData}
-                              fill={chartColors[index % chartColors.length]}
-                              stroke="white"
-                              strokeWidth="2"
-                              className="hover:opacity-80 transition-opacity"
-                            />
+                            <g key={index}>
+                              <path
+                                d={pathData}
+                                fill={chartColors[index % chartColors.length]}
+                                stroke="white"
+                                strokeWidth="2"
+                                className="hover:opacity-80 transition-opacity cursor-pointer"
+                              />
+                              <title>
+                                {item.category}: {Math.round(item.amount).toLocaleString()} ({item.percentage.toFixed(1)}%)
+                              </title>
+                            </g>
                           )
                         })
                       })()}
@@ -409,6 +413,7 @@ export default function ReportsPage() {
                             <span className="font-medium text-gray-700">{item.category}</span>
                           </div>
                           <div className="text-right">
+                            <div className="text-xs text-gray-600">{Math.round(item.amount).toLocaleString()}</div>
                             <span className="font-bold text-gray-900">{item.percentage.toFixed(1)}%</span>
                           </div>
                         </div>
@@ -532,6 +537,7 @@ export default function ReportsPage() {
                             <span className="font-medium text-gray-700">{item.category}</span>
                           </div>
                           <div className="text-right">
+                            <div className="text-xs text-gray-600">{Math.round(item.amount).toLocaleString()}</div>
                             <span className="font-bold text-gray-900">{item.percentage.toFixed(1)}%</span>
                           </div>
                         </div>
