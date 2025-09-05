@@ -125,7 +125,7 @@ export default function ProductsMasterPage() {
       const url = editingProduct ? '/api/products-master' : '/api/products-master'
       const method = editingProduct ? 'PUT' : 'POST'
       
-      const submitData: any = {
+      const submitData: Record<string, unknown> = {
         ...formData,
         category_id: formData.category_id || null,
         subcategory_id: formData.subcategory_id || null
