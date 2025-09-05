@@ -32,6 +32,10 @@ export default function ReportsPage() {
   const [loading, setLoading] = useState(true)
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [lastRefreshTime, setLastRefreshTime] = useState<Date | null>(null)
+  const [selectedMonth, setSelectedMonth] = useState<string>(() => {
+    const currentDate = new Date()
+    return `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`
+  })
   const [cachedData, setCachedData] = useState<{
     salesData?: MonthlySalesData[]
     discountData?: DiscountData[]
@@ -131,6 +135,48 @@ export default function ReportsPage() {
     }
   }, [cachedData])
 
+  // Fetch category data for selected month
+  const [monthlyCategoryData, setMonthlyCategoryData] = useState<CategoryData[]>([])
+  const [monthlySmallCategoryData, setMonthlySmallCategoryData] = useState<CategoryData[]>([])
+  const [categoryLoading, setCategoryLoading] = useState(false)
+
+  const fetchMonthlyCategoryData = useCallback(async (month: string) => {
+    setCategoryLoading(true)
+    try {
+      const [categoryResponse, smallCategoryResponse] = await Promise.all([
+        fetch(`/api/reports/category-distribution?month=${month}`),
+        fetch(`/api/reports/small-category-distribution?month=${month}`)
+      ])
+
+      if (categoryResponse.ok) {
+        const categoryResult = await categoryResponse.json()
+        setMonthlyCategoryData(categoryResult.data || categoryResult)
+      } else {
+        setMonthlyCategoryData([])
+      }
+
+      if (smallCategoryResponse.ok) {
+        const smallCategoryResult = await smallCategoryResponse.json()
+        setMonthlySmallCategoryData(smallCategoryResult.data || smallCategoryResult)
+      } else {
+        setMonthlySmallCategoryData([])
+      }
+    } catch (error) {
+      console.error('獲取月份分類資料失敗:', error)
+      setMonthlyCategoryData([])
+      setMonthlySmallCategoryData([])
+    } finally {
+      setCategoryLoading(false)
+    }
+  }, [])
+
+  // Fetch category data when selected month changes
+  useEffect(() => {
+    if (selectedMonth) {
+      fetchMonthlyCategoryData(selectedMonth)
+    }
+  }, [selectedMonth, fetchMonthlyCategoryData])
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
@@ -147,6 +193,14 @@ export default function ReportsPage() {
       </div>
     )
   }
+
+  // 商品品項數圖表顯示所有月份資料（從當月往回推13個月）
+  const filteredSalesData = salesData
+  const filteredDiscountData = discountData.filter(item => item.month === selectedMonth)
+  
+  // Use monthly fetched category data
+  const filteredCategoryData = monthlyCategoryData
+  const filteredSmallCategoryData = monthlySmallCategoryData
 
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
@@ -339,7 +393,110 @@ export default function ReportsPage() {
             )}
           </div>
 
-          {/* 4. 分類佔比圓餅圖 - 大分類與小分類並排 */}
+          {/* 4. 商品品項數趨勢圖 */}
+          <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-lg">
+            <div className="flex items-center space-x-3 mb-6">
+              <div className="w-10 h-10 bg-green-400 rounded-xl flex items-center justify-center">
+                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                </svg>
+              </div>
+              <h2 className="text-xl font-bold text-gray-900">商品品項數</h2>
+            </div>
+            
+            {filteredSalesData.length > 0 ? (
+              <div className="h-80">
+                <div className="flex items-end justify-between h-64 px-2 py-4 space-x-1">
+                  {filteredSalesData.slice().reverse().map((item, index) => {
+                    const maxItems = Math.max(...filteredSalesData.map(s => s.productItemCount))
+                    const height = maxItems > 0 ? (item.productItemCount / maxItems) * 240 : 1 // 至少1px高度以顯示條
+                    
+                    return (
+                      <div key={index} className="flex flex-col items-center flex-1 group relative">
+                        {/* 直接顯示品項數 */}
+                        <div className="text-xs font-bold text-gray-900 mb-1">
+                          {item.productItemCount}種
+                        </div>
+                        <div 
+                          className="w-full rounded-t-sm transition-all duration-300"
+                          style={{ 
+                            height: `${height}px`, 
+                            backgroundColor: '#A7F3D0' // mint_green
+                          }}
+                        />
+                        <div className="text-xs text-gray-600 mt-2 text-center">
+                          {item.monthDisplay}
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+                
+                {/* Y軸標籤 */}
+                <div className="flex justify-between text-sm text-gray-600 mt-4">
+                  <span>時間軸</span>
+                  <span>商品品項數量</span>
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-12 text-gray-500">
+                <p>暫無商品品項數資料</p>
+              </div>
+            )}
+          </div>
+
+          {/* 5. 月份篩選器 */}
+          <div className="bg-white/70 backdrop-blur-sm border border-white/50 rounded-2xl p-6 shadow-lg">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 bg-blue-400 rounded-xl flex items-center justify-center">
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                </div>
+                <h2 className="text-xl font-bold text-gray-900">月份篩選</h2>
+              </div>
+              
+              <div className="flex items-center space-x-3">
+                <label htmlFor="month-select" className="text-sm font-medium text-gray-700">
+                  選擇月份：
+                </label>
+                <select
+                  id="month-select"
+                  value={selectedMonth}
+                  onChange={(e) => setSelectedMonth(e.target.value)}
+                  className="px-4 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent text-gray-900 min-w-[140px]"
+                >
+                  {(() => {
+                    const options = []
+                    const currentDate = new Date()
+                    const currentYear = currentDate.getFullYear()
+                    const currentMonth = currentDate.getMonth()
+                    
+                    // Generate options for last 12 months
+                    for (let i = 0; i < 12; i++) {
+                      const date = new Date(currentYear, currentMonth - i, 1)
+                      const year = date.getFullYear()
+                      const month = date.getMonth() + 1
+                      const value = `${year}-${String(month).padStart(2, '0')}`
+                      const display = `${year}年${month}月`
+                      options.push(
+                        <option key={value} value={value}>
+                          {display}
+                        </option>
+                      )
+                    }
+                    return options
+                  })()}
+                </select>
+              </div>
+            </div>
+            <div className="mt-4 text-sm text-gray-600">
+              以下圖表將顯示所選月份的資料統計
+            </div>
+          </div>
+
+          {/* 6. 分類佔比圓餅圖 - 大分類與小分類並排 */}
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
             {/* 大分類佔比 */}
             <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-lg">
@@ -352,7 +509,7 @@ export default function ReportsPage() {
                 <h2 className="text-xl font-bold text-gray-900">大分類佔比</h2>
               </div>
               
-              {categoryData.length > 0 ? (
+              {filteredCategoryData.length > 0 ? (
                 <div className="h-96 flex flex-col items-center">
                   {/* 圓餅圖 */}
                   <div className="relative w-64 h-64 mb-4">
@@ -363,7 +520,7 @@ export default function ReportsPage() {
                         const centerX = 128
                         const centerY = 128
                         
-                        return categoryData.slice(0, 8).map((item, index) => {
+                        return filteredCategoryData.slice(0, 8).map((item, index) => {
                           const angle = (item.percentage / 100) * 360
                           const startAngle = currentAngle
                           const endAngle = currentAngle + angle
@@ -403,7 +560,7 @@ export default function ReportsPage() {
                   {/* 圖例 */}
                   <div className="w-full">
                     <div className="space-y-1 max-h-32 overflow-y-auto">
-                      {categoryData.slice(0, 8).map((item, index) => (
+                      {filteredCategoryData.slice(0, 8).map((item, index) => (
                         <div key={index} className="flex justify-between items-center p-1 bg-gray-50 rounded text-xs">
                           <div className="flex items-center space-x-2">
                             <div 
@@ -439,14 +596,14 @@ export default function ReportsPage() {
                 <h2 className="text-xl font-bold text-gray-900">小分類佔比</h2>
               </div>
               
-              {smallCategoryData.length > 0 ? (
+              {filteredSmallCategoryData.length > 0 ? (
                 <div className="h-96 flex flex-col items-center">
                   {/* 圓餅圖 */}
                   <div className="relative w-64 h-64 mb-4">
                     <svg width="256" height="256" className="transform -rotate-90">
                       {(() => {
                         // 處理數據：取前8名，其餘合併為「其他」
-                        let processedData = [...smallCategoryData]
+                        let processedData = [...filteredSmallCategoryData]
                         if (processedData.length > 9) {
                           const top8 = processedData.slice(0, 8)
                           const others = processedData.slice(8)
@@ -510,7 +667,7 @@ export default function ReportsPage() {
                     <div className="space-y-1 max-h-32 overflow-y-auto">
                       {(() => {
                         // 處理數據：取前8名，其餘合併為「其他」
-                        let processedData = [...smallCategoryData]
+                        let processedData = [...filteredSmallCategoryData]
                         if (processedData.length > 9) {
                           const top8 = processedData.slice(0, 8)
                           const others = processedData.slice(8)
@@ -554,51 +711,6 @@ export default function ReportsPage() {
             </div>
           </div>
 
-          {/* 6. 商品品項數趨勢圖 */}
-          <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-lg">
-            <div className="flex items-center space-x-3 mb-6">
-              <div className="w-10 h-10 bg-green-400 rounded-xl flex items-center justify-center">
-                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                </svg>
-              </div>
-              <h2 className="text-xl font-bold text-gray-900">商品品項數</h2>
-            </div>
-            
-            {salesData.length > 0 ? (
-              <div className="h-80">
-                <div className="flex items-end justify-between h-64 px-2 py-4 space-x-1">
-                  {salesData.slice().reverse().map((item, index) => {
-                    const maxItems = Math.max(...salesData.map(s => s.productItemCount))
-                    const height = maxItems > 0 ? (item.productItemCount / maxItems) * 240 : 1 // 至少1px高度以顯示條
-                    
-                    return (
-                      <div key={index} className="flex flex-col items-center flex-1 group">
-                        <div 
-                          className="w-full rounded-t-sm transition-all duration-300 relative"
-                          style={{ 
-                            height: `${height}px`,
-                            backgroundColor: '#98F5E1'
-                          }}
-                        >
-                          <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 text-gray-900 text-xs font-medium whitespace-nowrap">
-                            {item.productItemCount} 種
-                          </div>
-                        </div>
-                        <div className="text-xs text-gray-600 mt-2 transform -rotate-45 origin-left whitespace-nowrap">
-                          {item.monthDisplay}
-                        </div>
-                      </div>
-                    )
-                  })}
-                </div>
-              </div>
-            ) : (
-              <div className="text-center py-12 text-gray-500">
-                <p>暫無商品品項資料</p>
-              </div>
-            )}
-          </div>
         </div>
 
         {/* 操作按鈕區域 */}
