@@ -299,8 +299,8 @@ export default function ReportsPage() {
           {/* 3. 折扣金額趨勢圖 */}
           <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-lg">
             <div className="flex items-center space-x-3 mb-6">
-              <div className="w-10 h-10 bg-yellow-400 rounded-xl flex items-center justify-center">
-                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: '#FBF8CC' }}>
+                <svg className="w-5 h-5 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
                 </svg>
               </div>
@@ -317,8 +317,8 @@ export default function ReportsPage() {
                     return (
                       <div key={index} className="flex flex-col items-center flex-1 group">
                         <div 
-                          className="w-full bg-yellow-400 rounded-t-sm transition-all duration-300 group-hover:bg-yellow-500 relative"
-                          style={{ height: `${height}px` }}
+                          className="w-full rounded-t-sm transition-all duration-300 group-hover:opacity-80 relative"
+                          style={{ height: `${height}px`, backgroundColor: '#FBF8CC' }}
                         >
                           <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 text-gray-900 text-xs font-medium whitespace-nowrap">
                             {Math.round(item.discountAmount).toLocaleString()}
@@ -435,17 +435,35 @@ export default function ReportsPage() {
               </div>
               
               {smallCategoryData.length > 0 ? (
-                <div className="h-80 flex flex-col items-center">
+                <div className="h-96 flex flex-col items-center">
                   {/* 圓餅圖 */}
-                  <div className="relative w-48 h-48 mb-4">
-                    <svg width="192" height="192" className="transform -rotate-90">
+                  <div className="relative w-64 h-64 mb-4">
+                    <svg width="256" height="256" className="transform -rotate-90">
                       {(() => {
-                        let currentAngle = 0
-                        const radius = 80
-                        const centerX = 96
-                        const centerY = 96
+                        // 處理數據：取前8名，其餘合併為「其他」
+                        let processedData = [...smallCategoryData]
+                        if (processedData.length > 9) {
+                          const top8 = processedData.slice(0, 8)
+                          const others = processedData.slice(8)
+                          const othersTotal = others.reduce((sum, item) => sum + item.amount, 0)
+                          const othersPercentage = others.reduce((sum, item) => sum + item.percentage, 0)
+                          
+                          processedData = [
+                            ...top8,
+                            {
+                              category: '其他',
+                              amount: othersTotal,
+                              percentage: othersPercentage
+                            }
+                          ]
+                        }
                         
-                        return smallCategoryData.slice(0, 12).map((item, index) => {
+                        let currentAngle = 0
+                        const radius = 110
+                        const centerX = 128
+                        const centerY = 128
+                        
+                        return processedData.map((item, index) => {
                           const angle = (item.percentage / 100) * 360
                           const startAngle = currentAngle
                           const endAngle = currentAngle + angle
@@ -464,14 +482,18 @@ export default function ReportsPage() {
                           const pathData = `M ${centerX} ${centerY} L ${x1} ${y1} A ${radius} ${radius} 0 ${largeArcFlag} 1 ${x2} ${y2} Z`
                           
                           return (
-                            <path
-                              key={index}
-                              d={pathData}
-                              fill={chartColors[index % chartColors.length]}
-                              stroke="white"
-                              strokeWidth="2"
-                              className="hover:opacity-80 transition-opacity"
-                            />
+                            <g key={index}>
+                              <path
+                                d={pathData}
+                                fill={chartColors[index % chartColors.length]}
+                                stroke="white"
+                                strokeWidth="2"
+                                className="hover:opacity-80 transition-opacity cursor-pointer"
+                              />
+                              <title>
+                                {item.category}: {Math.round(item.amount).toLocaleString()} ({item.percentage.toFixed(1)}%)
+                              </title>
+                            </g>
                           )
                         })
                       })()}
@@ -481,7 +503,26 @@ export default function ReportsPage() {
                   {/* 圖例 */}
                   <div className="w-full">
                     <div className="space-y-1 max-h-32 overflow-y-auto">
-                      {smallCategoryData.slice(0, 12).map((item, index) => (
+                      {(() => {
+                        // 處理數據：取前8名，其餘合併為「其他」
+                        let processedData = [...smallCategoryData]
+                        if (processedData.length > 9) {
+                          const top8 = processedData.slice(0, 8)
+                          const others = processedData.slice(8)
+                          const othersTotal = others.reduce((sum, item) => sum + item.amount, 0)
+                          const othersPercentage = others.reduce((sum, item) => sum + item.percentage, 0)
+                          
+                          processedData = [
+                            ...top8,
+                            {
+                              category: '其他',
+                              amount: othersTotal,
+                              percentage: othersPercentage
+                            }
+                          ]
+                        }
+                        
+                        return processedData.map((item, index) => (
                         <div key={index} className="flex justify-between items-center p-1 bg-gray-50 rounded text-xs">
                           <div className="flex items-center space-x-2">
                             <div 
@@ -581,7 +622,7 @@ export default function ReportsPage() {
 
         {/* 空狀態提示 */}
         {salesData.length === 0 && (
-          <div className="bg-yellow-50 border border-gray-200 rounded-2xl p-8 text-center">
+          <div className="bg-gray-50 border border-gray-200 rounded-2xl p-8 text-center">
             <div className="w-16 h-16 bg-pink-400 rounded-2xl flex items-center justify-center mx-auto mb-4">
               <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
