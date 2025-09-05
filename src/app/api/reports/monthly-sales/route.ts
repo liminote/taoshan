@@ -87,7 +87,7 @@ export async function GET() {
     if (orderData && orderData.length > 0) {
       console.log(`取得 ${orderData.length} 筆訂單資料`)
       let processedCount = 0
-      const sampleDates = []
+      const sampleDates: string[] = []
       
       orderData.forEach((record, index) => {
         if (record.checkout_time) {
