@@ -535,7 +535,8 @@ export default function ReportsPage() {
                             <span className="font-bold text-gray-900">{item.percentage.toFixed(1)}%</span>
                           </div>
                         </div>
-                      ))}
+                        ))
+                      })()}
                     </div>
                   </div>
                 </div>
