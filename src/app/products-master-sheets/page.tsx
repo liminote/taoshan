@@ -274,15 +274,16 @@ export default function ProductsMasterSheetsPage() {
 
   const getCategoryColor = (categoryId: number) => {
     const colors = [
-      'from-pink-400 to-orange-400',
-      'from-orange-400 to-yellow-400', 
-      'from-yellow-400 to-green-400',
-      'from-green-400 to-pink-400',
-      'from-pink-500 to-orange-500',
-      'from-orange-500 to-yellow-500',
-      'from-yellow-500 to-green-500',
-      'from-green-500 to-pink-500',
-      'from-orange-300 to-pink-300'
+      'bg-sky_blue',      // 天藍色
+      'bg-melon',         // 粉色
+      'bg-mint_green',    // 薄荷綠
+      'bg-periwinkle',    // 淺紫色
+      'bg-fawn',          // 小鹿色
+      'bg-aquamarine',    // 海藍色
+      'bg-lavender_blush',// 薰衣草紅
+      'bg-tea_green',     // 茶綠色
+      'bg-mauve',         // 淡紫色
+      'bg-lemon_chiffon'  // 檸檬色
     ]
     return colors[(categoryId - 1) % colors.length]
   }
@@ -386,7 +387,7 @@ export default function ProductsMasterSheetsPage() {
         <div className="mb-8">
           <Link 
             href="/" 
-            className="inline-flex items-center text-gray-600 hover:text-sky_blue transition-colors mb-6 group"
+            className="inline-flex items-center text-gray-600 hover:text-blue-600 transition-colors mb-6 group"
           >
             <svg className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -396,7 +397,7 @@ export default function ProductsMasterSheetsPage() {
           
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <div className="w-12 h-12 bg-melon rounded-2xl flex items-center justify-center shadow-lg">
+              <div className="w-12 h-12 bg-pink-400 rounded-2xl flex items-center justify-center shadow-lg">
                 <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                 </svg>
@@ -829,7 +830,7 @@ export default function ProductsMasterSheetsPage() {
                       >
                         <div className="flex items-center justify-between">
                           <div className="flex items-center space-x-4">
-                            <div className={`w-12 h-12 bg-gradient-to-r ${getCategoryColor(category.id)} rounded-xl flex items-center justify-center shadow-md text-2xl`}>
+                            <div className={`w-12 h-12 ${getCategoryColor(category.id)} rounded-xl flex items-center justify-center shadow-md text-2xl`}>
                               {getCategoryIcon(category.name)}
                             </div>
                             <div>
