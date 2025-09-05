@@ -397,7 +397,7 @@ export default function ProductsMasterSheetsPage() {
           
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <div className="w-12 h-12 bg-melon rounded-2xl flex items-center justify-center shadow-lg">
+              <div className="w-12 h-12 bg-pink-400 rounded-2xl flex items-center justify-center shadow-lg">
                 <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                 </svg>
@@ -424,7 +424,7 @@ export default function ProductsMasterSheetsPage() {
               <button
                 onClick={handleRefresh}
                 disabled={refreshLoading}
-                className="inline-flex items-center px-4 py-2 bg-sky_blue text-white rounded-xl hover:shadow-lg transition-all duration-300 hover:scale-105 disabled:opacity-50"
+                className="inline-flex items-center px-4 py-2 bg-sky-400 text-white rounded-xl hover:shadow-lg transition-all duration-300 hover:scale-105 disabled:opacity-50"
               >
                 <svg className={`w-5 h-5 mr-2 ${refreshLoading ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -440,7 +440,7 @@ export default function ProductsMasterSheetsPage() {
                   }
                 }}
                 disabled={uncategorizedLoading}
-                className="inline-flex items-center px-4 py-2 bg-fawn text-white rounded-xl hover:shadow-lg transition-all duration-300 hover:scale-105 disabled:opacity-50"
+                className="inline-flex items-center px-4 py-2 bg-orange-400 text-white rounded-xl hover:shadow-lg transition-all duration-300 hover:scale-105 disabled:opacity-50"
               >
                 <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.728-.833-2.498 0L4.316 16.5c-.77.833.192 2.5 1.732 2.5z" />
@@ -450,7 +450,7 @@ export default function ProductsMasterSheetsPage() {
               
               <button
                 onClick={() => setShowAddForm(!showAddForm)}
-                className="inline-flex items-center px-4 py-2 bg-tea_green text-white rounded-xl hover:shadow-lg transition-all duration-300 hover:scale-105"
+                className="inline-flex items-center px-4 py-2 bg-green-400 text-white rounded-xl hover:shadow-lg transition-all duration-300 hover:scale-105"
               >
                 <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -468,8 +468,8 @@ export default function ProductsMasterSheetsPage() {
               onClick={() => setActiveTab('products')}
               className={`px-6 py-3 text-sm font-medium rounded-lg transition-all duration-200 flex items-center space-x-2 ${
                 activeTab === 'products'
-                  ? 'bg-white text-melon shadow-sm'
-                  : 'text-gray-600 hover:text-melon'
+                  ? 'bg-white text-pink-600 shadow-sm'
+                  : 'text-gray-600 hover:text-pink-600'
               }`}
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -481,8 +481,8 @@ export default function ProductsMasterSheetsPage() {
               onClick={() => setActiveTab('categories')}
               className={`px-6 py-3 text-sm font-medium rounded-lg transition-all duration-200 flex items-center space-x-2 ${
                 activeTab === 'categories'
-                  ? 'bg-white text-fawn shadow-sm'
-                  : 'text-gray-600 hover:text-fawn'
+                  ? 'bg-white text-orange-600 shadow-sm'
+                  : 'text-gray-600 hover:text-orange-600'
               }`}
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -526,7 +526,7 @@ export default function ProductsMasterSheetsPage() {
                       </div>
                       <button
                         onClick={() => handleQuickAdd(product)}
-                        className="ml-2 px-2 py-1 bg-fawn text-white text-xs rounded hover:bg-fawn-600 transition-colors"
+                        className="ml-2 px-2 py-1 bg-orange-400 text-white text-xs rounded hover:bg-orange-500 transition-colors"
                       >
                         分類
                       </button>
@@ -557,7 +557,7 @@ export default function ProductsMasterSheetsPage() {
                 value={search}
                 onChange={(e) => handleSearch(e.target.value)}
                 placeholder="輸入商品名稱、分類等..."
-                className="w-full px-3 py-2 border border-orange-200 rounded-lg bg-white/70 focus:ring-2 focus:ring-melon/50 focus:border-melon text-gray-900"
+                className="w-full px-3 py-2 border border-orange-200 rounded-lg bg-white/70 focus:ring-2 focus:ring-pink-400/50 focus:border-pink-400 text-gray-900"
               />
             </div>
 
@@ -575,14 +575,14 @@ export default function ProductsMasterSheetsPage() {
                       onChange={(e) => setFormData({...formData, original_name: e.target.value})}
                       placeholder="商品名稱*"
                       required
-                      className="px-3 py-2 border border-orange-200 rounded-lg bg-white/70 focus:ring-2 focus:ring-melon/50 focus:border-melon text-sm text-gray-900"
+                      className="px-3 py-2 border border-orange-200 rounded-lg bg-white/70 focus:ring-2 focus:ring-pink-400/50 focus:border-pink-400 text-sm text-gray-900"
                     />
                     <input
                       type="text"
                       value={formData.new_name}
                       onChange={(e) => setFormData({...formData, new_name: e.target.value})}
                       placeholder="新商品名稱"
-                      className="px-3 py-2 border border-orange-200 rounded-lg bg-white/70 focus:ring-2 focus:ring-melon/50 focus:border-melon text-sm text-gray-900"
+                      className="px-3 py-2 border border-orange-200 rounded-lg bg-white/70 focus:ring-2 focus:ring-pink-400/50 focus:border-pink-400 text-sm text-gray-900"
                     />
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -591,21 +591,21 @@ export default function ProductsMasterSheetsPage() {
                       value={formData.category}
                       onChange={(e) => setFormData({...formData, category: e.target.value})}
                       placeholder="大分類"
-                      className="px-3 py-2 border border-orange-200 rounded-lg bg-white/70 focus:ring-2 focus:ring-melon/50 focus:border-melon text-sm text-gray-900"
+                      className="px-3 py-2 border border-orange-200 rounded-lg bg-white/70 focus:ring-2 focus:ring-pink-400/50 focus:border-pink-400 text-sm text-gray-900"
                     />
                     <input
                       type="text"
                       value={formData.small_category}
                       onChange={(e) => setFormData({...formData, small_category: e.target.value})}
                       placeholder="小分類"
-                      className="px-3 py-2 border border-orange-200 rounded-lg bg-white/70 focus:ring-2 focus:ring-melon/50 focus:border-melon text-sm text-gray-900"
+                      className="px-3 py-2 border border-orange-200 rounded-lg bg-white/70 focus:ring-2 focus:ring-pink-400/50 focus:border-pink-400 text-sm text-gray-900"
                     />
                   </div>
                   <div className="flex space-x-2">
                     <button
                       type="submit"
                       disabled={actionLoading}
-                      className="px-4 py-2 bg-pink-600 text-white rounded-lg hover:bg-pink-700 transition-colors disabled:opacity-50 text-sm"
+                      className="px-4 py-2 bg-pink-500 text-white rounded-lg hover:bg-pink-600 transition-colors disabled:opacity-50 text-sm"
                     >
                       {actionLoading ? '處理中...' : (editingProduct ? '更新' : '新增')}
                     </button>
@@ -635,7 +635,7 @@ export default function ProductsMasterSheetsPage() {
               <div className="text-red-600 mb-4">❌ {error}</div>
               <button 
                 onClick={() => fetchProducts()}
-                className="px-4 py-2 bg-pink-600 text-white rounded-lg hover:bg-pink-700 transition-colors"
+                className="px-4 py-2 bg-pink-500 text-white rounded-lg hover:bg-pink-600 transition-colors"
               >
                 重新載入
               </button>
@@ -733,7 +733,7 @@ export default function ProductsMasterSheetsPage() {
                           onClick={() => setPagination(prev => ({ ...prev, page: pageNum }))}
                           className={`px-3 py-2 text-sm rounded-lg transition-all ${
                             pageNum === pagination.page
-                              ? 'bg-pink-600 text-white'
+                              ? 'bg-pink-500 text-white'
                               : 'bg-white/50 border border-orange-200/50 hover:bg-white/80'
                           }`}
                         >
@@ -789,7 +789,7 @@ export default function ProductsMasterSheetsPage() {
                 <div className="text-red-600 mb-4">❌ {categoriesError}</div>
                 <button 
                   onClick={fetchCategories}
-                  className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors"
+                  className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
                 >
                   重新載入
                 </button>
@@ -878,7 +878,7 @@ export default function ProductsMasterSheetsPage() {
                           <div className="mb-4 flex justify-end">
                             <button
                               onClick={() => setShowAddSubcategory(category.id)}
-                              className="px-4 py-2 bg-pink-600 text-white text-sm rounded-lg hover:bg-pink-700 transition-colors flex items-center space-x-2"
+                              className="px-4 py-2 bg-pink-500 text-white text-sm rounded-lg hover:bg-pink-700 transition-colors flex items-center space-x-2"
                             >
                               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -903,7 +903,7 @@ export default function ProductsMasterSheetsPage() {
                                 <button
                                   onClick={() => addSubcategory(category.id)}
                                   disabled={!newSubcategoryName.trim() || categoryActionLoading}
-                                  className="px-4 py-2 bg-pink-600 text-white text-sm rounded-lg hover:bg-pink-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                  className="px-4 py-2 bg-pink-500 text-white text-sm rounded-lg hover:bg-pink-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                   {categoryActionLoading ? '新增中...' : '確認'}
                                 </button>
@@ -973,7 +973,7 @@ export default function ProductsMasterSheetsPage() {
                       <button
                         onClick={addCategory}
                         disabled={!newCategoryName.trim() || categoryActionLoading}
-                        className="px-6 py-2 bg-orange-600 text-white rounded-xl hover:bg-orange-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="px-6 py-2 bg-orange-500 text-white rounded-xl hover:bg-orange-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         {categoryActionLoading ? '新增中...' : '確認'}
                       </button>
@@ -1003,7 +1003,7 @@ export default function ProductsMasterSheetsPage() {
                   </button>
                   <button 
                     onClick={() => setExpandedCategories(new Set(categories.map(c => c.id)))}
-                    className="px-6 py-3 bg-orange-600 text-white rounded-xl hover:bg-orange-700 transition-colors shadow-lg"
+                    className="px-6 py-3 bg-orange-500 text-white rounded-xl hover:bg-orange-600 transition-colors shadow-lg"
                   >
                     展開所有分類
                   </button>
