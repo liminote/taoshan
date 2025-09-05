@@ -467,7 +467,7 @@ export default function ReportsPage() {
                             <path
                               key={index}
                               d={pathData}
-                              fill={`hsl(${index * 30}, 70%, 60%)`}
+                              fill={chartColors[index % chartColors.length]}
                               stroke="white"
                               strokeWidth="2"
                               className="hover:opacity-80 transition-opacity"
@@ -486,7 +486,7 @@ export default function ReportsPage() {
                           <div className="flex items-center space-x-2">
                             <div 
                               className="w-2 h-2 rounded-full"
-                              style={{ backgroundColor: `hsl(${index * 30}, 70%, 60%)` }}
+                              style={{ backgroundColor: chartColors[index % chartColors.length] }}
                             ></div>
                             <span className="font-medium text-gray-700">{item.category}</span>
                           </div>
