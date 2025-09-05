@@ -231,7 +231,7 @@ export default function ReportsPage() {
                             backgroundColor: '#FFCFD2'
                           }}
                         >
-                          <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded-lg shadow-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">
+                          <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 text-gray-900 text-xs font-medium whitespace-nowrap">
                             {Math.round(item.amount).toLocaleString()}
                           </div>
                         </div>
@@ -277,7 +277,7 @@ export default function ReportsPage() {
                             backgroundColor: '#FDE4CF'
                           }}
                         >
-                          <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded-lg shadow-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">
+                          <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 text-gray-900 text-xs font-medium whitespace-nowrap">
                             {Math.round(item.avgOrderValue).toLocaleString()}
                           </div>
                         </div>
@@ -320,7 +320,7 @@ export default function ReportsPage() {
                           className="w-full bg-yellow-400 rounded-t-sm transition-all duration-300 group-hover:bg-yellow-500 relative"
                           style={{ height: `${height}px` }}
                         >
-                          <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded-lg shadow-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">
+                          <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 text-gray-900 text-xs font-medium whitespace-nowrap">
                             {Math.round(item.discountAmount).toLocaleString()}
                           </div>
                         </div>
@@ -533,7 +533,7 @@ export default function ReportsPage() {
                             backgroundColor: '#98F5E1'
                           }}
                         >
-                          <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded-lg shadow-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">
+                          <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 text-gray-900 text-xs font-medium whitespace-nowrap">
                             {item.productItemCount} 種
                           </div>
                         </div>
