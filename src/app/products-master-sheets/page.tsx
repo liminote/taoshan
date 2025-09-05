@@ -407,7 +407,7 @@ export default function ProductsMasterSheetsPage() {
             <div className="p-8 text-center">
               <div className="text-red-600 mb-4">❌ {error}</div>
               <button 
-                onClick={fetchProducts}
+                onClick={() => fetchProducts()}
                 className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
               >
                 重新載入
