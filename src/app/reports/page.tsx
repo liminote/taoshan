@@ -3,26 +3,65 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 
-interface SalesData {
+interface MonthlySalesData {
   month: string
+  monthDisplay: string
   amount: number
-  quantity: number
+  orderCount: number
+  avgOrderValue: number
+  productItemCount: number
+}
+
+interface DiscountData {
+  month: string
+  monthDisplay: string
+  discountAmount: number
+}
+
+interface CategoryData {
+  category: string
+  amount: number
+  percentage: number
 }
 
 export default function ReportsPage() {
-  const [salesData, setSalesData] = useState<SalesData[]>([])
+  const [salesData, setSalesData] = useState<MonthlySalesData[]>([])
+  const [discountData, setDiscountData] = useState<DiscountData[]>([])
+  const [categoryData, setCategoryData] = useState<CategoryData[]>([])
+  const [smallCategoryData, setSmallCategoryData] = useState<CategoryData[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetchSalesData()
+    fetchAllData()
   }, [])
 
-  const fetchSalesData = async () => {
+  const fetchAllData = async () => {
     try {
-      const response = await fetch('/api/reports/monthly-sales')
-      if (response.ok) {
-        const data = await response.json()
-        setSalesData(data)
+      const [salesResponse, discountResponse, categoryResponse, smallCategoryResponse] = await Promise.all([
+        fetch('/api/reports/monthly-sales'),
+        fetch('/api/reports/discount-trends'),
+        fetch('/api/reports/category-distribution'),
+        fetch('/api/reports/small-category-distribution')
+      ])
+
+      if (salesResponse.ok) {
+        const salesData = await salesResponse.json()
+        setSalesData(salesData)
+      }
+
+      if (discountResponse.ok) {
+        const discountData = await discountResponse.json()
+        setDiscountData(discountData)
+      }
+
+      if (categoryResponse.ok) {
+        const categoryData = await categoryResponse.json()
+        setCategoryData(categoryData)
+      }
+
+      if (smallCategoryResponse.ok) {
+        const smallCategoryData = await smallCategoryResponse.json()
+        setSmallCategoryData(smallCategoryData)
       }
     } catch (error) {
       console.error('取得報表資料失敗:', error)
@@ -78,80 +117,343 @@ export default function ReportsPage() {
           </div>
         </div>
 
-        {/* 報表卡片區域 */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-          {/* 月銷售金額 */}
+        {/* 報表圖表區域 */}
+        <div className="space-y-8 mb-8">
+          {/* 1. 月銷售金額趨勢圖 */}
           <div className="bg-white/70 backdrop-blur-sm border border-white/50 rounded-2xl p-6 shadow-lg">
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl flex items-center justify-center">
-                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-                  </svg>
-                </div>
-                <h2 className="text-xl font-bold text-gray-900">月銷售金額</h2>
+            <div className="flex items-center space-x-3 mb-6">
+              <div className="w-10 h-10 bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl flex items-center justify-center">
+                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                </svg>
               </div>
-              <div className="text-2xl font-bold text-green-600">
-                {salesData.length > 0 ? `NT$ ${salesData[0]?.amount.toLocaleString() || 0}` : 'NT$ 0'}
-              </div>
+              <h2 className="text-xl font-bold text-gray-900">月銷售金額</h2>
             </div>
             
             {salesData.length > 0 ? (
-              <div className="space-y-3 max-h-80 overflow-y-auto">
-                {salesData.map((item, index) => (
-                  <div key={index} className="flex justify-between items-center p-3 bg-white/50 rounded-xl hover:bg-white/70 transition-all">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                      <span className="font-medium text-gray-700">{item.month}</span>
-                    </div>
-                    <span className="font-bold text-gray-900">NT$ {item.amount.toLocaleString()}</span>
-                  </div>
-                ))}
+              <div className="h-80">
+                <div className="flex items-end justify-between h-64 px-2 py-4 space-x-1">
+                  {salesData.slice().reverse().map((item, index) => {
+                    const maxAmount = Math.max(...salesData.map(s => s.amount))
+                    const height = maxAmount > 0 ? (item.amount / maxAmount) * 240 : 0
+                    
+                    return (
+                      <div key={index} className="flex flex-col items-center flex-1 group">
+                        <div 
+                          className="w-full bg-gradient-to-t from-green-500 to-emerald-400 rounded-t-sm transition-all duration-300 group-hover:from-green-600 group-hover:to-emerald-500 relative"
+                          style={{ height: `${height}px` }}
+                        >
+                          <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded whitespace-nowrap">
+                            {Math.round(item.amount).toLocaleString()}
+                          </div>
+                        </div>
+                        <div className="text-xs text-gray-600 mt-2 transform -rotate-45 origin-left whitespace-nowrap">
+                          {item.monthDisplay}
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
               </div>
             ) : (
               <div className="text-center py-12 text-gray-500">
-                <svg className="w-16 h-16 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                </svg>
                 <p>暫無銷售資料</p>
               </div>
             )}
           </div>
 
-          {/* 月銷售數量 */}
+          {/* 2. 平均單價趨勢圖 */}
           <div className="bg-white/70 backdrop-blur-sm border border-white/50 rounded-2xl p-6 shadow-lg">
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center">
-                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
-                  </svg>
-                </div>
-                <h2 className="text-xl font-bold text-gray-900">月銷售數量</h2>
+            <div className="flex items-center space-x-3 mb-6">
+              <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center">
+                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
+                </svg>
               </div>
-              <div className="text-2xl font-bold text-blue-600">
-                {salesData.length > 0 ? `${salesData[0]?.quantity.toLocaleString() || 0} 件` : '0 件'}
-              </div>
+              <h2 className="text-xl font-bold text-gray-900">平均單價</h2>
             </div>
             
             {salesData.length > 0 ? (
-              <div className="space-y-3 max-h-80 overflow-y-auto">
-                {salesData.map((item, index) => (
-                  <div key={index} className="flex justify-between items-center p-3 bg-white/50 rounded-xl hover:bg-white/70 transition-all">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                      <span className="font-medium text-gray-700">{item.month}</span>
-                    </div>
-                    <span className="font-bold text-gray-900">{item.quantity.toLocaleString()} 件</span>
-                  </div>
-                ))}
+              <div className="h-80">
+                <div className="flex items-end justify-between h-64 px-2 py-4 space-x-1">
+                  {salesData.slice().reverse().map((item, index) => {
+                    const maxAvg = Math.max(...salesData.map(s => s.avgOrderValue))
+                    const height = maxAvg > 0 ? (item.avgOrderValue / maxAvg) * 240 : 0
+                    
+                    return (
+                      <div key={index} className="flex flex-col items-center flex-1 group">
+                        <div 
+                          className="w-full bg-gradient-to-t from-blue-500 to-indigo-400 rounded-t-sm transition-all duration-300 group-hover:from-blue-600 group-hover:to-indigo-500 relative"
+                          style={{ height: `${height}px` }}
+                        >
+                          <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded whitespace-nowrap">
+                            {Math.round(item.avgOrderValue).toLocaleString()}
+                          </div>
+                        </div>
+                        <div className="text-xs text-gray-600 mt-2 transform -rotate-45 origin-left whitespace-nowrap">
+                          {item.monthDisplay}
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
               </div>
             ) : (
               <div className="text-center py-12 text-gray-500">
-                <svg className="w-16 h-16 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
+                <p>暫無平均單價資料</p>
+              </div>
+            )}
+          </div>
+
+          {/* 3. 折扣金額趨勢圖 */}
+          <div className="bg-white/70 backdrop-blur-sm border border-white/50 rounded-2xl p-6 shadow-lg">
+            <div className="flex items-center space-x-3 mb-6">
+              <div className="w-10 h-10 bg-gradient-to-r from-red-500 to-orange-600 rounded-xl flex items-center justify-center">
+                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
                 </svg>
-                <p>暫無數量資料</p>
+              </div>
+              <h2 className="text-xl font-bold text-gray-900">折扣金額</h2>
+            </div>
+            
+            {discountData.length > 0 ? (
+              <div className="h-80">
+                <div className="flex items-end justify-between h-64 px-2 py-4 space-x-1">
+                  {discountData.slice().reverse().map((item, index) => {
+                    const maxDiscount = Math.max(...discountData.map(s => s.discountAmount))
+                    const height = maxDiscount > 0 ? (item.discountAmount / maxDiscount) * 240 : 0
+                    
+                    return (
+                      <div key={index} className="flex flex-col items-center flex-1 group">
+                        <div 
+                          className="w-full bg-gradient-to-t from-red-500 to-orange-400 rounded-t-sm transition-all duration-300 group-hover:from-red-600 group-hover:to-orange-500 relative"
+                          style={{ height: `${height}px` }}
+                        >
+                          <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded whitespace-nowrap">
+                            {Math.round(item.discountAmount).toLocaleString()}
+                          </div>
+                        </div>
+                        <div className="text-xs text-gray-600 mt-2 transform -rotate-45 origin-left whitespace-nowrap">
+                          {item.monthDisplay}
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-12 text-gray-500">
+                <p>暫無折扣資料</p>
+              </div>
+            )}
+          </div>
+
+          {/* 4. 分類佔比圓餅圖 - 大分類與小分類並排 */}
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+            {/* 大分類佔比 */}
+            <div className="bg-white/70 backdrop-blur-sm border border-white/50 rounded-2xl p-6 shadow-lg">
+              <div className="flex items-center space-x-3 mb-6">
+                <div className="w-10 h-10 bg-gradient-to-r from-orange-500 to-red-600 rounded-xl flex items-center justify-center">
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                  </svg>
+                </div>
+                <h2 className="text-xl font-bold text-gray-900">大分類佔比</h2>
+              </div>
+              
+              {categoryData.length > 0 ? (
+                <div className="h-80 flex flex-col items-center">
+                  {/* 圓餅圖 */}
+                  <div className="relative w-48 h-48 mb-4">
+                    <svg width="192" height="192" className="transform -rotate-90">
+                      {(() => {
+                        let currentAngle = 0
+                        const radius = 80
+                        const centerX = 96
+                        const centerY = 96
+                        
+                        return categoryData.slice(0, 8).map((item, index) => {
+                          const angle = (item.percentage / 100) * 360
+                          const startAngle = currentAngle
+                          const endAngle = currentAngle + angle
+                          currentAngle += angle
+                          
+                          const startAngleRad = (startAngle * Math.PI) / 180
+                          const endAngleRad = (endAngle * Math.PI) / 180
+                          
+                          const x1 = centerX + radius * Math.cos(startAngleRad)
+                          const y1 = centerY + radius * Math.sin(startAngleRad)
+                          const x2 = centerX + radius * Math.cos(endAngleRad)
+                          const y2 = centerY + radius * Math.sin(endAngleRad)
+                          
+                          const largeArcFlag = angle > 180 ? 1 : 0
+                          
+                          const pathData = `M ${centerX} ${centerY} L ${x1} ${y1} A ${radius} ${radius} 0 ${largeArcFlag} 1 ${x2} ${y2} Z`
+                          
+                          return (
+                            <path
+                              key={index}
+                              d={pathData}
+                              fill={`hsl(${index * 45}, 70%, 60%)`}
+                              stroke="white"
+                              strokeWidth="2"
+                              className="hover:opacity-80 transition-opacity"
+                            />
+                          )
+                        })
+                      })()}
+                    </svg>
+                  </div>
+                  
+                  {/* 圖例 */}
+                  <div className="w-full">
+                    <div className="space-y-1 max-h-32 overflow-y-auto">
+                      {categoryData.slice(0, 8).map((item, index) => (
+                        <div key={index} className="flex justify-between items-center p-1 bg-white/50 rounded text-xs">
+                          <div className="flex items-center space-x-2">
+                            <div 
+                              className="w-2 h-2 rounded-full"
+                              style={{ backgroundColor: `hsl(${index * 45}, 70%, 60%)` }}
+                            ></div>
+                            <span className="font-medium text-gray-700">{item.category}</span>
+                          </div>
+                          <div className="text-right">
+                            <span className="font-bold text-gray-900">{item.percentage.toFixed(1)}%</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-12 text-gray-500">
+                  <p>暫無大分類資料</p>
+                </div>
+              )}
+            </div>
+
+            {/* 小分類佔比 */}
+            <div className="bg-white/70 backdrop-blur-sm border border-white/50 rounded-2xl p-6 shadow-lg">
+              <div className="flex items-center space-x-3 mb-6">
+                <div className="w-10 h-10 bg-gradient-to-r from-pink-500 to-rose-600 rounded-xl flex items-center justify-center">
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                  </svg>
+                </div>
+                <h2 className="text-xl font-bold text-gray-900">小分類佔比</h2>
+              </div>
+              
+              {smallCategoryData.length > 0 ? (
+                <div className="h-80 flex flex-col items-center">
+                  {/* 圓餅圖 */}
+                  <div className="relative w-48 h-48 mb-4">
+                    <svg width="192" height="192" className="transform -rotate-90">
+                      {(() => {
+                        let currentAngle = 0
+                        const radius = 80
+                        const centerX = 96
+                        const centerY = 96
+                        
+                        return smallCategoryData.slice(0, 12).map((item, index) => {
+                          const angle = (item.percentage / 100) * 360
+                          const startAngle = currentAngle
+                          const endAngle = currentAngle + angle
+                          currentAngle += angle
+                          
+                          const startAngleRad = (startAngle * Math.PI) / 180
+                          const endAngleRad = (endAngle * Math.PI) / 180
+                          
+                          const x1 = centerX + radius * Math.cos(startAngleRad)
+                          const y1 = centerY + radius * Math.sin(startAngleRad)
+                          const x2 = centerX + radius * Math.cos(endAngleRad)
+                          const y2 = centerY + radius * Math.sin(endAngleRad)
+                          
+                          const largeArcFlag = angle > 180 ? 1 : 0
+                          
+                          const pathData = `M ${centerX} ${centerY} L ${x1} ${y1} A ${radius} ${radius} 0 ${largeArcFlag} 1 ${x2} ${y2} Z`
+                          
+                          return (
+                            <path
+                              key={index}
+                              d={pathData}
+                              fill={`hsl(${index * 30}, 70%, 60%)`}
+                              stroke="white"
+                              strokeWidth="2"
+                              className="hover:opacity-80 transition-opacity"
+                            />
+                          )
+                        })
+                      })()}
+                    </svg>
+                  </div>
+                  
+                  {/* 圖例 */}
+                  <div className="w-full">
+                    <div className="space-y-1 max-h-32 overflow-y-auto">
+                      {smallCategoryData.slice(0, 12).map((item, index) => (
+                        <div key={index} className="flex justify-between items-center p-1 bg-white/50 rounded text-xs">
+                          <div className="flex items-center space-x-2">
+                            <div 
+                              className="w-2 h-2 rounded-full"
+                              style={{ backgroundColor: `hsl(${index * 30}, 70%, 60%)` }}
+                            ></div>
+                            <span className="font-medium text-gray-700">{item.category}</span>
+                          </div>
+                          <div className="text-right">
+                            <span className="font-bold text-gray-900">{item.percentage.toFixed(1)}%</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-12 text-gray-500">
+                  <p>暫無小分類資料</p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* 6. 商品品項數趨勢圖 */}
+          <div className="bg-white/70 backdrop-blur-sm border border-white/50 rounded-2xl p-6 shadow-lg">
+            <div className="flex items-center space-x-3 mb-6">
+              <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-600 rounded-xl flex items-center justify-center">
+                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                </svg>
+              </div>
+              <h2 className="text-xl font-bold text-gray-900">商品品項數</h2>
+            </div>
+            
+            {salesData.length > 0 ? (
+              <div className="h-80">
+                <div className="flex items-end justify-between h-64 px-2 py-4 space-x-1">
+                  {salesData.slice().reverse().map((item, index) => {
+                    const maxItems = Math.max(...salesData.map(s => s.productItemCount))
+                    const height = maxItems > 0 ? (item.productItemCount / maxItems) * 240 : 1 // 至少1px高度以顯示條
+                    
+                    return (
+                      <div key={index} className="flex flex-col items-center flex-1 group">
+                        <div 
+                          className="w-full bg-gradient-to-t from-purple-500 to-pink-400 rounded-t-sm transition-all duration-300 group-hover:from-purple-600 group-hover:to-pink-500 relative"
+                          style={{ height: `${height}px` }}
+                        >
+                          <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded whitespace-nowrap">
+                            {item.productItemCount} 種
+                          </div>
+                        </div>
+                        <div className="text-xs text-gray-600 mt-2 transform -rotate-45 origin-left whitespace-nowrap">
+                          {item.monthDisplay}
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-12 text-gray-500">
+                <p>暫無商品品項資料</p>
               </div>
             )}
           </div>
@@ -170,7 +472,7 @@ export default function ReportsPage() {
           </Link>
           
           <button 
-            onClick={fetchSalesData}
+            onClick={fetchAllData}
             className="group inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-2xl hover:shadow-lg transition-all duration-300 hover:scale-105"
           >
             <svg className="w-5 h-5 mr-2 group-hover:rotate-180 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">

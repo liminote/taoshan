@@ -1,0 +1,22 @@
+const productsData = [
+  {originalName: "(必點)極品十貫壽司", newName: "(必點)極品十貫壽司-", categoryName: "1壽司刺身", subcategoryName: "手卷/壽司（菜單）"},
+  {originalName: "(推薦)炙燒比目魚鰭邊握壽司/2貫", newName: "(推薦)炙燒比目魚鰭邊握壽司/2貫-", categoryName: "1壽司刺身", subcategoryName: "手卷/壽司（菜單）"},
+  {originalName: "(推薦)炙燒比目魚鰭邊握壽司/2貫*", newName: "(推薦)炙燒比目魚鰭邊握壽司/2貫-", categoryName: "1壽司刺身", subcategoryName: "手卷/壽司（菜單）"},
+  {originalName: "(推薦)炙燒焦糖鮭魚握壽司/2貫", newName: "(推薦)炙燒焦糖鮭魚握壽司/2貫-", categoryName: "1壽司刺身", subcategoryName: "手卷/壽司（菜單）"},
+  {originalName: "九州青干/貫", newName: "九州青干/貫-", categoryName: "1壽司刺身", subcategoryName: "手卷/壽司（菜單）"},
+  {originalName: "九州青干握壽司/2貫", newName: "九州青干握壽司/2貫-", categoryName: "1壽司刺身", subcategoryName: "手卷/壽司（菜單）"},
+  {originalName: "干貝蟹膏握壽司", newName: "干貝蟹膏握壽司-", categoryName: "1壽司刺身", subcategoryName: "手卷/壽司（菜單）"},
+  {originalName: "天使蝦/隻", newName: "天使蝦/隻-", categoryName: "1壽司刺身", subcategoryName: "手卷/壽司（菜單）"},
+  {originalName: "手卷(招待)", newName: "手卷(招待)-", categoryName: "1壽司刺身", subcategoryName: "手卷/壽司（菜單）"},
+  {originalName: "比目魚握壽司/貫", newName: "比目魚握壽司/貫-", categoryName: "1壽司刺身", subcategoryName: "手卷/壽司（菜單）"},
+  {originalName: "北海道干貝/貫", newName: "北海道干貝/貫-", categoryName: "1壽司刺身", subcategoryName: "手卷/壽司（菜單）"},
+  {originalName: "北海道海膽", newName: "北海道海膽/貫-", categoryName: "1壽司刺身", subcategoryName: "手卷/壽司（菜單）"},
+  {originalName: "北海道海膽/貫", newName: "北海道海膽/貫-", categoryName: "1壽司刺身", subcategoryName: "手卷/壽司（菜單）"},
+  {originalName: "北海道海膽手卷", newName: "北海道海膽手卷-", categoryName: "1壽司刺身", subcategoryName: "手卷/壽司（菜單）"},
+  {originalName: "北海道海膽手卷/支", newName: "北海道海膽手卷-", categoryName: "1壽司刺身", subcategoryName: "手卷/壽司（菜單）"},
+  {originalName: "本港紅甘/貫", newName: "本港紅甘/貫-", categoryName: "1壽司刺身", subcategoryName: "手卷/壽司（菜單）"},
+  {originalName: "本港紅甘握壽司/2貫", newName: "本港紅甘握壽司/2貫-", categoryName: "1壽司刺身", subcategoryName: "手卷/壽司（菜單）"},
+  {originalName: "本港紅甘握壽司/2貫*", newName: "本港紅甘握壽司/2貫-", categoryName: "1壽司刺身", subcategoryName: "手卷/壽司（菜單）"},
+  {originalName: "生魚片蛋糕", newName: "生魚片蛋糕-", categoryName: "1壽司刺身", subcategoryName: "手卷/壽司（菜單）"},
+  {originalName: "松葉蟹握壽司", newName: "松葉蟹握壽司-", categoryName: "1壽司刺身", subcategoryName: "手卷/壽司（菜單）"}
+]

@@ -38,22 +38,42 @@ export default function Home() {
               </svg>
             </div>
           </Link>
-          
+
           <Link 
-            href="/upload" 
+            href="/categories" 
             className="group block w-full bg-white/70 backdrop-blur-sm border border-white/50 rounded-2xl p-6 hover:bg-white/90 hover:shadow-xl hover:scale-[1.02] transition-all duration-300"
           >
             <div className="flex items-center space-x-4">
-              <div className="flex-shrink-0 w-12 h-12 bg-gradient-to-r from-green-500 to-green-600 rounded-xl flex items-center justify-center">
+              <div className="flex-shrink-0 w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-600 rounded-xl flex items-center justify-center">
                 <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
                 </svg>
               </div>
               <div className="flex-1">
-                <h3 className="text-xl font-semibold text-gray-900 group-hover:text-green-600 transition-colors">資料上傳</h3>
-                <p className="text-gray-600 text-sm mt-1">上傳 Excel 報表檔案</p>
+                <h3 className="text-xl font-semibold text-gray-900 group-hover:text-purple-600 transition-colors">商品分類管理</h3>
+                <p className="text-gray-600 text-sm mt-1">管理商品的主分類和子分類</p>
               </div>
-              <svg className="w-5 h-5 text-gray-400 group-hover:text-green-500 group-hover:translate-x-1 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 text-gray-400 group-hover:text-purple-500 group-hover:translate-x-1 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </div>
+          </Link>
+          
+          <Link 
+            href="/products-master-sheets" 
+            className="group block w-full bg-white/70 backdrop-blur-sm border border-white/50 rounded-2xl p-6 hover:bg-white/90 hover:shadow-xl hover:scale-[1.02] transition-all duration-300"
+          >
+            <div className="flex items-center space-x-4">
+              <div className="flex-shrink-0 w-12 h-12 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center">
+                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                </svg>
+              </div>
+              <div className="flex-1">
+                <h3 className="text-xl font-semibold text-gray-900 group-hover:text-indigo-600 transition-colors">商品主檔管理</h3>
+                <p className="text-gray-600 text-sm mt-1">從Google Sheets管理商品分類，偵測未分類商品</p>
+              </div>
+              <svg className="w-5 h-5 text-gray-400 group-hover:text-indigo-500 group-hover:translate-x-1 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
             </div>
