@@ -143,7 +143,7 @@ async function writeToGoogleSheets(values: unknown[]): Promise<{success: boolean
       spreadsheetId,
       range,
       valueInputOption: 'RAW',
-      resource: {
+      requestBody: {
         values: [values]
       }
     })
