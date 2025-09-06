@@ -75,7 +75,7 @@ export async function GET() {
       items: cacheInfo,
       totalSize: cacheInfo.reduce((sum, item) => sum + item.dataSize, 0)
     })
-  } catch (error) {
+  } catch {
     return NextResponse.json({
       success: false,
       error: '取得快取狀態失敗'
@@ -277,11 +277,11 @@ async function precalculateMonthlyData(productCsv: string, masterCsv: string) {
   for (const month of recentMonths) {
     try {
       // 計算大分類分布
-      const categoryData = await calculateCategoryDistribution(productCsv, masterCsv, month)
+      const categoryData = await calculateCategoryDistribution()
       reportCache.set(`${CACHE_KEYS.CATEGORY_DISTRIBUTION}_${month}`, categoryData)
       
       // 計算小分類分布  
-      const smallCategoryData = await calculateSmallCategoryDistribution(productCsv, masterCsv, month)
+      const smallCategoryData = await calculateSmallCategoryDistribution()
       reportCache.set(`${CACHE_KEYS.SMALL_CATEGORY_DISTRIBUTION}_${month}`, smallCategoryData)
       
       // 計算支付方式分布
@@ -293,7 +293,7 @@ async function precalculateMonthlyData(productCsv: string, masterCsv: string) {
       reportCache.set(`${CACHE_KEYS.ORDER_TYPE_DISTRIBUTION}_${month}`, orderTypeData)
       
       // 計算排名
-      const rankingData = await calculateRankings(productCsv, masterCsv, month)
+      const rankingData = await calculateRankings()
       reportCache.set(`${CACHE_KEYS.RANKINGS}_${month}`, rankingData)
       
       console.log(`✅ 已快取 ${month} 的資料`)
@@ -304,13 +304,13 @@ async function precalculateMonthlyData(productCsv: string, masterCsv: string) {
 }
 
 // 計算分類分布（簡化版本，你可以從原API複製完整邏輯）
-async function calculateCategoryDistribution(productCsv: string, masterCsv: string, month: string) {
+async function calculateCategoryDistribution(): Promise<never[]> {
   // 這裡需要複製 category-distribution API 的邏輯
   // 為了簡潔，我先返回空資料，你可以複製完整實作
   return []
 }
 
-async function calculateSmallCategoryDistribution(productCsv: string, masterCsv: string, month: string) {
+async function calculateSmallCategoryDistribution(): Promise<never[]> {
   // 複製 small-category-distribution API 的邏輯
   return []
 }
@@ -478,7 +478,7 @@ async function calculateOrderTypeDistribution(orderCsv: string, month: string) {
     .sort((a, b) => b.count - a.count)
 }
 
-async function calculateRankings(productCsv: string, masterCsv: string, month: string) {
+async function calculateRankings() {
   // 複製 rankings API 的邏輯
   return {
     quantityRanking: [],

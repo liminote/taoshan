@@ -115,7 +115,6 @@ export async function GET(request: NextRequest) {
 
     // 計算總數用於百分比計算
     const totalCount = orderData.length
-    const totalAmount = orderData.reduce((sum, record) => sum + record.amount, 0)
 
     // 轉換為陣列並排序
     const paymentDistribution = Array.from(paymentStats.entries())

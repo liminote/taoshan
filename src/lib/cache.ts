@@ -6,7 +6,7 @@ interface CacheItem<T> {
 }
 
 class ReportCache {
-  private cache = new Map<string, CacheItem<any>>()
+  private cache = new Map<string, CacheItem<unknown>>()
 
   // 設定快取資料（不會過期，只能手動清除）
   set<T>(key: string, data: T): void {

@@ -66,7 +66,7 @@ export default function ReportsPage() {
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [isManualRefreshing, setIsManualRefreshing] = useState(false)
   const [lastRefreshTime, setLastRefreshTime] = useState<Date | null>(null)
-  const [cacheStatus, setCacheStatus] = useState<{cached: boolean; items: any[]} | null>(null)
+  const [, setCacheStatus] = useState<{cached: boolean; items: unknown[]} | null>(null)
   
   // Trends tab data (all time data - no filtering)
   const [salesData, setSalesData] = useState<MonthlySalesData[]>([])
