@@ -261,7 +261,12 @@ async function calculateDiscountTrends(orderCsv: string) {
 }
 
 // 預計算各月份的分類和排名資料
-async function precalculateMonthlyData(productCsv: string, masterCsv: string) {
+async function precalculateMonthlyData(_productCsv: string, _masterCsv: string) {
+  // 獲取訂單資料
+  const orderSheetUrl = 'https://docs.google.com/spreadsheets/d/1EWPECWQp_Ehz43Lfks_I8lcvEig8gV9DjyjEIzC5EO4/export?format=csv&gid=0'
+  const orderResponse = await fetch(orderSheetUrl)
+  const orderCsv = await orderResponse.text()
+
   const allMonths = []
   for (let year = 2023; year <= 2025; year++) {
     const startMonth = year === 2023 ? 9 : 1  
