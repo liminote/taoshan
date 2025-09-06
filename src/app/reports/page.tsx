@@ -729,7 +729,7 @@ export default function ReportsPage() {
                   {/* 銷量排名 */}
                   <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
                     <div className="px-6 py-4" style={{ backgroundColor: '#90DBF4' }}>
-                      <h3 className="text-lg font-semibold text-gray-900">銷量排名 TOP 10</h3>
+                      <h3 className="text-lg font-semibold text-gray-900">銷量排名 TOP 20</h3>
                     </div>
                     <div className="overflow-x-auto">
                       <table className="w-full">
@@ -742,7 +742,7 @@ export default function ReportsPage() {
                           </tr>
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-200">
-                          {rankingData.quantityRanking.slice(0, 10).map((item, index) => (
+                          {rankingData.quantityRanking.slice(0, 20).map((item, index) => (
                             <tr key={index} className={`${index < 3 ? 'bg-blue-50' : ''} hover:bg-gray-50 transition-colors`}>
                               <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
                                 {index < 3 ? (
@@ -773,7 +773,7 @@ export default function ReportsPage() {
                   {/* 銷額排名 */}
                   <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
                     <div className="px-6 py-4" style={{ backgroundColor: '#FFCFD2' }}>
-                      <h3 className="text-lg font-semibold text-gray-900">銷額排名 TOP 10</h3>
+                      <h3 className="text-lg font-semibold text-gray-900">銷額排名 TOP 20</h3>
                     </div>
                     <div className="overflow-x-auto">
                       <table className="w-full">
@@ -786,7 +786,7 @@ export default function ReportsPage() {
                           </tr>
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-200">
-                          {rankingData.amountRanking.slice(0, 10).map((item, index) => (
+                          {rankingData.amountRanking.slice(0, 20).map((item, index) => (
                             <tr key={index} className={`${index < 3 ? 'bg-red-50' : ''} hover:bg-gray-50 transition-colors`}>
                               <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
                                 {index < 3 ? (
@@ -820,7 +820,7 @@ export default function ReportsPage() {
                 {rankingData.alcoholRanking && rankingData.alcoholRanking.length > 0 && (
                   <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
                     <div className="px-6 py-4" style={{ backgroundColor: '#98F5E1' }}>
-                      <h3 className="text-lg font-semibold text-gray-900">酒水排名 TOP 10</h3>
+                      <h3 className="text-lg font-semibold text-gray-900">酒水排名 TOP 20</h3>
                       <p className="text-sm text-gray-700 mt-1">大分類為 6酒水</p>
                     </div>
                     <div className="overflow-x-auto">
@@ -835,7 +835,7 @@ export default function ReportsPage() {
                           </tr>
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-200">
-                          {rankingData.alcoholRanking.slice(0, 10).map((item, index) => (
+                          {rankingData.alcoholRanking.slice(0, 20).map((item, index) => (
                             <tr key={index} className={`${index < 3 ? 'bg-teal-50' : ''} hover:bg-gray-50 transition-colors`}>
                               <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
                                 {index < 3 ? (
