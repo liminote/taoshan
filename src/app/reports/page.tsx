@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
+import { useRouter, useSearchParams } from 'next/navigation'
 
 interface MonthlySalesData {
   month: string
@@ -58,8 +59,14 @@ interface RankingData {
 }
 
 export default function ReportsPage() {
-  // Tab state
-  const [activeTab, setActiveTab] = useState<'trends' | 'monthly'>('trends')
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  
+  // Tab state with URL sync
+  const [activeTab, setActiveTab] = useState<'trends' | 'monthly'>(() => {
+    const tab = searchParams.get('tab')
+    return (tab === 'monthly' || tab === 'trends') ? tab : 'trends'
+  })
   
   // Common loading states
   const [loading, setLoading] = useState(true)
@@ -682,7 +689,10 @@ export default function ReportsPage() {
         <div className="mb-8">
           <div className="bg-white rounded-xl shadow-sm p-1 inline-flex">
             <button
-              onClick={() => setActiveTab('trends')}
+              onClick={() => {
+                setActiveTab('trends')
+                router.push('/reports?tab=trends', { scroll: false })
+              }}
               className={`px-6 py-3 rounded-lg font-medium transition-all ${
                 activeTab === 'trends'
                   ? 'bg-purple-400 text-white shadow-sm'
@@ -692,7 +702,10 @@ export default function ReportsPage() {
               趨勢觀測
             </button>
             <button
-              onClick={() => setActiveTab('monthly')}
+              onClick={() => {
+                setActiveTab('monthly')
+                router.push('/reports?tab=monthly', { scroll: false })
+              }}
               className={`px-6 py-3 rounded-lg font-medium transition-all ${
                 activeTab === 'monthly'
                   ? 'bg-purple-400 text-white shadow-sm'
