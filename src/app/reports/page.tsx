@@ -25,20 +25,30 @@ interface CategoryData {
 }
 
 export default function ReportsPage() {
-  const [salesData, setSalesData] = useState<MonthlySalesData[]>([])
-  const [discountData, setDiscountData] = useState<DiscountData[]>([])
+  // Tab state
+  const [activeTab, setActiveTab] = useState<'trends' | 'monthly'>('trends')
+  
+  // Common loading states
   const [loading, setLoading] = useState(true)
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [lastRefreshTime, setLastRefreshTime] = useState<Date | null>(null)
+  
+  // Trends tab data (all time data - no filtering)
+  const [salesData, setSalesData] = useState<MonthlySalesData[]>([])
+  const [discountData, setDiscountData] = useState<DiscountData[]>([])
+  
+  // Monthly tab data (filtered by selected month)
   const [selectedMonth, setSelectedMonth] = useState<string>(() => {
     const currentDate = new Date()
     return `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`
   })
+  const [monthlyCategoryData, setMonthlyCategoryData] = useState<CategoryData[]>([])
+  const [monthlySmallCategoryData, setMonthlySmallCategoryData] = useState<CategoryData[]>([])
+
+  // Cache for trends data
   const [cachedData, setCachedData] = useState<{
     salesData?: MonthlySalesData[]
     discountData?: DiscountData[]
-    categoryData?: CategoryData[]
-    smallCategoryData?: CategoryData[]
     timestamp?: Date
   }>({})
 
@@ -48,19 +58,16 @@ export default function ReportsPage() {
     '#FFCFD2', // 蜜瓜粉
     '#98F5E1', // 薄荷綠
     '#A3C4F3', // 長春花藍
-    '#FDE4CF', // 淺鹿色
-    '#8EECF5', // 海藍綠
-    '#F1C0E8', // 薰衣草粉
-    '#B9FBC0', // 茶綠色
-    '#CFBAF0', // 淺紫色
-    '#FBF8CC'  // 檸檬黃
+    '#CFBCF2', // 淡紫色
+    '#A8E6CF', // 水綠色
+    '#FFE5CC', // 淺桃色
+    '#B5E7A0', // 茶綠色
+    '#D7A3D7', // 淡紫羅蘭
+    '#FFFACD'  // 檸檬薄荷色
   ]
 
-  useEffect(() => {
-    fetchAllData()
-  }, [])
-
-  const fetchAllData = useCallback(async (forceRefresh = false) => {
+  // Fetch trends data (used for 趨勢觀測 tab)
+  const fetchTrendsData = useCallback(async (forceRefresh = false) => {
     const now = new Date()
     const cacheExpireTime = 5 * 60 * 1000 // 5分鐘緩存
     
@@ -75,19 +82,15 @@ export default function ReportsPage() {
     if (forceRefresh) {
       setIsRefreshing(true)
     }
-    
+
     try {
-      const [salesResponse, discountResponse, categoryResponse, smallCategoryResponse] = await Promise.all([
+      const [salesResponse, discountResponse] = await Promise.all([
         fetch('/api/reports/monthly-sales'),
-        fetch('/api/reports/discount-trends'),
-        fetch('/api/reports/category-distribution'),
-        fetch('/api/reports/small-category-distribution')
+        fetch('/api/reports/discount-trends')
       ])
 
       let newSalesData: MonthlySalesData[] = []
       let newDiscountData: DiscountData[] = []
-      let newCategoryData: CategoryData[] = []
-      let newSmallCategoryData: CategoryData[] = []
 
       if (salesResponse.ok) {
         const salesResult = await salesResponse.json()
@@ -101,38 +104,23 @@ export default function ReportsPage() {
         setDiscountData(newDiscountData)
       }
 
-      if (categoryResponse.ok) {
-        const categoryResult = await categoryResponse.json()
-        newCategoryData = categoryResult.data || categoryResult
-      }
-
-      if (smallCategoryResponse.ok) {
-        const smallCategoryResult = await smallCategoryResponse.json()
-        newSmallCategoryData = smallCategoryResult.data || smallCategoryResult
-      }
-
       // 更新緩存
       setCachedData({
         salesData: newSalesData,
         discountData: newDiscountData,
-        categoryData: newCategoryData,
-        smallCategoryData: newSmallCategoryData,
         timestamp: now
       })
-      
+
       setLastRefreshTime(now)
     } catch (error) {
-      console.error('取得報表資料失敗:', error)
+      console.error('獲取趨勢資料失敗:', error)
     } finally {
       setLoading(false)
       setIsRefreshing(false)
     }
   }, [cachedData])
 
-  // Fetch category data for selected month
-  const [monthlyCategoryData, setMonthlyCategoryData] = useState<CategoryData[]>([])
-  const [monthlySmallCategoryData, setMonthlySmallCategoryData] = useState<CategoryData[]>([])
-
+  // Fetch monthly category data (used for 當月數字 tab)
   const fetchMonthlyCategoryData = useCallback(async (month: string) => {
     try {
       const [categoryResponse, smallCategoryResponse] = await Promise.all([
@@ -160,19 +148,101 @@ export default function ReportsPage() {
     }
   }, [])
 
+  // Initial data fetch and setup
+  useEffect(() => {
+    fetchTrendsData()
+  }, [fetchTrendsData])
+
   // Fetch category data when selected month changes
   useEffect(() => {
-    if (selectedMonth) {
+    if (activeTab === 'monthly') {
       fetchMonthlyCategoryData(selectedMonth)
     }
-  }, [selectedMonth, fetchMonthlyCategoryData])
+  }, [selectedMonth, activeTab, fetchMonthlyCategoryData])
 
+  // Refresh handler
+  const handleRefresh = () => {
+    if (activeTab === 'trends') {
+      fetchTrendsData(true)
+    } else {
+      fetchMonthlyCategoryData(selectedMonth)
+    }
+  }
+
+  // Generate SVG pie chart
+  const generatePieChart = (data: CategoryData[], size: number = 200) => {
+    if (!data || data.length === 0) return null
+
+    // 如果超過9個分類，將第9名之後的合併成「其他」
+    let chartData = [...data]
+    if (chartData.length > 9) {
+      const top8 = chartData.slice(0, 8)
+      const others = chartData.slice(8)
+      const othersAmount = others.reduce((sum, item) => sum + item.amount, 0)
+      const othersPercentage = others.reduce((sum, item) => sum + item.percentage, 0)
+      
+      chartData = [
+        ...top8,
+        {
+          category: '其他',
+          amount: othersAmount,
+          percentage: Math.round(othersPercentage * 10) / 10
+        }
+      ]
+    }
+
+    const radius = size / 2 - 10
+    const centerX = size / 2
+    const centerY = size / 2
+    
+    let currentAngle = 0
+    
+    return (
+      <svg width={size} height={size} className="drop-shadow-sm">
+        {chartData.map((item, index) => {
+          const percentage = item.percentage
+          const angle = (percentage / 100) * 360
+          const startAngle = currentAngle
+          const endAngle = currentAngle + angle
+          
+          const x1 = centerX + radius * Math.cos((startAngle - 90) * Math.PI / 180)
+          const y1 = centerY + radius * Math.sin((startAngle - 90) * Math.PI / 180)
+          const x2 = centerX + radius * Math.cos((endAngle - 90) * Math.PI / 180)
+          const y2 = centerY + radius * Math.sin((endAngle - 90) * Math.PI / 180)
+          
+          const largeArcFlag = angle > 180 ? 1 : 0
+          
+          const pathData = [
+            `M ${centerX} ${centerY}`,
+            `L ${x1} ${y1}`,
+            `A ${radius} ${radius} 0 ${largeArcFlag} 1 ${x2} ${y2}`,
+            'Z'
+          ].join(' ')
+          
+          currentAngle += angle
+          
+          return (
+            <path
+              key={item.category}
+              d={pathData}
+              fill={chartColors[index % chartColors.length]}
+              className="hover:opacity-80 transition-opacity cursor-pointer"
+            >
+              <title>{`${item.category}: NT$ ${item.amount.toLocaleString()} (${item.percentage}%)`}</title>
+            </path>
+          )
+        })}
+      </svg>
+    )
+  }
+
+  // Loading state
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-6xl mx-auto">
           <div className="text-center">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-4 shadow-lg animate-pulse" style={{ backgroundColor: '#A3C4F3' }}>
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-purple-400 rounded-2xl mb-4 shadow-lg animate-pulse">
               <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
               </svg>
@@ -183,13 +253,6 @@ export default function ReportsPage() {
       </div>
     )
   }
-
-  // 商品品項數圖表顯示所有月份資料（從當月往回推13個月）
-  const filteredSalesData = salesData
-  
-  // Use monthly fetched category data
-  const filteredCategoryData = monthlyCategoryData
-  const filteredSmallCategoryData = monthlySmallCategoryData
 
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
@@ -215,540 +278,296 @@ export default function ReportsPage() {
               </div>
               <div>
                 <h1 className="text-3xl font-bold text-gray-800">
-                  銷售報表
+                  報表管理
                 </h1>
-                <p className="text-gray-600 mt-1">追蹤你的餐廳業績表現</p>
+                <p className="text-gray-600 mt-1">數據分析與報表檢視</p>
               </div>
             </div>
             
-            {/* 緩存狀態和手動刷新按鈕 */}
-            <div className="flex items-center space-x-4">
-              {lastRefreshTime && (
-                <div className="text-sm text-gray-500">
-                  <p>上次更新：{lastRefreshTime.toLocaleTimeString('zh-TW')}</p>
-                  <p className="text-xs">數據緩存5分鐘</p>
-                </div>
-              )}
-              <button 
-                onClick={() => fetchAllData(true)}
-                disabled={isRefreshing}
-                className="group inline-flex items-center px-4 py-2 bg-pink-400 text-white rounded-xl hover:shadow-lg transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+            <button
+              onClick={handleRefresh}
+              disabled={isRefreshing}
+              className="inline-flex items-center px-4 py-2 bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+            >
+              <svg 
+                className={`w-4 h-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} 
+                fill="none" 
+                stroke="currentColor" 
+                viewBox="0 0 24 24"
               >
-                <svg className={`w-4 h-4 mr-2 transition-transform duration-300 ${isRefreshing ? 'animate-spin' : 'group-hover:rotate-180'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                </svg>
-                <span className="text-sm font-semibold">
-                  {isRefreshing ? '更新中...' : '更新數據'}
-                </span>
-              </button>
-            </div>
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              {isRefreshing ? '更新中...' : '刷新資料'}
+            </button>
           </div>
         </div>
 
-        {/* 報表圖表區域 */}
-        <div className="space-y-8 mb-8">
-          {/* 1. 月銷售金額趨勢圖 */}
-          <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-lg">
-            <div className="flex items-center space-x-3 mb-6">
-              <div className="w-10 h-10 bg-pink-400 rounded-xl flex items-center justify-center">
-                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-                </svg>
-              </div>
-              <h2 className="text-xl font-bold text-gray-900">月銷售金額</h2>
-            </div>
-            
-            {salesData.length > 0 ? (
-              <div className="h-80">
-                <div className="flex items-end justify-between h-64 px-2 py-4 space-x-1">
-                  {salesData.slice().reverse().map((item, index) => {
-                    const maxAmount = Math.max(...salesData.map(s => s.amount))
-                    const height = maxAmount > 0 ? (item.amount / maxAmount) * 240 : 0
-                    
-                    return (
-                      <div key={index} className="flex flex-col items-center flex-1 group">
-                        <div 
-                          className="w-full rounded-t-sm transition-all duration-300 relative"
-                          style={{ 
-                            height: `${height}px`,
-                            backgroundColor: '#FFCFD2'
-                          }}
-                        >
-                          <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 text-gray-900 text-xs font-medium whitespace-nowrap">
-                            {Math.round(item.amount).toLocaleString()}
-                          </div>
-                        </div>
-                        <div className="text-xs text-gray-600 mt-2 transform -rotate-45 origin-left whitespace-nowrap">
-                          {item.monthDisplay}
-                        </div>
-                      </div>
-                    )
-                  })}
-                </div>
-              </div>
-            ) : (
-              <div className="text-center py-12 text-gray-500">
-                <p>暫無銷售資料</p>
-              </div>
-            )}
+        {/* Tab Navigation */}
+        <div className="mb-8">
+          <div className="bg-white rounded-xl shadow-sm p-1 inline-flex">
+            <button
+              onClick={() => setActiveTab('trends')}
+              className={`px-6 py-3 rounded-lg font-medium transition-all ${
+                activeTab === 'trends'
+                  ? 'bg-purple-400 text-white shadow-sm'
+                  : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50'
+              }`}
+            >
+              趨勢觀測
+            </button>
+            <button
+              onClick={() => setActiveTab('monthly')}
+              className={`px-6 py-3 rounded-lg font-medium transition-all ${
+                activeTab === 'monthly'
+                  ? 'bg-purple-400 text-white shadow-sm'
+                  : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50'
+              }`}
+            >
+              當月數字
+            </button>
           </div>
+        </div>
 
-          {/* 2. 平均單價趨勢圖 */}
-          <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-lg">
-            <div className="flex items-center space-x-3 mb-6">
-              <div className="w-10 h-10 bg-orange-400 rounded-xl flex items-center justify-center">
-                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
-                </svg>
-              </div>
-              <h2 className="text-xl font-bold text-gray-900">平均單價</h2>
-            </div>
-            
-            {salesData.length > 0 ? (
-              <div className="h-80">
-                <div className="flex items-end justify-between h-64 px-2 py-4 space-x-1">
-                  {salesData.slice().reverse().map((item, index) => {
-                    const maxAvg = Math.max(...salesData.map(s => s.avgOrderValue))
-                    const height = maxAvg > 0 ? (item.avgOrderValue / maxAvg) * 240 : 0
-                    
-                    return (
-                      <div key={index} className="flex flex-col items-center flex-1 group">
-                        <div 
-                          className="w-full rounded-t-sm transition-all duration-300 relative"
-                          style={{ 
-                            height: `${height}px`,
-                            backgroundColor: '#FDE4CF'
-                          }}
-                        >
-                          <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 text-gray-900 text-xs font-medium whitespace-nowrap">
-                            {Math.round(item.avgOrderValue).toLocaleString()}
-                          </div>
-                        </div>
-                        <div className="text-xs text-gray-600 mt-2 transform -rotate-45 origin-left whitespace-nowrap">
-                          {item.monthDisplay}
-                        </div>
-                      </div>
-                    )
-                  })}
-                </div>
-              </div>
-            ) : (
-              <div className="text-center py-12 text-gray-500">
-                <p>暫無平均單價資料</p>
-              </div>
-            )}
-          </div>
-
-          {/* 3. 折扣金額趨勢圖 */}
-          <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-lg">
-            <div className="flex items-center space-x-3 mb-6">
-              <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: '#FBF8CC' }}>
-                <svg className="w-5 h-5 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-                </svg>
-              </div>
-              <h2 className="text-xl font-bold text-gray-900">折扣金額</h2>
-            </div>
-            
-            {discountData.length > 0 ? (
-              <div className="h-80">
-                <div className="flex items-end justify-between h-64 px-2 py-4 space-x-1">
-                  {discountData.slice().reverse().map((item, index) => {
-                    const maxDiscount = Math.max(...discountData.map(s => s.discountAmount))
-                    const height = maxDiscount > 0 ? (item.discountAmount / maxDiscount) * 240 : 0
-                    
-                    return (
-                      <div key={index} className="flex flex-col items-center flex-1 group">
-                        <div 
-                          className="w-full rounded-t-sm transition-all duration-300 group-hover:opacity-80 relative"
-                          style={{ height: `${height}px`, backgroundColor: '#FBF8CC' }}
-                        >
-                          <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 text-gray-900 text-xs font-medium whitespace-nowrap">
-                            {Math.round(item.discountAmount).toLocaleString()}
-                          </div>
-                        </div>
-                        <div className="text-xs text-gray-600 mt-2 transform -rotate-45 origin-left whitespace-nowrap">
-                          {item.monthDisplay}
-                        </div>
-                      </div>
-                    )
-                  })}
-                </div>
-              </div>
-            ) : (
-              <div className="text-center py-12 text-gray-500">
-                <p>暫無折扣資料</p>
-              </div>
-            )}
-          </div>
-
-          {/* 4. 商品品項數趨勢圖 */}
-          <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-lg">
-            <div className="flex items-center space-x-3 mb-6">
-              <div className="w-10 h-10 bg-green-400 rounded-xl flex items-center justify-center">
-                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                </svg>
-              </div>
-              <h2 className="text-xl font-bold text-gray-900">商品品項數</h2>
-            </div>
-            
-            {filteredSalesData.length > 0 ? (
-              <div className="h-80">
-                <div className="flex items-end justify-between h-64 px-2 py-4 space-x-1">
-                  {filteredSalesData.slice().reverse().map((item, index) => {
-                    const maxItems = Math.max(...filteredSalesData.map(s => s.productItemCount))
-                    const height = maxItems > 0 ? (item.productItemCount / maxItems) * 240 : 1 // 至少1px高度以顯示條
-                    
-                    return (
-                      <div key={index} className="flex flex-col items-center flex-1 group relative">
-                        {/* 直接顯示品項數 */}
-                        <div className="text-xs font-bold text-gray-900 mb-1">
-                          {item.productItemCount}種
-                        </div>
-                        <div 
-                          className="w-full rounded-t-sm transition-all duration-300"
-                          style={{ 
-                            height: `${height}px`, 
-                            backgroundColor: '#A7F3D0' // mint_green
-                          }}
-                        />
-                        <div className="text-xs text-gray-600 mt-2 text-center">
-                          {item.monthDisplay}
-                        </div>
-                      </div>
-                    )
-                  })}
-                </div>
-                
-                {/* Y軸標籤 */}
-                <div className="flex justify-between text-sm text-gray-600 mt-4">
-                  <span>時間軸</span>
-                  <span>商品品項數量</span>
-                </div>
-              </div>
-            ) : (
-              <div className="text-center py-12 text-gray-500">
-                <p>暫無商品品項數資料</p>
-              </div>
-            )}
-          </div>
-
-          {/* 5. 月份篩選器 */}
-          <div className="bg-white/70 backdrop-blur-sm border border-white/50 rounded-2xl p-6 shadow-lg">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-blue-400 rounded-xl flex items-center justify-center">
-                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+        {/* Trends Tab Content */}
+        {activeTab === 'trends' && (
+          <div className="space-y-8">
+            {/* 月銷售統計 */}
+            <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
+              <div className="flex items-center space-x-3 mb-6">
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: '#90DBF4' }}>
+                  <svg className="w-5 h-5 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                   </svg>
                 </div>
-                <h2 className="text-xl font-bold text-gray-900">月份篩選</h2>
+                <h2 className="text-xl font-bold text-gray-900">月銷售統計</h2>
               </div>
-              
-              <div className="flex items-center space-x-3">
-                <label htmlFor="month-select" className="text-sm font-medium text-gray-700">
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+                {salesData.slice(-12).map((item, index) => (
+                  <div key={item.month} className="bg-gray-50 rounded-xl p-4 hover:bg-gray-100 transition-colors">
+                    <div className="text-sm font-medium text-gray-600 mb-1">{item.monthDisplay}</div>
+                    <div className="text-lg font-bold text-gray-900">
+                      {item.amount.toLocaleString()}
+                    </div>
+                    <div className="text-xs text-gray-500 mt-1">
+                      {item.orderCount} 筆訂單
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* 平均單價統計 */}
+            <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
+              <div className="flex items-center space-x-3 mb-6">
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: '#FFCFD2' }}>
+                  <svg className="w-5 h-5 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                  </svg>
+                </div>
+                <h2 className="text-xl font-bold text-gray-900">平均單價統計</h2>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+                {salesData.slice(-12).map((item, index) => (
+                  <div key={item.month} className="bg-gray-50 rounded-xl p-4 hover:bg-gray-100 transition-colors">
+                    <div className="text-sm font-medium text-gray-600 mb-1">{item.monthDisplay}</div>
+                    <div className="text-lg font-bold text-gray-900">
+                      {item.avgOrderValue.toLocaleString()}
+                    </div>
+                    <div className="text-xs text-gray-500 mt-1">
+                      平均單價
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* 折扣金額統計 */}
+            <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
+              <div className="flex items-center space-x-3 mb-6">
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: '#FFFACD' }}>
+                  <svg className="w-5 h-5 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                  </svg>
+                </div>
+                <h2 className="text-xl font-bold text-gray-900">折扣金額統計</h2>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+                {discountData.slice(-12).map((item, index) => (
+                  <div key={item.month} className="bg-gray-50 rounded-xl p-4 hover:bg-gray-100 transition-colors">
+                    <div className="text-sm font-medium text-gray-600 mb-1">{item.monthDisplay}</div>
+                    <div className="text-lg font-bold text-gray-900">
+                      {item.discountAmount.toLocaleString()}
+                    </div>
+                    <div className="text-xs text-gray-500 mt-1">
+                      折扣金額
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* 商品品項數統計 */}
+            <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
+              <div className="flex items-center space-x-3 mb-6">
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: '#98F5E1' }}>
+                  <svg className="w-5 h-5 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                  </svg>
+                </div>
+                <h2 className="text-xl font-bold text-gray-900">商品品項數統計</h2>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+                {salesData.slice(-12).map((item, index) => (
+                  <div key={item.month} className="bg-gray-50 rounded-xl p-4 hover:bg-gray-100 transition-colors">
+                    <div className="text-sm font-medium text-gray-600 mb-1">{item.monthDisplay}</div>
+                    <div className="text-lg font-bold text-gray-900">
+                      {item.productItemCount}種
+                    </div>
+                    <div className="text-xs text-gray-500 mt-1">
+                      商品品項
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {lastRefreshTime && (
+              <div className="text-center text-sm text-gray-500">
+                最後更新時間：{lastRefreshTime.toLocaleString('zh-TW')}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Monthly Tab Content */}
+        {activeTab === 'monthly' && (
+          <div className="space-y-8">
+            {/* 月份篩選器 */}
+            <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
+              <div className="flex items-center space-x-4">
+                <label htmlFor="month-select" className="text-lg font-medium text-gray-700">
                   選擇月份：
                 </label>
                 <select
                   id="month-select"
                   value={selectedMonth}
                   onChange={(e) => setSelectedMonth(e.target.value)}
-                  className="px-4 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent text-gray-900 min-w-[140px]"
+                  className="px-4 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-transparent text-gray-900 min-w-[140px]"
                 >
-                  {(() => {
-                    const options = []
-                    const currentDate = new Date()
-                    const currentYear = currentDate.getFullYear()
-                    const currentMonth = currentDate.getMonth()
-                    
-                    // Generate options for last 12 months
-                    for (let i = 0; i < 12; i++) {
-                      const date = new Date(currentYear, currentMonth - i, 1)
-                      const year = date.getFullYear()
-                      const month = date.getMonth() + 1
-                      const value = `${year}-${String(month).padStart(2, '0')}`
-                      const display = `${year}年${month}月`
-                      options.push(
-                        <option key={value} value={value}>
-                          {display}
-                        </option>
-                      )
-                    }
-                    return options
-                  })()}
+                  {/* 生成最近13個月的選項 */}
+                  {Array.from({ length: 13 }, (_, i) => {
+                    const date = new Date()
+                    date.setMonth(date.getMonth() - i)
+                    const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
+                    const monthDisplay = `${date.getFullYear()}年${String(date.getMonth() + 1).padStart(2, '0')}月`
+                    return (
+                      <option key={monthKey} value={monthKey}>
+                        {monthDisplay}
+                      </option>
+                    )
+                  })}
                 </select>
               </div>
             </div>
-            <div className="mt-4 text-sm text-gray-600">
-              以下圖表將顯示所選月份的資料統計
-            </div>
-          </div>
 
-          {/* 6. 分類佔比圓餅圖 - 大分類與小分類並排 */}
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-            {/* 大分類佔比 */}
-            <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-lg">
+            {/* 大分類分布 */}
+            <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
               <div className="flex items-center space-x-3 mb-6">
-                <div className="w-10 h-10 bg-pink-400 rounded-xl flex items-center justify-center">
-                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: '#A3C4F3' }}>
+                  <svg className="w-5 h-5 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" />
                   </svg>
                 </div>
-                <h2 className="text-xl font-bold text-gray-900">大分類佔比</h2>
+                <h2 className="text-xl font-bold text-gray-900">大分類分布</h2>
               </div>
-              
-              {filteredCategoryData.length > 0 ? (
-                <div className="h-96 flex flex-col items-center">
-                  {/* 圓餅圖 */}
-                  <div className="relative w-64 h-64 mb-4">
-                    <svg width="256" height="256" className="transform -rotate-90">
-                      {(() => {
-                        let currentAngle = 0
-                        const radius = 110
-                        const centerX = 128
-                        const centerY = 128
-                        
-                        return filteredCategoryData.slice(0, 8).map((item, index) => {
-                          const angle = (item.percentage / 100) * 360
-                          const startAngle = currentAngle
-                          const endAngle = currentAngle + angle
-                          currentAngle += angle
-                          
-                          const startAngleRad = (startAngle * Math.PI) / 180
-                          const endAngleRad = (endAngle * Math.PI) / 180
-                          
-                          const x1 = centerX + radius * Math.cos(startAngleRad)
-                          const y1 = centerY + radius * Math.sin(startAngleRad)
-                          const x2 = centerX + radius * Math.cos(endAngleRad)
-                          const y2 = centerY + radius * Math.sin(endAngleRad)
-                          
-                          const largeArcFlag = angle > 180 ? 1 : 0
-                          
-                          const pathData = `M ${centerX} ${centerY} L ${x1} ${y1} A ${radius} ${radius} 0 ${largeArcFlag} 1 ${x2} ${y2} Z`
-                          
-                          return (
-                            <g key={index}>
-                              <path
-                                d={pathData}
-                                fill={chartColors[index % chartColors.length]}
-                                stroke="white"
-                                strokeWidth="2"
-                                className="hover:opacity-80 transition-opacity cursor-pointer"
-                              />
-                              <title>
-                                {item.category}: {Math.round(item.amount).toLocaleString()} ({item.percentage.toFixed(1)}%)
-                              </title>
-                            </g>
-                          )
-                        })
-                      })()}
-                    </svg>
-                  </div>
-                  
-                  {/* 圖例 */}
-                  <div className="w-full">
-                    <div className="space-y-1 max-h-32 overflow-y-auto">
-                      {filteredCategoryData.slice(0, 8).map((item, index) => (
-                        <div key={index} className="flex justify-between items-center p-1 bg-gray-50 rounded text-xs">
-                          <div className="flex items-center space-x-2">
-                            <div 
-                              className="w-2 h-2 rounded-full"
-                              style={{ backgroundColor: chartColors[index % chartColors.length] }}
-                            ></div>
-                            <span className="font-medium text-gray-700">{item.category}</span>
-                          </div>
-                          <div className="text-right">
-                            <div className="text-xs text-gray-600">{Math.round(item.amount).toLocaleString()}</div>
-                            <span className="font-bold text-gray-900">{item.percentage.toFixed(1)}%</span>
+
+              <div className="flex flex-col lg:flex-row items-center lg:items-start space-y-6 lg:space-y-0 lg:space-x-8">
+                <div className="flex-shrink-0">
+                  {generatePieChart(monthlyCategoryData, 260)}
+                </div>
+                
+                <div className="flex-1 min-w-0">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {monthlyCategoryData.map((item, index) => (
+                      <div
+                        key={item.category}
+                        className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors"
+                      >
+                        <div
+                          className="w-4 h-4 rounded-full flex-shrink-0"
+                          style={{ backgroundColor: chartColors[index % chartColors.length] }}
+                        />
+                        <div className="flex-1 min-w-0">
+                          <div className="font-medium text-gray-900 truncate">{item.category}</div>
+                          <div className="text-sm text-gray-600">
+                            {item.amount.toLocaleString()} ({item.percentage}%)
                           </div>
                         </div>
-                      ))}
-                    </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
-              ) : (
-                <div className="text-center py-12 text-gray-500">
-                  <p>暫無大分類資料</p>
-                </div>
-              )}
+              </div>
             </div>
 
-            {/* 小分類佔比 */}
-            <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-lg">
+            {/* 小分類分布 */}
+            <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
               <div className="flex items-center space-x-3 mb-6">
-                <div className="w-10 h-10 bg-pink-400 rounded-xl flex items-center justify-center">
-                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: '#CFBCF2' }}>
+                  <svg className="w-5 h-5 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" />
                   </svg>
                 </div>
-                <h2 className="text-xl font-bold text-gray-900">小分類佔比</h2>
+                <h2 className="text-xl font-bold text-gray-900">小分類分布</h2>
               </div>
-              
-              {filteredSmallCategoryData.length > 0 ? (
-                <div className="h-96 flex flex-col items-center">
-                  {/* 圓餅圖 */}
-                  <div className="relative w-64 h-64 mb-4">
-                    <svg width="256" height="256" className="transform -rotate-90">
-                      {(() => {
-                        // 處理數據：取前8名，其餘合併為「其他」
-                        let processedData = [...filteredSmallCategoryData]
-                        if (processedData.length > 9) {
-                          const top8 = processedData.slice(0, 8)
-                          const others = processedData.slice(8)
-                          const othersTotal = others.reduce((sum, item) => sum + item.amount, 0)
-                          const othersPercentage = others.reduce((sum, item) => sum + item.percentage, 0)
-                          
-                          processedData = [
-                            ...top8,
-                            {
-                              category: '其他',
-                              amount: othersTotal,
-                              percentage: othersPercentage
-                            }
-                          ]
-                        }
-                        
-                        let currentAngle = 0
-                        const radius = 110
-                        const centerX = 128
-                        const centerY = 128
-                        
-                        return processedData.map((item, index) => {
-                          const angle = (item.percentage / 100) * 360
-                          const startAngle = currentAngle
-                          const endAngle = currentAngle + angle
-                          currentAngle += angle
-                          
-                          const startAngleRad = (startAngle * Math.PI) / 180
-                          const endAngleRad = (endAngle * Math.PI) / 180
-                          
-                          const x1 = centerX + radius * Math.cos(startAngleRad)
-                          const y1 = centerY + radius * Math.sin(startAngleRad)
-                          const x2 = centerX + radius * Math.cos(endAngleRad)
-                          const y2 = centerY + radius * Math.sin(endAngleRad)
-                          
-                          const largeArcFlag = angle > 180 ? 1 : 0
-                          
-                          const pathData = `M ${centerX} ${centerY} L ${x1} ${y1} A ${radius} ${radius} 0 ${largeArcFlag} 1 ${x2} ${y2} Z`
-                          
-                          return (
-                            <g key={index}>
-                              <path
-                                d={pathData}
-                                fill={chartColors[index % chartColors.length]}
-                                stroke="white"
-                                strokeWidth="2"
-                                className="hover:opacity-80 transition-opacity cursor-pointer"
-                              />
-                              <title>
-                                {item.category}: {Math.round(item.amount).toLocaleString()} ({item.percentage.toFixed(1)}%)
-                              </title>
-                            </g>
-                          )
-                        })
-                      })()}
-                    </svg>
-                  </div>
-                  
-                  {/* 圖例 */}
-                  <div className="w-full">
-                    <div className="space-y-1 max-h-32 overflow-y-auto">
-                      {(() => {
-                        // 處理數據：取前8名，其餘合併為「其他」
-                        let processedData = [...filteredSmallCategoryData]
-                        if (processedData.length > 9) {
-                          const top8 = processedData.slice(0, 8)
-                          const others = processedData.slice(8)
-                          const othersTotal = others.reduce((sum, item) => sum + item.amount, 0)
-                          const othersPercentage = others.reduce((sum, item) => sum + item.percentage, 0)
-                          
-                          processedData = [
-                            ...top8,
-                            {
-                              category: '其他',
-                              amount: othersTotal,
-                              percentage: othersPercentage
-                            }
-                          ]
-                        }
-                        
-                        return processedData.map((item, index) => (
-                        <div key={index} className="flex justify-between items-center p-1 bg-gray-50 rounded text-xs">
-                          <div className="flex items-center space-x-2">
-                            <div 
-                              className="w-2 h-2 rounded-full"
-                              style={{ backgroundColor: chartColors[index % chartColors.length] }}
-                            ></div>
-                            <span className="font-medium text-gray-700">{item.category}</span>
-                          </div>
-                          <div className="text-right">
-                            <div className="text-xs text-gray-600">{Math.round(item.amount).toLocaleString()}</div>
-                            <span className="font-bold text-gray-900">{item.percentage.toFixed(1)}%</span>
+
+              <div className="flex flex-col lg:flex-row items-center lg:items-start space-y-6 lg:space-y-0 lg:space-x-8">
+                <div className="flex-shrink-0">
+                  {generatePieChart(monthlySmallCategoryData, 260)}
+                </div>
+                
+                <div className="flex-1 min-w-0">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {monthlySmallCategoryData.slice(0, 9).map((item, index) => (
+                      <div
+                        key={item.category}
+                        className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors"
+                      >
+                        <div
+                          className="w-4 h-4 rounded-full flex-shrink-0"
+                          style={{ backgroundColor: chartColors[index % chartColors.length] }}
+                        />
+                        <div className="flex-1 min-w-0">
+                          <div className="font-medium text-gray-900 truncate">{item.category}</div>
+                          <div className="text-sm text-gray-600">
+                            {item.amount.toLocaleString()} ({item.percentage}%)
                           </div>
                         </div>
-                        ))
-                      })()}
-                    </div>
+                      </div>
+                    ))}
+                    {monthlySmallCategoryData.length > 9 && (
+                      <div className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors">
+                        <div
+                          className="w-4 h-4 rounded-full flex-shrink-0"
+                          style={{ backgroundColor: chartColors[8] }}
+                        />
+                        <div className="flex-1 min-w-0">
+                          <div className="font-medium text-gray-900 truncate">其他</div>
+                          <div className="text-sm text-gray-600">
+                            {monthlySmallCategoryData.slice(8).reduce((sum, item) => sum + item.amount, 0).toLocaleString()} 
+                            ({Math.round(monthlySmallCategoryData.slice(8).reduce((sum, item) => sum + item.percentage, 0) * 10) / 10}%)
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
-              ) : (
-                <div className="text-center py-12 text-gray-500">
-                  <p>暫無小分類資料</p>
-                </div>
-              )}
+              </div>
             </div>
-          </div>
-
-        </div>
-
-        {/* 操作按鈕區域 */}
-        <div className="flex flex-wrap gap-4 mb-8">
-          <Link 
-            href="/reports/categories"
-            className="group inline-flex items-center px-6 py-3 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 hover:shadow-lg transition-all duration-300 hover:scale-105"
-          >
-            <svg className="w-5 h-5 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-            </svg>
-            <span className="font-semibold text-gray-900 group-hover:text-purple-600 transition-colors">分類管理</span>
-          </Link>
-          
-          <button 
-            onClick={() => fetchAllData(true)}
-            disabled={isRefreshing}
-            className="group inline-flex items-center px-6 py-3 bg-pink-400 text-white rounded-lg hover:shadow-lg transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <svg className={`w-5 h-5 mr-2 transition-transform duration-300 ${isRefreshing ? 'animate-spin' : 'group-hover:rotate-180'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-            </svg>
-            <span className="font-semibold">
-              {isRefreshing ? '更新中...' : '重新整理'}
-            </span>
-          </button>
-        </div>
-
-        {/* 空狀態提示 */}
-        {salesData.length === 0 && (
-          <div className="bg-gray-50 border border-gray-200 rounded-2xl p-8 text-center">
-            <div className="w-16 h-16 bg-pink-400 rounded-2xl flex items-center justify-center mx-auto mb-4">
-              <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-              </svg>
-            </div>
-            <h3 className="text-xl font-bold text-gray-900 mb-2">尚無報表資料</h3>
-            <p className="text-gray-600 mb-4">
-              請先上傳 Excel 檔案來導入銷售資料，才能查看報表統計。
-            </p>
-            <Link 
-              href="/upload" 
-              className="inline-flex items-center px-6 py-3 bg-pink-400 text-white rounded-lg hover:shadow-lg transition-all duration-300 hover:scale-105"
-            >
-              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-              </svg>
-              <span className="font-semibold">立即上傳資料</span>
-            </Link>
           </div>
         )}
       </div>
