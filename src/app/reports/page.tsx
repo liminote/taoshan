@@ -24,6 +24,20 @@ interface CategoryData {
   percentage: number
 }
 
+interface PaymentData {
+  method: string
+  count: number
+  amount: number
+  percentage: number
+}
+
+interface OrderTypeData {
+  type: string
+  count: number
+  amount: number
+  percentage: number
+}
+
 interface RankingItem {
   rank: number
   name: string
@@ -50,7 +64,9 @@ export default function ReportsPage() {
   // Common loading states
   const [loading, setLoading] = useState(true)
   const [isRefreshing, setIsRefreshing] = useState(false)
+  const [isManualRefreshing, setIsManualRefreshing] = useState(false)
   const [lastRefreshTime, setLastRefreshTime] = useState<Date | null>(null)
+  const [cacheStatus, setCacheStatus] = useState<{cached: boolean; items: any[]} | null>(null)
   
   // Trends tab data (all time data - no filtering)
   const [salesData, setSalesData] = useState<MonthlySalesData[]>([])
@@ -63,6 +79,8 @@ export default function ReportsPage() {
   })
   const [monthlyCategoryData, setMonthlyCategoryData] = useState<CategoryData[]>([])
   const [monthlySmallCategoryData, setMonthlySmallCategoryData] = useState<CategoryData[]>([])
+  const [paymentData, setPaymentData] = useState<PaymentData[]>([])
+  const [orderTypeData, setOrderTypeData] = useState<OrderTypeData[]>([])
   const [rankingData, setRankingData] = useState<RankingData | null>(null)
 
   // Cache for trends data
@@ -148,9 +166,11 @@ export default function ReportsPage() {
   // Fetch monthly category data (used for 當月數字 tab)
   const fetchMonthlyCategoryData = useCallback(async (month: string) => {
     try {
-      const [categoryResponse, smallCategoryResponse, rankingResponse] = await Promise.all([
+      const [categoryResponse, smallCategoryResponse, paymentResponse, orderTypeResponse, rankingResponse] = await Promise.all([
         fetch(`/api/reports/category-distribution?month=${month}`),
         fetch(`/api/reports/small-category-distribution?month=${month}`),
+        fetch(`/api/reports/payment-distribution?month=${month}`),
+        fetch(`/api/reports/order-type-distribution?month=${month}`),
         fetch(`/api/reports/rankings?month=${month}`)
       ])
 
@@ -168,6 +188,20 @@ export default function ReportsPage() {
         setMonthlySmallCategoryData([])
       }
 
+      if (paymentResponse.ok) {
+        const paymentResult = await paymentResponse.json()
+        setPaymentData(paymentResult.data || paymentResult)
+      } else {
+        setPaymentData([])
+      }
+
+      if (orderTypeResponse.ok) {
+        const orderTypeResult = await orderTypeResponse.json()
+        setOrderTypeData(orderTypeResult.data || orderTypeResult)
+      } else {
+        setOrderTypeData([])
+      }
+
       if (rankingResponse.ok) {
         const rankingResult = await rankingResponse.json()
         setRankingData(rankingResult.data || null)
@@ -178,6 +212,8 @@ export default function ReportsPage() {
       console.error('獲取月份分類資料失敗:', error)
       setMonthlyCategoryData([])
       setMonthlySmallCategoryData([])
+      setPaymentData([])
+      setOrderTypeData([])
       setRankingData(null)
     }
   }, [])
@@ -194,7 +230,45 @@ export default function ReportsPage() {
     }
   }, [selectedMonth, activeTab, fetchMonthlyCategoryData])
 
-  // Refresh handler
+  // Manual cache refresh handler
+  const handleManualRefresh = async () => {
+    setIsManualRefreshing(true)
+    try {
+      const response = await fetch('/api/cache/refresh', { method: 'POST' })
+      const result = await response.json()
+      
+      if (result.success) {
+        // 清除本地狀態，強制重新載入
+        setSalesData([])
+        setDiscountData([])
+        setMonthlyCategoryData([])
+        setMonthlySmallCategoryData([])
+        setPaymentData([])
+        setOrderTypeData([])
+        setRankingData(null)
+        setCachedData({})
+        
+        // 重新載入當前標籤頁的資料
+        if (activeTab === 'trends') {
+          await fetchTrendsData(true)
+        } else {
+          await fetchMonthlyCategoryData(selectedMonth)
+        }
+        
+        setLastRefreshTime(new Date())
+        alert('✅ 資料已更新！所有報表資料已刷新為最新版本。')
+      } else {
+        alert('❌ 更新失敗：' + (result.error || '未知錯誤'))
+      }
+    } catch (error) {
+      console.error('手動刷新失敗:', error)
+      alert('❌ 更新失敗：網路錯誤')
+    } finally {
+      setIsManualRefreshing(false)
+    }
+  }
+
+  // Quick refresh handler (original)
   const handleRefresh = () => {
     if (activeTab === 'trends') {
       fetchTrendsData(true)
@@ -202,6 +276,20 @@ export default function ReportsPage() {
       fetchMonthlyCategoryData(selectedMonth)
     }
   }
+
+  // Check cache status on load
+  useEffect(() => {
+    const checkCacheStatus = async () => {
+      try {
+        const response = await fetch('/api/cache/refresh')
+        const result = await response.json()
+        setCacheStatus(result)
+      } catch (error) {
+        console.error('檢查快取狀態失敗:', error)
+      }
+    }
+    checkCacheStatus()
+  }, [])
 
   // Generate SVG bar chart for trends
   const generateBarChart = (data: MonthlySalesData[] | DiscountData[], dataKey: string, height: number = 200, color: string) => {
@@ -341,6 +429,104 @@ export default function ReportsPage() {
     )
   }
 
+  // Generate SVG pie chart for payment methods
+  const generatePaymentPieChart = (data: PaymentData[], size: number = 200) => {
+    if (!data || data.length === 0) return null
+
+    const radius = size / 2 - 10
+    const centerX = size / 2
+    const centerY = size / 2
+    
+    let currentAngle = 0
+    
+    return (
+      <svg width={size} height={size} className="drop-shadow-sm">
+        {data.map((item, index) => {
+          const percentage = item.percentage
+          const angle = (percentage / 100) * 360
+          const startAngle = currentAngle
+          const endAngle = currentAngle + angle
+          
+          const x1 = centerX + radius * Math.cos((startAngle - 90) * Math.PI / 180)
+          const y1 = centerY + radius * Math.sin((startAngle - 90) * Math.PI / 180)
+          const x2 = centerX + radius * Math.cos((endAngle - 90) * Math.PI / 180)
+          const y2 = centerY + radius * Math.sin((endAngle - 90) * Math.PI / 180)
+          
+          const largeArcFlag = angle > 180 ? 1 : 0
+          
+          const pathData = [
+            `M ${centerX} ${centerY}`,
+            `L ${x1} ${y1}`,
+            `A ${radius} ${radius} 0 ${largeArcFlag} 1 ${x2} ${y2}`,
+            'Z'
+          ].join(' ')
+          
+          currentAngle += angle
+          
+          return (
+            <path
+              key={item.method}
+              d={pathData}
+              fill={chartColors[index % chartColors.length]}
+              className="hover:opacity-80 transition-opacity cursor-pointer"
+            >
+              <title>{`${item.method}: ${item.count} 筆 (${item.percentage}%)`}</title>
+            </path>
+          )
+        })}
+      </svg>
+    )
+  }
+
+  // Generate SVG pie chart for order types
+  const generateOrderTypePieChart = (data: OrderTypeData[], size: number = 200) => {
+    if (!data || data.length === 0) return null
+
+    const radius = size / 2 - 10
+    const centerX = size / 2
+    const centerY = size / 2
+    
+    let currentAngle = 0
+    
+    return (
+      <svg width={size} height={size} className="drop-shadow-sm">
+        {data.map((item, index) => {
+          const percentage = item.percentage
+          const angle = (percentage / 100) * 360
+          const startAngle = currentAngle
+          const endAngle = currentAngle + angle
+          
+          const x1 = centerX + radius * Math.cos((startAngle - 90) * Math.PI / 180)
+          const y1 = centerY + radius * Math.sin((startAngle - 90) * Math.PI / 180)
+          const x2 = centerX + radius * Math.cos((endAngle - 90) * Math.PI / 180)
+          const y2 = centerY + radius * Math.sin((endAngle - 90) * Math.PI / 180)
+          
+          const largeArcFlag = angle > 180 ? 1 : 0
+          
+          const pathData = [
+            `M ${centerX} ${centerY}`,
+            `L ${x1} ${y1}`,
+            `A ${radius} ${radius} 0 ${largeArcFlag} 1 ${x2} ${y2}`,
+            'Z'
+          ].join(' ')
+          
+          currentAngle += angle
+          
+          return (
+            <path
+              key={item.type}
+              d={pathData}
+              fill={chartColors[index % chartColors.length]}
+              className="hover:opacity-80 transition-opacity cursor-pointer"
+            >
+              <title>{`${item.type}: ${item.count} 筆 (${item.percentage}%)`}</title>
+            </path>
+          )
+        })}
+      </svg>
+    )
+  }
+
   // Generate SVG pie chart
   const generatePieChart = (data: CategoryData[], size: number = 200) => {
     if (!data || data.length === 0) return null
@@ -456,21 +642,39 @@ export default function ReportsPage() {
               </div>
             </div>
             
-            <button
-              onClick={handleRefresh}
-              disabled={isRefreshing}
-              className="inline-flex items-center px-4 py-2 bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
-            >
-              <svg 
-                className={`w-4 h-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} 
-                fill="none" 
-                stroke="currentColor" 
-                viewBox="0 0 24 24"
+            <div className="flex space-x-3">
+              <button
+                onClick={handleRefresh}
+                disabled={isRefreshing}
+                className="inline-flex items-center px-4 py-2 bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
               >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-              </svg>
-              {isRefreshing ? '更新中...' : '刷新資料'}
-            </button>
+                <svg 
+                  className={`w-4 h-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} 
+                  fill="none" 
+                  stroke="currentColor" 
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                {isRefreshing ? '重新載入...' : '重新載入'}
+              </button>
+              
+              <button
+                onClick={handleManualRefresh}
+                disabled={isManualRefreshing}
+                className="inline-flex items-center px-4 py-2 bg-purple-500 text-white rounded-xl shadow-sm hover:shadow-md transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+              >
+                <svg 
+                  className={`w-4 h-4 mr-2 ${isManualRefreshing ? 'animate-spin' : ''}`} 
+                  fill="none" 
+                  stroke="currentColor" 
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4-4m0 0L8 8m4-4v12" />
+                </svg>
+                {isManualRefreshing ? '更新資料中...' : '更新最新資料'}
+              </button>
+            </div>
           </div>
         </div>
 
@@ -688,6 +892,89 @@ export default function ReportsPage() {
                         </div>
                       </div>
                     )}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* 支付方式和訂單類型分布 */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {/* 支付方式分布 */}
+              <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
+                <div className="flex items-center space-x-3 mb-6">
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: '#A8E6CF' }}>
+                    <svg className="w-5 h-5 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                    </svg>
+                  </div>
+                  <h2 className="text-xl font-bold text-gray-900">支付方式</h2>
+                </div>
+
+                <div className="flex flex-col lg:flex-row items-center lg:items-start space-y-6 lg:space-y-0 lg:space-x-8">
+                  <div className="flex-shrink-0">
+                    {generatePaymentPieChart(paymentData, 200)}
+                  </div>
+                  
+                  <div className="flex-1 min-w-0">
+                    <div className="space-y-3">
+                      {paymentData.map((item, index) => (
+                        <div
+                          key={item.method}
+                          className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors"
+                        >
+                          <div
+                            className="w-4 h-4 rounded-full flex-shrink-0"
+                            style={{ backgroundColor: chartColors[index % chartColors.length] }}
+                          />
+                          <div className="flex-1 min-w-0">
+                            <div className="font-medium text-gray-900">{item.method}</div>
+                            <div className="text-sm text-gray-600">
+                              {formatNumber(item.count)} 筆 ({item.percentage}%)
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* 訂單類型分布 */}
+              <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
+                <div className="flex items-center space-x-3 mb-6">
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: '#B5E7A0' }}>
+                    <svg className="w-5 h-5 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                    </svg>
+                  </div>
+                  <h2 className="text-xl font-bold text-gray-900">訂單類型</h2>
+                </div>
+
+                <div className="flex flex-col lg:flex-row items-center lg:items-start space-y-6 lg:space-y-0 lg:space-x-8">
+                  <div className="flex-shrink-0">
+                    {generateOrderTypePieChart(orderTypeData, 200)}
+                  </div>
+                  
+                  <div className="flex-1 min-w-0">
+                    <div className="space-y-3">
+                      {orderTypeData.map((item, index) => (
+                        <div
+                          key={item.type}
+                          className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors"
+                        >
+                          <div
+                            className="w-4 h-4 rounded-full flex-shrink-0"
+                            style={{ backgroundColor: chartColors[index % chartColors.length] }}
+                          />
+                          <div className="flex-1 min-w-0">
+                            <div className="font-medium text-gray-900">{item.type}</div>
+                            <div className="text-sm text-gray-600">
+                              {formatNumber(item.count)} 筆 ({item.percentage}%)
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
               </div>

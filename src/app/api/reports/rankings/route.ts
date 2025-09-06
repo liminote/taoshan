@@ -1,11 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { reportCache, CACHE_KEYS } from '@/lib/cache'
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
     const month = searchParams.get('month') || new Date().toISOString().slice(0, 7) // 默認當月 YYYY-MM
 
-    console.log('🔍 獲取排名資料，月份:', month)
+    // 檢查快取
+    const cacheKey = `${CACHE_KEYS.RANKINGS}_${month}`
+    const cachedData = reportCache.get(cacheKey)
+    if (cachedData) {
+      console.log('📋 使用快取的排名資料，月份:', month)
+      return NextResponse.json({
+        success: true,
+        month,
+        data: cachedData,
+        cached: true,
+        cacheTimestamp: reportCache.getTimestamp(cacheKey)
+      })
+    }
+
+    console.log('⚠️ 無快取資料，執行即時計算，月份:', month)
 
     // 使用 Google Sheets 資料來源
     const productSheetUrl = 'https://docs.google.com/spreadsheets/d/1GeRbtCX_oHJBooYvZeRbREaSxJ4r8P8QoL-vHiSz2eo/export?format=csv&gid=0'
@@ -161,15 +176,22 @@ export async function GET(request: NextRequest) {
     console.log(`- 銷額排名: ${amountRanking.length} 項`) 
     console.log(`- 酒水排名: ${alcoholRanking.length} 項`)
 
+    const resultData = {
+      quantityRanking,
+      amountRanking,
+      alcoholRanking,
+      totals
+    }
+
+    // 儲存到快取
+    reportCache.set(cacheKey, resultData)
+
     return NextResponse.json({
       success: true,
       month,
-      data: {
-        quantityRanking,
-        amountRanking,
-        alcoholRanking,
-        totals
-      }
+      data: resultData,
+      cached: false,
+      computed: true
     })
 
   } catch (error) {

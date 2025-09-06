@@ -1,7 +1,21 @@
 import { NextResponse } from 'next/server'
+import { reportCache, CACHE_KEYS } from '@/lib/cache'
 
 export async function GET() {
   try {
+    // 先檢查快取
+    const cachedData = reportCache.get(CACHE_KEYS.MONTHLY_SALES)
+    if (cachedData) {
+      console.log('📋 使用快取的月銷售資料')
+      return NextResponse.json({
+        success: true,
+        data: cachedData,
+        cached: true,
+        cacheTimestamp: reportCache.getTimestamp(CACHE_KEYS.MONTHLY_SALES)
+      })
+    }
+
+    console.log('⚠️ 無快取資料，執行即時計算...')
     // 生成包含所有實際資料的月份，然後取最近13個月
     const allMonths = []
     // 生成從2023-09到2025-08的所有月份
@@ -156,9 +170,14 @@ export async function GET() {
       productItemCount: monthlyStats[month].productItemCount
     }))
 
+    // 儲存到快取
+    reportCache.set(CACHE_KEYS.MONTHLY_SALES, result)
+    
     return NextResponse.json({
       success: true,
-      data: result
+      data: result,
+      cached: false,
+      computed: true
     })
 
   } catch (error) {
