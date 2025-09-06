@@ -189,7 +189,7 @@ async function updateGoogleSheets(rowIndex: number, values: unknown[]): Promise<
       spreadsheetId,
       range,
       valueInputOption: 'RAW',
-      resource: {
+      requestBody: {
         values: [values]
       }
     })
