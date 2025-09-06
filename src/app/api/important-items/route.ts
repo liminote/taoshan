@@ -54,7 +54,7 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const { action, data } = await request.json()
-    let importantItems = loadImportantItems()
+    const importantItems = loadImportantItems()
     
     if (action === 'add') {
       const { date, content, assignee } = data

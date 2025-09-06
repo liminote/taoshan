@@ -27,8 +27,6 @@ interface CategoryData {
 export default function ReportsPage() {
   const [salesData, setSalesData] = useState<MonthlySalesData[]>([])
   const [discountData, setDiscountData] = useState<DiscountData[]>([])
-  const [categoryData, setCategoryData] = useState<CategoryData[]>([])
-  const [smallCategoryData, setSmallCategoryData] = useState<CategoryData[]>([])
   const [loading, setLoading] = useState(true)
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [lastRefreshTime, setLastRefreshTime] = useState<Date | null>(null)
@@ -70,8 +68,6 @@ export default function ReportsPage() {
     if (!forceRefresh && cachedData.timestamp && (now.getTime() - cachedData.timestamp.getTime() < cacheExpireTime)) {
       setSalesData(cachedData.salesData || [])
       setDiscountData(cachedData.discountData || [])
-      setCategoryData(cachedData.categoryData || [])
-      setSmallCategoryData(cachedData.smallCategoryData || [])
       setLoading(false)
       return
     }
@@ -108,13 +104,11 @@ export default function ReportsPage() {
       if (categoryResponse.ok) {
         const categoryResult = await categoryResponse.json()
         newCategoryData = categoryResult.data || categoryResult
-        setCategoryData(newCategoryData)
       }
 
       if (smallCategoryResponse.ok) {
         const smallCategoryResult = await smallCategoryResponse.json()
         newSmallCategoryData = smallCategoryResult.data || smallCategoryResult
-        setSmallCategoryData(newSmallCategoryData)
       }
 
       // 更新緩存
@@ -138,10 +132,8 @@ export default function ReportsPage() {
   // Fetch category data for selected month
   const [monthlyCategoryData, setMonthlyCategoryData] = useState<CategoryData[]>([])
   const [monthlySmallCategoryData, setMonthlySmallCategoryData] = useState<CategoryData[]>([])
-  const [categoryLoading, setCategoryLoading] = useState(false)
 
   const fetchMonthlyCategoryData = useCallback(async (month: string) => {
-    setCategoryLoading(true)
     try {
       const [categoryResponse, smallCategoryResponse] = await Promise.all([
         fetch(`/api/reports/category-distribution?month=${month}`),
@@ -165,8 +157,6 @@ export default function ReportsPage() {
       console.error('獲取月份分類資料失敗:', error)
       setMonthlyCategoryData([])
       setMonthlySmallCategoryData([])
-    } finally {
-      setCategoryLoading(false)
     }
   }, [])
 
@@ -196,7 +186,6 @@ export default function ReportsPage() {
 
   // 商品品項數圖表顯示所有月份資料（從當月往回推13個月）
   const filteredSalesData = salesData
-  const filteredDiscountData = discountData.filter(item => item.month === selectedMonth)
   
   // Use monthly fetched category data
   const filteredCategoryData = monthlyCategoryData

@@ -6,9 +6,6 @@ import { usePathname } from 'next/navigation'
 export default function Header() {
   const pathname = usePathname()
   
-  // 判斷是否為首頁
-  const isHomePage = pathname === '/'
-  
   const navigation = [
     {
       name: '報表管理',
