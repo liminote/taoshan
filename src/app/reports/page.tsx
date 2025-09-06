@@ -297,7 +297,7 @@ export default function ReportsPage() {
 
     // 取最新13個月並反轉順序（最新在左邊）
     const chartData = data.slice(-13).reverse()
-    const maxValue = Math.max(...chartData.map(item => item[dataKey]))
+    const maxValue = Math.max(...chartData.map(item => (item as unknown as Record<string, number>)[dataKey]))
     
     return (
       <div className="w-full">
@@ -383,7 +383,7 @@ export default function ReportsPage() {
             const actualMax = tickCount * tickInterval
             
             return chartData.map((item, index) => {
-              const barHeight = (item[dataKey] / actualMax) * height
+              const barHeight = ((item as unknown as Record<string, number>)[dataKey] / actualMax) * height
               const barWidth = 80 // 固定柱子寬度
               const spacing = 40 // 固定間距
               const x = 120 + index * (barWidth + spacing)
@@ -408,7 +408,7 @@ export default function ReportsPage() {
                     textAnchor="middle"
                     className="text-base fill-gray-700 font-medium"
                   >
-                    {Math.floor(item[dataKey]).toLocaleString()}
+                    {Math.floor((item as unknown as Record<string, number>)[dataKey]).toLocaleString()}
                   </text>
                   
                   {/* Month label */}
