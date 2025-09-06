@@ -29,14 +29,31 @@ export async function GET(request: Request) {
     
     const productNameIndex = productHeaders.findIndex(h => h.includes('商品名稱') || h.includes('品項名稱'))
     const amountIndex = productHeaders.findIndex(h => h.includes('金額') || h.includes('價格'))
+    const checkoutTimeIndex = productHeaders.findIndex(h => h.includes('結帳時間'))
     
-    const productSales = productLines.slice(1).map(line => {
+    let productSales = productLines.slice(1).map(line => {
       const values = line.split(',').map(v => v.replace(/"/g, '').trim())
       return {
         productName: values[productNameIndex] || '',
-        amount: parseFloat(values[amountIndex]) || 0
+        amount: parseFloat(values[amountIndex]) || 0,
+        checkoutTime: values[checkoutTimeIndex] || ''
       }
     }).filter(record => record.productName && record.amount > 0)
+
+    // 如果有月份參數，篩選該月份的商品銷售資料
+    if (selectedMonth) {
+      productSales = productSales.filter(record => {
+        if (!record.checkoutTime) return false
+        
+        const dateStr = record.checkoutTime.replace(/\//g, '-')
+        const date = new Date(dateStr)
+        
+        if (isNaN(date.getTime())) return false
+        
+        const recordMonth = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
+        return recordMonth === selectedMonth
+      })
+    }
 
     // 解析商品主檔
     const masterLines = masterCsv.split('\n').filter(line => line.trim())
@@ -66,7 +83,18 @@ export async function GET(request: Request) {
     })
 
     console.log(`建立了 ${Object.keys(productMapping).length} 個商品對應關係`)
-    console.log(`處理 ${productSales.length} 筆商品銷售資料`)
+    console.log(`處理 ${productSales.length} 筆商品銷售資料${selectedMonth ? `（篩選月份：${selectedMonth}）` : ''}`)
+    
+    // 檢查「白鯧」是否在主檔中
+    const hasWhitePomfret = Object.keys(productMapping).some(key => key.includes('白鯧'))
+    if (hasWhitePomfret) {
+      console.log('主檔中包含白鯧相關商品')
+      Object.keys(productMapping).filter(key => key.includes('白鯧')).forEach(key => {
+        console.log(`  "${key}" -> "${productMapping[key]}"`)
+      })
+    } else {
+      console.log('主檔中未找到白鯧相關商品')
+    }
 
     // 按大分類統計金額
     const categoryStats: { [key: string]: number } = {}
@@ -93,42 +121,30 @@ export async function GET(request: Request) {
 
     console.log(`成功比對: ${matchedCount} 筆，未比對: ${unmatchedProducts.length} 筆`)
     if (unmatchedProducts.length > 0) {
-      console.log('未比對商品前10項:', unmatchedProducts.slice(0, 10))
+      // 統計未比對商品的唯一值和頻率
+      const unmatchedStats = unmatchedProducts.reduce((acc, product) => {
+        acc[product] = (acc[product] || 0) + 1
+        return acc
+      }, {} as {[key: string]: number})
+      
+      console.log('未比對商品統計:')
+      Object.entries(unmatchedStats)
+        .sort(([,a], [,b]) => b - a)
+        .forEach(([product, count]) => {
+          console.log(`  "${product}": ${count} 次`)
+        })
     }
 
     // 轉換為陣列格式並計算百分比
     let result = Object.entries(categoryStats)
       .map(([category, amount]) => ({
         category: category,
-        amount: Math.round(amount * 100) / 100,
+        amount: Math.round(amount),
         percentage: totalAmount > 0 ? Math.round((amount / totalAmount) * 1000) / 10 : 0
       }))
       .sort((a, b) => b.amount - a.amount) // 按金額排序，最高在前
 
-    // 如果有月份參數，根據月份調整資料（模擬月份篩選）
-    if (selectedMonth && result.length > 0) {
-      // 根據月份生成不同的變化因子
-      const monthHash = selectedMonth.split('-').reduce((acc, num) => acc + parseInt(num), 0)
-      const variation = (monthHash % 20) / 100 + 0.9 // 0.9 to 1.09 的變化範圍
-      
-      result = result.map(item => {
-        const categoryHash = item.category.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0)
-        const itemVariation = variation + ((categoryHash % 10) / 100) // 每個分類有不同變化
-        const newAmount = Math.round(item.amount * itemVariation * 100) / 100
-        
-        return {
-          ...item,
-          amount: newAmount
-        }
-      })
-      
-      // 重新計算百分比
-      const newTotalAmount = result.reduce((sum, item) => sum + item.amount, 0)
-      result = result.map(item => ({
-        ...item,
-        percentage: newTotalAmount > 0 ? Math.round((item.amount / newTotalAmount) * 1000) / 10 : 0
-      })).sort((a, b) => b.amount - a.amount)
-    }
+    // 月份篩選已在資料處理階段完成，這裡不需要額外處理
 
     return NextResponse.json({
       success: true,

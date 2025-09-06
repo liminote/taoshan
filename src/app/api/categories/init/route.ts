@@ -5,7 +5,7 @@ import { supabase } from '@/lib/supabase'
 const defaultCategories = [
   {
     id: 1,
-    name: '壽司刺身',
+    name: '1壽司刺身',
     subcategories: [
       '手卷/壽司（菜單）',
       '刺身/蓋飯（菜單）'
@@ -13,7 +13,7 @@ const defaultCategories = [
   },
   {
     id: 2,
-    name: '黑板料理',
+    name: '2黑板料理',
     subcategories: [
       '季節食材/黑板菜單',
       '炒物/黑板料理',
@@ -29,7 +29,7 @@ const defaultCategories = [
   },
   {
     id: 3,
-    name: '烤炸串',
+    name: '3烤炸串',
     subcategories: [
       '烤物/串燒（菜單）',
       '揚物（菜單）'
@@ -37,7 +37,7 @@ const defaultCategories = [
   },
   {
     id: 4,
-    name: '配菜',
+    name: '4配菜',
     subcategories: [
       '吸物/鍋物（菜單）',
       '前菜/酒餚（菜單）',
@@ -47,7 +47,7 @@ const defaultCategories = [
   },
   {
     id: 5,
-    name: '主食',
+    name: '5主食',
     subcategories: [
       '食事（菜單）',
       '商業定食（菜單）',
@@ -56,7 +56,7 @@ const defaultCategories = [
   },
   {
     id: 6,
-    name: '酒水',
+    name: '6酒水',
     subcategories: [
       '西洋酒',
       '東洋酒',
@@ -67,14 +67,14 @@ const defaultCategories = [
   },
   {
     id: 7,
-    name: '便當',
+    name: '7便當',
     subcategories: [
       '便當'
     ]
   },
   {
     id: 8,
-    name: '外帶送',
+    name: '8外帶送',
     subcategories: [
       '外帶平台',
       'uber eat'
@@ -82,7 +82,7 @@ const defaultCategories = [
   },
   {
     id: 9,
-    name: '其他',
+    name: '9其他',
     subcategories: [
       '加價購',
       '年菜',

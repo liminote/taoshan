@@ -169,6 +169,144 @@ export default function ReportsPage() {
     }
   }
 
+  // Generate SVG bar chart for trends
+  const generateBarChart = (data: any[], dataKey: string, height: number = 200, color: string) => {
+    if (!data || data.length === 0) return null
+
+    // 取最新13個月並反轉順序（最新在左邊）
+    const chartData = data.slice(-13).reverse()
+    const maxValue = Math.max(...chartData.map(item => item[dataKey]))
+    
+    return (
+      <div className="w-full">
+        <svg width="100%" height={height + 80} className="drop-shadow-sm" viewBox={`0 0 1700 ${height + 80}`}>
+          {/* Y axis labels */}
+          {(() => {
+            // 計算合適的刻度間隔
+            const getTickInterval = (max: number) => {
+              // 目標是產生約 4-6 個刻度
+              const roughInterval = max / 5
+              
+              // 找到適當的 10 的次方作為基數
+              const magnitude = Math.pow(10, Math.floor(Math.log10(roughInterval)))
+              
+              // 將粗略間隔標準化為 1, 2, 5 的倍數
+              const normalized = roughInterval / magnitude
+              
+              let niceInterval
+              if (normalized <= 1) {
+                niceInterval = magnitude
+              } else if (normalized <= 2) {
+                niceInterval = 2 * magnitude
+              } else if (normalized <= 5) {
+                niceInterval = 5 * magnitude
+              } else {
+                niceInterval = 10 * magnitude
+              }
+              
+              return niceInterval
+            }
+            
+            const tickInterval = getTickInterval(maxValue)
+            const tickCount = Math.ceil(maxValue / tickInterval)
+            const actualMax = tickCount * tickInterval
+            
+            const ticks = []
+            for (let i = 0; i <= tickCount; i++) {
+              ticks.push(i * tickInterval)
+            }
+            
+            return ticks.map((tickValue, index) => {
+              const y = height - (tickValue / actualMax) * height + 20
+              return (
+                <g key={index}>
+                  <line x1="120" y1={y} x2="1620" y2={y} stroke="#e5e7eb" strokeWidth="1" />
+                  <text x="75" y={y + 4} textAnchor="end" className="text-sm fill-gray-500">
+                    {Math.floor(tickValue).toLocaleString()}
+                  </text>
+                </g>
+              )
+            })
+          })()}
+          
+          {/* Bars */}
+          {(() => {
+            // 重新計算 actualMax 用於柱子高度
+            const getTickInterval = (max: number) => {
+              // 目標是產生約 4-6 個刻度
+              const roughInterval = max / 5
+              
+              // 找到適當的 10 的次方作為基數
+              const magnitude = Math.pow(10, Math.floor(Math.log10(roughInterval)))
+              
+              // 將粗略間隔標準化為 1, 2, 5 的倍數
+              const normalized = roughInterval / magnitude
+              
+              let niceInterval
+              if (normalized <= 1) {
+                niceInterval = magnitude
+              } else if (normalized <= 2) {
+                niceInterval = 2 * magnitude
+              } else if (normalized <= 5) {
+                niceInterval = 5 * magnitude
+              } else {
+                niceInterval = 10 * magnitude
+              }
+              
+              return niceInterval
+            }
+            
+            const tickInterval = getTickInterval(maxValue)
+            const tickCount = Math.ceil(maxValue / tickInterval)
+            const actualMax = tickCount * tickInterval
+            
+            return chartData.map((item, index) => {
+              const barHeight = (item[dataKey] / actualMax) * height
+              const barWidth = 80 // 固定柱子寬度
+              const spacing = 40 // 固定間距
+              const x = 120 + index * (barWidth + spacing)
+              const y = height - barHeight + 20
+              
+              return (
+                <g key={index}>
+                  {/* Bar */}
+                  <rect
+                    x={x}
+                    y={y}
+                    width={barWidth}
+                    height={barHeight}
+                    fill={color}
+                    className="hover:opacity-80 transition-opacity"
+                  />
+                  
+                  {/* Value on top of bar */}
+                  <text
+                    x={x + barWidth / 2}
+                    y={y - 5}
+                    textAnchor="middle"
+                    className="text-base fill-gray-700 font-medium"
+                  >
+                    {Math.floor(item[dataKey]).toLocaleString()}
+                  </text>
+                  
+                  {/* Month label */}
+                  <text
+                    x={x + barWidth / 2}
+                    y={height + 45}
+                    textAnchor="middle"
+                    className="text-sm fill-gray-600"
+                  >
+                    {item.monthDisplay.replace('年', '/').replace('月', '')}
+                  </text>
+                </g>
+              )
+            })
+          })()}
+        </svg>
+      </div>
+    )
+  }
+
   // Generate SVG pie chart
   const generatePieChart = (data: CategoryData[], size: number = 200) => {
     if (!data || data.length === 0) return null
@@ -342,19 +480,7 @@ export default function ReportsPage() {
                 <h2 className="text-xl font-bold text-gray-900">月銷售統計</h2>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-4">
-                {salesData.slice(-12).map((item, index) => (
-                  <div key={item.month} className="bg-gray-50 rounded-xl p-4 hover:bg-gray-100 transition-colors">
-                    <div className="text-sm font-medium text-gray-600 mb-1">{item.monthDisplay}</div>
-                    <div className="text-lg font-bold text-gray-900">
-                      {item.amount.toLocaleString()}
-                    </div>
-                    <div className="text-xs text-gray-500 mt-1">
-                      {item.orderCount} 筆訂單
-                    </div>
-                  </div>
-                ))}
-              </div>
+              {generateBarChart(salesData, 'amount', 200, '#90DBF4')}
             </div>
 
             {/* 平均單價統計 */}
@@ -368,19 +494,7 @@ export default function ReportsPage() {
                 <h2 className="text-xl font-bold text-gray-900">平均單價統計</h2>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-4">
-                {salesData.slice(-12).map((item, index) => (
-                  <div key={item.month} className="bg-gray-50 rounded-xl p-4 hover:bg-gray-100 transition-colors">
-                    <div className="text-sm font-medium text-gray-600 mb-1">{item.monthDisplay}</div>
-                    <div className="text-lg font-bold text-gray-900">
-                      {item.avgOrderValue.toLocaleString()}
-                    </div>
-                    <div className="text-xs text-gray-500 mt-1">
-                      平均單價
-                    </div>
-                  </div>
-                ))}
-              </div>
+              {generateBarChart(salesData, 'avgOrderValue', 200, '#FFCFD2')}
             </div>
 
             {/* 折扣金額統計 */}
@@ -394,19 +508,7 @@ export default function ReportsPage() {
                 <h2 className="text-xl font-bold text-gray-900">折扣金額統計</h2>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-4">
-                {discountData.slice(-12).map((item, index) => (
-                  <div key={item.month} className="bg-gray-50 rounded-xl p-4 hover:bg-gray-100 transition-colors">
-                    <div className="text-sm font-medium text-gray-600 mb-1">{item.monthDisplay}</div>
-                    <div className="text-lg font-bold text-gray-900">
-                      {item.discountAmount.toLocaleString()}
-                    </div>
-                    <div className="text-xs text-gray-500 mt-1">
-                      折扣金額
-                    </div>
-                  </div>
-                ))}
-              </div>
+              {generateBarChart(discountData, 'discountAmount', 200, '#FFFACD')}
             </div>
 
             {/* 商品品項數統計 */}
@@ -420,19 +522,7 @@ export default function ReportsPage() {
                 <h2 className="text-xl font-bold text-gray-900">商品品項數統計</h2>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-4">
-                {salesData.slice(-12).map((item, index) => (
-                  <div key={item.month} className="bg-gray-50 rounded-xl p-4 hover:bg-gray-100 transition-colors">
-                    <div className="text-sm font-medium text-gray-600 mb-1">{item.monthDisplay}</div>
-                    <div className="text-lg font-bold text-gray-900">
-                      {item.productItemCount}種
-                    </div>
-                    <div className="text-xs text-gray-500 mt-1">
-                      商品品項
-                    </div>
-                  </div>
-                ))}
-              </div>
+              {generateBarChart(salesData, 'productItemCount', 200, '#98F5E1')}
             </div>
 
             {lastRefreshTime && (

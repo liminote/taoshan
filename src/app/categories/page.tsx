@@ -61,22 +61,31 @@ export default function CategoriesPage() {
   const getCategoryIcon = (categoryName: string) => {
     switch (categoryName) {
       case '壽司刺身':
+      case '1壽司刺身':
         return '🍣'
       case '黑板料理':
+      case '2黑板料理':
         return '📋'
       case '烤炸串':
+      case '3烤炸串':
         return '🍢'
       case '配菜':
+      case '4配菜':
         return '🥗'
       case '主食':
+      case '5主食':
         return '🍱'
       case '酒水':
+      case '6酒水':
         return '🍷'
       case '便當':
+      case '7便當':
         return '🍙'
       case '外帶送':
+      case '8外帶送':
         return '🚚'
       case '其他':
+      case '9其他':
         return '📦'
       default:
         return '🏷️'

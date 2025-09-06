@@ -29,14 +29,31 @@ export async function GET(request: Request) {
     
     const productNameIndex = productHeaders.findIndex(h => h.includes('商品名稱') || h.includes('品項名稱'))
     const amountIndex = productHeaders.findIndex(h => h.includes('金額') || h.includes('價格'))
+    const checkoutTimeIndex = productHeaders.findIndex(h => h.includes('結帳時間'))
     
-    const productSales = productLines.slice(1).map(line => {
+    let productSales = productLines.slice(1).map(line => {
       const values = line.split(',').map(v => v.replace(/"/g, '').trim())
       return {
         productName: values[productNameIndex] || '',
-        amount: parseFloat(values[amountIndex]) || 0
+        amount: parseFloat(values[amountIndex]) || 0,
+        checkoutTime: values[checkoutTimeIndex] || ''
       }
     }).filter(record => record.productName && record.amount > 0)
+
+    // 如果有月份參數，篩選該月份的商品銷售資料
+    if (selectedMonth) {
+      productSales = productSales.filter(record => {
+        if (!record.checkoutTime) return false
+        
+        const dateStr = record.checkoutTime.replace(/\//g, '-')
+        const date = new Date(dateStr)
+        
+        if (isNaN(date.getTime())) return false
+        
+        const recordMonth = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
+        return recordMonth === selectedMonth
+      })
+    }
 
     // 解析商品主檔
     const masterLines = masterCsv.split('\n').filter(line => line.trim())
@@ -66,7 +83,7 @@ export async function GET(request: Request) {
     })
 
     console.log(`建立了 ${Object.keys(productMapping).length} 個商品對應關係（小分類）`)
-    console.log(`處理 ${productSales.length} 筆商品銷售資料`)
+    console.log(`處理 ${productSales.length} 筆商品銷售資料${selectedMonth ? `（篩選月份：${selectedMonth}）` : ''}`)
 
     // 按小分類統計金額
     const categoryStats: { [key: string]: number } = {}
@@ -100,35 +117,12 @@ export async function GET(request: Request) {
     let result = Object.entries(categoryStats)
       .map(([category, amount]) => ({
         category: category,
-        amount: Math.round(amount * 100) / 100,
+        amount: Math.round(amount),
         percentage: totalAmount > 0 ? Math.round((amount / totalAmount) * 1000) / 10 : 0
       }))
       .sort((a, b) => b.amount - a.amount) // 按金額排序，最高在前
 
-    // 如果有月份參數，根據月份調整資料（模擬月份篩選）
-    if (selectedMonth && result.length > 0) {
-      // 根據月份生成不同的變化因子
-      const monthHash = selectedMonth.split('-').reduce((acc, num) => acc + parseInt(num), 0)
-      const variation = (monthHash % 30) / 100 + 0.85 // 0.85 to 1.15 的變化範圍
-      
-      result = result.map(item => {
-        const categoryHash = item.category.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0)
-        const itemVariation = variation + ((categoryHash % 15) / 100) // 每個分類有不同變化
-        const newAmount = Math.round(item.amount * itemVariation * 100) / 100
-        
-        return {
-          ...item,
-          amount: newAmount
-        }
-      })
-      
-      // 重新計算百分比
-      const newTotalAmount = result.reduce((sum, item) => sum + item.amount, 0)
-      result = result.map(item => ({
-        ...item,
-        percentage: newTotalAmount > 0 ? Math.round((item.amount / newTotalAmount) * 1000) / 10 : 0
-      })).sort((a, b) => b.amount - a.amount)
-    }
+    // 月份篩選已在資料處理階段完成，這裡不需要額外處理
 
     return NextResponse.json({
       success: true,

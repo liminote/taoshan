@@ -69,6 +69,13 @@ export default function ProductsMasterSheetsPage() {
   const [newCategoryName, setNewCategoryName] = useState('')
   const [newSubcategoryName, setNewSubcategoryName] = useState('')
   const [categoryActionLoading, setCategoryActionLoading] = useState(false)
+  const [cacheClearing, setCacheClearing] = useState(false)
+  
+  // 取得選中大分類的小分類列表
+  const getSubcategories = (categoryName: string) => {
+    const category = categories.find(cat => cat.name === categoryName)
+    return category?.subcategories || []
+  }
 
   // 表單狀態
   const [formData, setFormData] = useState({
@@ -87,6 +94,13 @@ export default function ProductsMasterSheetsPage() {
       fetchCategories()
     }
   }, [activeTab])
+  
+  // 當顯示新增表單時，確保載入分類資料
+  useEffect(() => {
+    if (showAddForm && categories.length === 0) {
+      fetchCategories()
+    }
+  }, [showAddForm])
 
   const fetchProducts = async (forceRefresh = false) => {
     try {
@@ -250,22 +264,31 @@ export default function ProductsMasterSheetsPage() {
   const getCategoryIcon = (categoryName: string) => {
     switch (categoryName) {
       case '壽司刺身':
+      case '1壽司刺身':
         return '🍣'
       case '黑板料理':
+      case '2黑板料理':
         return '📋'
       case '烤炸串':
+      case '3烤炸串':
         return '🍢'
       case '配菜':
+      case '4配菜':
         return '🥗'
       case '主食':
+      case '5主食':
         return '🍱'
       case '酒水':
+      case '6酒水':
         return '🍷'
       case '便當':
+      case '7便當':
         return '🍙'
       case '外帶送':
+      case '8外帶送':
         return '🚚'
       case '其他':
+      case '9其他':
         return '📦'
       default:
         return '🏷️'
@@ -380,6 +403,31 @@ export default function ProductsMasterSheetsPage() {
     }
   }
 
+  const handleClearCache = async () => {
+    setCacheClearing(true)
+    try {
+      const response = await fetch('/api/cache/clear', {
+        method: 'POST'
+      })
+      
+      const result = await response.json()
+      if (response.ok) {
+        alert(result.message)
+        // 重新載入資料
+        await fetchProducts(true)
+        if (showUncategorized) {
+          await fetchUncategorizedProducts()
+        }
+      } else {
+        alert(result.error || '清除緩存失敗')
+      }
+    } catch (err) {
+      alert('清除緩存失敗：' + (err instanceof Error ? err.message : '未知錯誤'))
+    } finally {
+      setCacheClearing(false)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
@@ -431,6 +479,18 @@ export default function ProductsMasterSheetsPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                 </svg>
                 {refreshLoading ? '更新中...' : '重新整理'}
+              </button>
+              
+              <button
+                onClick={handleClearCache}
+                disabled={cacheClearing}
+                className="inline-flex items-center px-4 py-2 text-white rounded-xl hover:shadow-lg transition-all duration-300 hover:scale-105 disabled:opacity-50"
+                style={{ backgroundColor: '#A3C4F3' }}
+              >
+                <svg className={`w-5 h-5 mr-2 ${cacheClearing ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+                {cacheClearing ? '清除中...' : '清除緩存'}
               </button>
               
               <button
@@ -590,20 +650,37 @@ export default function ProductsMasterSheetsPage() {
                     />
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <input
-                      type="text"
+                    <select
                       value={formData.category}
-                      onChange={(e) => setFormData({...formData, category: e.target.value})}
-                      placeholder="大分類"
+                      onChange={(e) => {
+                        setFormData({
+                          ...formData, 
+                          category: e.target.value,
+                          small_category: '' // 清空小分類選擇
+                        })
+                      }}
                       className="px-3 py-2 border border-orange-200 rounded-lg bg-white/70 focus:ring-2 focus:ring-pink-400/50 focus:border-pink-400 text-sm text-gray-900"
-                    />
-                    <input
-                      type="text"
+                    >
+                      <option value="">選擇大分類</option>
+                      {categories.map((category) => (
+                        <option key={category.id} value={category.name}>
+                          {category.name}
+                        </option>
+                      ))}
+                    </select>
+                    <select
                       value={formData.small_category}
                       onChange={(e) => setFormData({...formData, small_category: e.target.value})}
-                      placeholder="小分類"
-                      className="px-3 py-2 border border-orange-200 rounded-lg bg-white/70 focus:ring-2 focus:ring-pink-400/50 focus:border-pink-400 text-sm text-gray-900"
-                    />
+                      disabled={!formData.category}
+                      className="px-3 py-2 border border-orange-200 rounded-lg bg-white/70 focus:ring-2 focus:ring-pink-400/50 focus:border-pink-400 text-sm text-gray-900 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <option value="">選擇小分類</option>
+                      {formData.category && getSubcategories(formData.category).map((subcategory) => (
+                        <option key={subcategory.id} value={subcategory.name}>
+                          {subcategory.name}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                   <div className="flex space-x-2">
                     <button
