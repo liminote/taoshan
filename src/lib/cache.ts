@@ -20,7 +20,7 @@ class ReportCache {
   // 取得快取資料
   get<T>(key: string): T | null {
     const item = this.cache.get(key)
-    return item ? item.data : null
+    return item ? (item.data as T) : null
   }
 
   // 檢查是否有快取
