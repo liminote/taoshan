@@ -237,19 +237,19 @@ export default function Home() {
                     </div>
                   </div>
                 </div>
-                <div className="flex space-x-2 mt-4">
-                  <button
-                    type="submit"
-                    className="px-4 py-2 bg-melon text-white rounded-lg hover:bg-melon-600 transition-colors"
-                  >
-                    新增
-                  </button>
+                <div className="flex justify-end space-x-2 mt-4">
                   <button
                     type="button"
                     onClick={() => setShowAddForm(false)}
-                    className="px-4 py-2 bg-fawn text-gray-700 rounded-lg hover:bg-fawn-300 transition-colors"
+                    className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors"
                   >
                     取消
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-4 py-2 bg-pink-500 text-white rounded-lg hover:bg-pink-600 transition-colors"
+                  >
+                    新增
                   </button>
                 </div>
               </form>
