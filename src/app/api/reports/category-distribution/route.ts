@@ -136,7 +136,7 @@ export async function GET(request: Request) {
     }
 
     // 轉換為陣列格式並計算百分比
-    let result = Object.entries(categoryStats)
+    const result = Object.entries(categoryStats)
       .map(([category, amount]) => ({
         category: category,
         amount: Math.round(amount),

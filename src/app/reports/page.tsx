@@ -24,6 +24,25 @@ interface CategoryData {
   percentage: number
 }
 
+interface RankingItem {
+  rank: number
+  name: string
+  quantity: number
+  amount: number
+  category: string
+}
+
+interface RankingData {
+  quantityRanking: RankingItem[]
+  amountRanking: RankingItem[]
+  alcoholRanking: RankingItem[]
+  totals: {
+    totalQuantity: number
+    totalAmount: number
+    totalProducts: number
+  }
+}
+
 export default function ReportsPage() {
   // Tab state
   const [activeTab, setActiveTab] = useState<'trends' | 'monthly'>('trends')
@@ -44,6 +63,7 @@ export default function ReportsPage() {
   })
   const [monthlyCategoryData, setMonthlyCategoryData] = useState<CategoryData[]>([])
   const [monthlySmallCategoryData, setMonthlySmallCategoryData] = useState<CategoryData[]>([])
+  const [rankingData, setRankingData] = useState<RankingData | null>(null)
 
   // Cache for trends data
   const [cachedData, setCachedData] = useState<{
@@ -65,6 +85,11 @@ export default function ReportsPage() {
     '#D7A3D7', // 淡紫羅蘭
     '#FFFACD'  // 檸檬薄荷色
   ]
+
+  // 格式化數字
+  const formatNumber = (num: number) => {
+    return new Intl.NumberFormat('zh-TW').format(num)
+  }
 
   // Fetch trends data (used for 趨勢觀測 tab)
   const fetchTrendsData = useCallback(async (forceRefresh = false) => {
@@ -123,9 +148,10 @@ export default function ReportsPage() {
   // Fetch monthly category data (used for 當月數字 tab)
   const fetchMonthlyCategoryData = useCallback(async (month: string) => {
     try {
-      const [categoryResponse, smallCategoryResponse] = await Promise.all([
+      const [categoryResponse, smallCategoryResponse, rankingResponse] = await Promise.all([
         fetch(`/api/reports/category-distribution?month=${month}`),
-        fetch(`/api/reports/small-category-distribution?month=${month}`)
+        fetch(`/api/reports/small-category-distribution?month=${month}`),
+        fetch(`/api/reports/rankings?month=${month}`)
       ])
 
       if (categoryResponse.ok) {
@@ -141,10 +167,18 @@ export default function ReportsPage() {
       } else {
         setMonthlySmallCategoryData([])
       }
+
+      if (rankingResponse.ok) {
+        const rankingResult = await rankingResponse.json()
+        setRankingData(rankingResult.data || null)
+      } else {
+        setRankingData(null)
+      }
     } catch (error) {
       console.error('獲取月份分類資料失敗:', error)
       setMonthlyCategoryData([])
       setMonthlySmallCategoryData([])
+      setRankingData(null)
     }
   }, [])
 
@@ -170,7 +204,7 @@ export default function ReportsPage() {
   }
 
   // Generate SVG bar chart for trends
-  const generateBarChart = (data: any[], dataKey: string, height: number = 200, color: string) => {
+  const generateBarChart = (data: MonthlySalesData[] | DiscountData[], dataKey: string, height: number = 200, color: string) => {
     if (!data || data.length === 0) return null
 
     // 取最新13個月並反轉順序（最新在左邊）
@@ -658,6 +692,182 @@ export default function ReportsPage() {
                 </div>
               </div>
             </div>
+
+            {/* 商品排名 */}
+            {rankingData && (
+              <div className="space-y-8">
+                {/* 總計摘要 */}
+                <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
+                  <div className="flex items-center space-x-3 mb-6">
+                    <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: '#FFE5CC' }}>
+                      <svg className="w-5 h-5 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                      </svg>
+                    </div>
+                    <h2 className="text-xl font-bold text-gray-900">銷售總計</h2>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="text-center p-4 bg-blue-50 rounded-xl">
+                      <div className="text-2xl font-bold text-blue-600">{formatNumber(rankingData.totals.totalQuantity)}</div>
+                      <div className="text-sm text-gray-600 mt-1">總銷量</div>
+                    </div>
+                    <div className="text-center p-4 bg-green-50 rounded-xl">
+                      <div className="text-2xl font-bold text-green-600">NT$ {formatNumber(rankingData.totals.totalAmount)}</div>
+                      <div className="text-sm text-gray-600 mt-1">總銷額</div>
+                    </div>
+                    <div className="text-center p-4 bg-purple-50 rounded-xl">
+                      <div className="text-2xl font-bold text-purple-600">{formatNumber(rankingData.totals.totalProducts)}</div>
+                      <div className="text-sm text-gray-600 mt-1">商品種類</div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 排名表格 */}
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+                  
+                  {/* 銷量排名 */}
+                  <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+                    <div className="px-6 py-4" style={{ backgroundColor: '#90DBF4' }}>
+                      <h3 className="text-lg font-semibold text-gray-900">銷量排名 TOP 10</h3>
+                    </div>
+                    <div className="overflow-x-auto">
+                      <table className="w-full">
+                        <thead className="bg-gray-50">
+                          <tr>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">排名</th>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">商品名稱</th>
+                            <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">數量</th>
+                            <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">金額</th>
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                          {rankingData.quantityRanking.slice(0, 10).map((item, index) => (
+                            <tr key={index} className={`${index < 3 ? 'bg-blue-50' : ''} hover:bg-gray-50 transition-colors`}>
+                              <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
+                                {index < 3 ? (
+                                  <span className="inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold text-white" 
+                                        style={{ backgroundColor: index === 0 ? '#FFD700' : index === 1 ? '#C0C0C0' : '#CD7F32' }}>
+                                    {item.rank}
+                                  </span>
+                                ) : (
+                                  `${item.rank}.`
+                                )}
+                              </td>
+                              <td className="px-4 py-3 text-sm text-gray-900 max-w-xs truncate" title={item.name}>
+                                {item.name}
+                              </td>
+                              <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 text-right font-medium">
+                                {formatNumber(item.quantity)}
+                              </td>
+                              <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600 text-right">
+                                {formatNumber(item.amount)}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                  {/* 銷額排名 */}
+                  <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+                    <div className="px-6 py-4" style={{ backgroundColor: '#FFCFD2' }}>
+                      <h3 className="text-lg font-semibold text-gray-900">銷額排名 TOP 10</h3>
+                    </div>
+                    <div className="overflow-x-auto">
+                      <table className="w-full">
+                        <thead className="bg-gray-50">
+                          <tr>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">排名</th>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">商品名稱</th>
+                            <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">數量</th>
+                            <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">金額 ↓</th>
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                          {rankingData.amountRanking.slice(0, 10).map((item, index) => (
+                            <tr key={index} className={`${index < 3 ? 'bg-red-50' : ''} hover:bg-gray-50 transition-colors`}>
+                              <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
+                                {index < 3 ? (
+                                  <span className="inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold text-white" 
+                                        style={{ backgroundColor: index === 0 ? '#FFD700' : index === 1 ? '#C0C0C0' : '#CD7F32' }}>
+                                    {item.rank}
+                                  </span>
+                                ) : (
+                                  `${item.rank}.`
+                                )}
+                              </td>
+                              <td className="px-4 py-3 text-sm text-gray-900 max-w-xs truncate" title={item.name}>
+                                {item.name}
+                              </td>
+                              <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600 text-right">
+                                {formatNumber(item.quantity)}
+                              </td>
+                              <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 text-right font-medium">
+                                {formatNumber(item.amount)}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                </div>
+
+                {/* 酒水排名 */}
+                {rankingData.alcoholRanking && rankingData.alcoholRanking.length > 0 && (
+                  <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+                    <div className="px-6 py-4" style={{ backgroundColor: '#98F5E1' }}>
+                      <h3 className="text-lg font-semibold text-gray-900">酒水排名 TOP 10</h3>
+                      <p className="text-sm text-gray-700 mt-1">大分類為 6酒水</p>
+                    </div>
+                    <div className="overflow-x-auto">
+                      <table className="w-full">
+                        <thead className="bg-gray-50">
+                          <tr>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">排名</th>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">大分類</th>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">商品名稱</th>
+                            <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">銷量</th>
+                            <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">金額</th>
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                          {rankingData.alcoholRanking.slice(0, 10).map((item, index) => (
+                            <tr key={index} className={`${index < 3 ? 'bg-teal-50' : ''} hover:bg-gray-50 transition-colors`}>
+                              <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
+                                {index < 3 ? (
+                                  <span className="inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold text-white" 
+                                        style={{ backgroundColor: index === 0 ? '#FFD700' : index === 1 ? '#C0C0C0' : '#CD7F32' }}>
+                                    {item.rank}
+                                  </span>
+                                ) : (
+                                  `${item.rank}.`
+                                )}
+                              </td>
+                              <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                                {item.category}
+                              </td>
+                              <td className="px-4 py-3 text-sm text-gray-900 max-w-xs truncate" title={item.name}>
+                                {item.name}
+                              </td>
+                              <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 text-right font-medium">
+                                {formatNumber(item.quantity)}
+                              </td>
+                              <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600 text-right">
+                                {formatNumber(item.amount)}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         )}
       </div>
