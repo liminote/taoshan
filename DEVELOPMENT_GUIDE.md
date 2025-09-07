@@ -289,6 +289,25 @@ const { data, error } = await supabase
   .limit(50)
 ```
 
+### 資料庫查詢優化
+
+```sql
+-- 效能索引（已包含在 important_items.sql 中）
+CREATE INDEX CONCURRENTLY idx_product_sales_checkout_month 
+ON product_sales (date_trunc('month', checkout_time));
+
+-- 查詢優化範例
+SELECT 
+  product_original_name,
+  SUM(invoice_amount) as total_sales,
+  COUNT(*) as order_count
+FROM product_sales 
+WHERE checkout_time >= NOW() - INTERVAL '30 days'
+GROUP BY product_original_name 
+ORDER BY total_sales DESC 
+LIMIT 20;
+```
+
 ## 除錯技巧
 
 ### 開發工具使用
@@ -332,12 +351,13 @@ useEffect(() => {
 
 ### Vercel 部署檢查清單
 
-- [ ] 環境變數已在 Vercel 中設置
+- [ ] 環境變數已在 Vercel 中設置（**注意：確保沒有換行符號**）
 - [ ] 構建成功 (`npm run build`)
 - [ ] 無 TypeScript 錯誤
 - [ ] 無 ESLint 警告
 - [ ] API 端點測試正常
 - [ ] Google Sheets 整合正常
+- [ ] **重要事項功能測試**（增刪改查）
 
 ### 環境變數管理
 
@@ -347,10 +367,64 @@ cp .env.example .env.local
 
 # Vercel 部署
 # 在 Vercel Dashboard 中設置以下變數：
-# - SUPABASE_URL
-# - SUPABASE_ANON_KEY  
+# - NEXT_PUBLIC_SUPABASE_URL
+# - NEXT_PUBLIC_SUPABASE_ANON_KEY（**確保是單行，無換行符號**）
 # - GOOGLE_SHEETS_CREDENTIALS
 # - GOOGLE_SHEETS_SPREADSHEET_ID
+```
+
+### 關鍵部署經驗教訓
+
+1. **Supabase API Key 格式**：
+   - ❌ **錯誤**：環境變數包含換行符號會導致 HTTP header 錯誤
+   - ✅ **正確**：確保 JWT token 是完整的單行字串
+
+2. **Serverless 限制**：
+   - ❌ **錯誤**：使用 `fs.writeFileSync()` 等文件系統操作
+   - ✅ **正確**：使用 Supabase 等外部資料庫
+
+3. **Debug 端點**：
+   - 開發階段可建立 `/api/debug-*` 端點幫助除錯
+   - 生產部署前**必須移除**或添加認證保護
+
+## Supabase 資料庫操作最佳實踐
+
+### 資料遷移流程
+
+```typescript
+// 1. 建立 SQL Schema
+// sql/table_name.sql
+CREATE TABLE IF NOT EXISTS table_name (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+// 2. 建立遷移腳本
+// migrate-data.js
+const migrateData = async () => {
+  const existingData = JSON.parse(fs.readFileSync('./data/old-data.json'))
+  
+  for (const item of existingData) {
+    const { data, error } = await supabase
+      .from('table_name')
+      .insert([item])
+  }
+}
+```
+
+### 資料庫設計原則
+
+```sql
+-- 使用 UUID 作為主鍵（更安全）
+id UUID PRIMARY KEY DEFAULT gen_random_uuid()
+
+-- 自動時間戳記
+created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+
+-- 必要的索引
+CREATE INDEX idx_table_common_query ON table_name(commonly_queried_column);
+CREATE INDEX idx_table_date ON table_name(date_column);
 ```
 
 ---
