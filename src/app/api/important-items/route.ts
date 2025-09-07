@@ -144,7 +144,10 @@ export async function POST(request: Request) {
       }
 
       const newCompleted = !currentItem.completed
-      const updateData: any = { 
+      const updateData: { 
+        completed: boolean;
+        completed_at?: string | null;
+      } = { 
         completed: newCompleted 
       }
       
