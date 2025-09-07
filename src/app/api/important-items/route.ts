@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server'
-import fs from 'fs'
-import path from 'path'
+import { supabase } from '@/lib/supabase'
 
 interface ImportantItem {
   id: string
@@ -8,42 +7,36 @@ interface ImportantItem {
   content: string
   assignee: string
   completed: boolean
-  completedAt?: string
-  createdAt: string
-}
-
-const DATA_FILE = path.join(process.cwd(), 'src/data/important-items.json')
-
-const loadImportantItems = (): ImportantItem[] => {
-  try {
-    if (fs.existsSync(DATA_FILE)) {
-      const data = fs.readFileSync(DATA_FILE, 'utf8')
-      return JSON.parse(data)
-    }
-  } catch (error) {
-    console.error('載入重要事項資料失敗:', error)
-  }
-  return []
-}
-
-const saveImportantItems = (items: ImportantItem[]): void => {
-  try {
-    const dir = path.dirname(DATA_FILE)
-    if (!fs.existsSync(dir)) {
-      fs.mkdirSync(dir, { recursive: true })
-    }
-    fs.writeFileSync(DATA_FILE, JSON.stringify(items, null, 2), 'utf8')
-  } catch (error) {
-    console.error('儲存重要事項資料失敗:', error)
-  }
+  completed_at?: string
+  created_at: string
 }
 
 export async function GET() {
   try {
-    const importantItems = loadImportantItems()
+    const { data: importantItems, error } = await supabase
+      .from('important_items')
+      .select('*')
+      .order('created_at', { ascending: false })
+
+    if (error) {
+      console.error('Supabase error:', error)
+      return NextResponse.json({ error: '獲取重要事項失敗' }, { status: 500 })
+    }
+
+    // Convert Supabase format to expected format
+    const formattedItems = importantItems?.map(item => ({
+      id: item.id,
+      date: item.date,
+      content: item.content,
+      assignee: item.assignee,
+      completed: item.completed,
+      completedAt: item.completed_at,
+      createdAt: item.created_at
+    })) || []
+
     return NextResponse.json({
       success: true,
-      data: importantItems
+      data: formattedItems
     })
   } catch (error) {
     console.error('獲取重要事項失敗:', error)
@@ -54,7 +47,6 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const { action, data } = await request.json()
-    const importantItems = loadImportantItems()
     
     if (action === 'add') {
       const { date, content, assignee } = data
@@ -63,87 +55,166 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: '日期、內容和負責人為必填' }, { status: 400 })
       }
       
-      const newItem: ImportantItem = {
-        id: Date.now().toString(),
-        date,
-        content,
-        assignee,
-        completed: false,
-        createdAt: new Date().toISOString()
+      const { data: newItem, error } = await supabase
+        .from('important_items')
+        .insert([
+          {
+            date,
+            content,
+            assignee,
+            completed: false
+          }
+        ])
+        .select()
+        .single()
+
+      if (error) {
+        console.error('Supabase insert error:', error)
+        return NextResponse.json({ error: '新增重要事項失敗' }, { status: 500 })
       }
-      
-      importantItems.push(newItem)
-      saveImportantItems(importantItems)
+
+      const formattedItem = {
+        id: newItem.id,
+        date: newItem.date,
+        content: newItem.content,
+        assignee: newItem.assignee,
+        completed: newItem.completed,
+        completedAt: newItem.completed_at,
+        createdAt: newItem.created_at
+      }
       
       return NextResponse.json({
         success: true,
         message: '重要事項已新增',
-        data: newItem
+        data: formattedItem
       })
       
     } else if (action === 'update') {
       const { id, date, content, assignee } = data
       
-      const itemIndex = importantItems.findIndex(item => item.id === id)
-      if (itemIndex === -1) {
+      const { data: updatedItem, error } = await supabase
+        .from('important_items')
+        .update({
+          ...(date && { date }),
+          ...(content && { content }),
+          ...(assignee && { assignee })
+        })
+        .eq('id', id)
+        .select()
+        .single()
+
+      if (error) {
+        console.error('Supabase update error:', error)
+        return NextResponse.json({ error: '更新重要事項失敗' }, { status: 500 })
+      }
+
+      if (!updatedItem) {
         return NextResponse.json({ error: '找不到指定的重要事項' }, { status: 404 })
       }
-      
-      importantItems[itemIndex] = {
-        ...importantItems[itemIndex],
-        date: date || importantItems[itemIndex].date,
-        content: content || importantItems[itemIndex].content,
-        assignee: assignee || importantItems[itemIndex].assignee
+
+      const formattedItem = {
+        id: updatedItem.id,
+        date: updatedItem.date,
+        content: updatedItem.content,
+        assignee: updatedItem.assignee,
+        completed: updatedItem.completed,
+        completedAt: updatedItem.completed_at,
+        createdAt: updatedItem.created_at
       }
-      
-      saveImportantItems(importantItems)
       
       return NextResponse.json({
         success: true,
         message: '重要事項已更新',
-        data: importantItems[itemIndex]
+        data: formattedItem
       })
       
     } else if (action === 'toggle') {
       const { id } = data
       
-      const itemIndex = importantItems.findIndex(item => item.id === id)
-      if (itemIndex === -1) {
+      // First get the current item to toggle its status
+      const { data: currentItem, error: fetchError } = await supabase
+        .from('important_items')
+        .select('completed')
+        .eq('id', id)
+        .single()
+
+      if (fetchError || !currentItem) {
+        console.error('Supabase fetch error:', fetchError)
         return NextResponse.json({ error: '找不到指定的重要事項' }, { status: 404 })
       }
-      
-      const item = importantItems[itemIndex]
-      item.completed = !item.completed
-      
-      if (item.completed) {
-        item.completedAt = new Date().toISOString()
-      } else {
-        delete item.completedAt
+
+      const newCompleted = !currentItem.completed
+      const updateData: any = { 
+        completed: newCompleted 
       }
       
-      saveImportantItems(importantItems)
+      if (newCompleted) {
+        updateData.completed_at = new Date().toISOString()
+      } else {
+        updateData.completed_at = null
+      }
+
+      const { data: updatedItem, error } = await supabase
+        .from('important_items')
+        .update(updateData)
+        .eq('id', id)
+        .select()
+        .single()
+
+      if (error) {
+        console.error('Supabase toggle error:', error)
+        return NextResponse.json({ error: '更新重要事項狀態失敗' }, { status: 500 })
+      }
+
+      const formattedItem = {
+        id: updatedItem.id,
+        date: updatedItem.date,
+        content: updatedItem.content,
+        assignee: updatedItem.assignee,
+        completed: updatedItem.completed,
+        completedAt: updatedItem.completed_at,
+        createdAt: updatedItem.created_at
+      }
       
       return NextResponse.json({
         success: true,
-        message: item.completed ? '事項已完成' : '事項已標記為未完成',
-        data: item
+        message: updatedItem.completed ? '事項已完成' : '事項已標記為未完成',
+        data: formattedItem
       })
       
     } else if (action === 'delete') {
       const { id } = data
       
-      const itemIndex = importantItems.findIndex(item => item.id === id)
-      if (itemIndex === -1) {
+      const { data: deletedItem, error } = await supabase
+        .from('important_items')
+        .delete()
+        .eq('id', id)
+        .select()
+        .single()
+
+      if (error) {
+        console.error('Supabase delete error:', error)
+        return NextResponse.json({ error: '刪除重要事項失敗' }, { status: 500 })
+      }
+
+      if (!deletedItem) {
         return NextResponse.json({ error: '找不到指定的重要事項' }, { status: 404 })
       }
-      
-      const deletedItem = importantItems.splice(itemIndex, 1)[0]
-      saveImportantItems(importantItems)
+
+      const formattedItem = {
+        id: deletedItem.id,
+        date: deletedItem.date,
+        content: deletedItem.content,
+        assignee: deletedItem.assignee,
+        completed: deletedItem.completed,
+        completedAt: deletedItem.completed_at,
+        createdAt: deletedItem.created_at
+      }
       
       return NextResponse.json({
         success: true,
         message: '重要事項已刪除',
-        data: deletedItem
+        data: formattedItem
       })
     }
     
