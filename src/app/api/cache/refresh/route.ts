@@ -89,7 +89,7 @@ async function calculateMonthlySales(orderCsv: string, productCsv: string) {
   const allMonths = []
   for (let year = 2023; year <= 2025; year++) {
     const startMonth = year === 2023 ? 9 : 1
-    const endMonth = year === 2025 ? 8 : 12
+    const endMonth = year === 2025 ? 9 : 12
     for (let month = startMonth; month <= endMonth; month++) {
       const monthKey = `${year}-${String(month).padStart(2, '0')}`
       allMonths.push(monthKey)
@@ -209,7 +209,7 @@ async function calculateDiscountTrends(orderCsv: string) {
   const allMonths = []
   for (let year = 2023; year <= 2025; year++) {
     const startMonth = year === 2023 ? 9 : 1
-    const endMonth = year === 2025 ? 8 : 12
+    const endMonth = year === 2025 ? 9 : 12
     for (let month = startMonth; month <= endMonth; month++) {
       const monthKey = `${year}-${String(month).padStart(2, '0')}`
       allMonths.push(monthKey)
@@ -270,7 +270,7 @@ async function precalculateMonthlyData(_productCsv: string, _masterCsv: string) 
   const allMonths = []
   for (let year = 2023; year <= 2025; year++) {
     const startMonth = year === 2023 ? 9 : 1  
-    const endMonth = year === 2025 ? 8 : 12
+    const endMonth = year === 2025 ? 9 : 12
     for (let month = startMonth; month <= endMonth; month++) {
       const monthKey = `${year}-${String(month).padStart(2, '0')}`
       allMonths.push(monthKey)

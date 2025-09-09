@@ -1,5 +1,22 @@
 import { NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
+import { cache } from '@/lib/cache'
+
+// 清除所有重要事項相關的快取
+function clearImportantItemsCache() {
+  const cacheKeys = [
+    'important-items-pending-50',
+    'important-items-all-50',
+    'important-items-pending-100', 
+    'important-items-all-100'
+  ]
+  
+  cacheKeys.forEach(key => {
+    cache.delete(key)
+  })
+  
+  console.log('🗑️ 已清除重要事項相關快取')
+}
 
 interface ImportantItem {
   id: string
@@ -11,12 +28,48 @@ interface ImportantItem {
   created_at: string
 }
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    const { data: importantItems, error } = await supabase
+    const url = new URL(request.url)
+    const onlyPending = url.searchParams.get('pending') === 'true'
+    const limit = parseInt(url.searchParams.get('limit') || '50')
+    const forceRefresh = url.searchParams.get('refresh') === 'true'
+
+    // 生成快取鍵
+    const cacheKey = `important-items-${onlyPending ? 'pending' : 'all'}-${limit}`
+    
+    // 檢查快取（除非強制刷新）
+    if (!forceRefresh) {
+      const cachedData = cache.get(cacheKey)
+      if (cachedData) {
+        console.log('✅ 使用快取的重要事項數據')
+        return NextResponse.json({
+          ...cachedData,
+          cached: true,
+          cacheTimestamp: cache.getTimestamp(cacheKey)
+        })
+      }
+    }
+
+    console.log(`🔄 從數據庫獲取重要事項 (${onlyPending ? '僅待處理' : '全部'})`)
+
+    let query = supabase
       .from('important_items')
       .select('*')
-      .order('created_at', { ascending: false })
+
+    // 如果只需要待處理事項，直接在數據庫層過濾
+    if (onlyPending) {
+      query = query
+        .eq('completed', false)
+        .order('date', { ascending: true }) // 按日期升序，緊急的優先顯示
+        .limit(limit)
+    } else {
+      query = query
+        .order('created_at', { ascending: false })
+        .limit(limit)
+    }
+
+    const { data: importantItems, error } = await query
 
     if (error) {
       console.error('Supabase error:', error)
@@ -34,10 +87,31 @@ export async function GET() {
       createdAt: item.created_at
     })) || []
 
-    return NextResponse.json({
+    // 計算統計資訊以減少前端計算
+    const stats = onlyPending ? {
+      totalPending: formattedItems.length,
+      overdueCount: formattedItems.filter(item => 
+        new Date(item.date) < new Date()
+      ).length
+    } : {
+      totalItems: formattedItems.length,
+      completedItems: formattedItems.filter(item => item.completed).length,
+      pendingItems: formattedItems.filter(item => !item.completed).length
+    }
+
+    const responseData = {
       success: true,
-      data: formattedItems
-    })
+      data: formattedItems,
+      stats,
+      cached: false,
+      timestamp: new Date().toISOString()
+    }
+
+    // 快取數據（30分鐘）
+    cache.set(cacheKey, responseData, 30)
+    console.log(`💾 已快取重要事項數據，快取鍵: ${cacheKey}`)
+
+    return NextResponse.json(responseData)
   } catch (error) {
     console.error('獲取重要事項失敗:', error)
     return NextResponse.json({ error: '獲取重要事項失敗' }, { status: 500 })
@@ -82,6 +156,9 @@ export async function POST(request: Request) {
         completedAt: newItem.completed_at,
         createdAt: newItem.created_at
       }
+
+      // 清除相關快取
+      clearImportantItemsCache()
       
       return NextResponse.json({
         success: true,
@@ -121,6 +198,9 @@ export async function POST(request: Request) {
         completedAt: updatedItem.completed_at,
         createdAt: updatedItem.created_at
       }
+
+      // 清除相關快取
+      clearImportantItemsCache()
       
       return NextResponse.json({
         success: true,
@@ -178,6 +258,9 @@ export async function POST(request: Request) {
         completedAt: updatedItem.completed_at,
         createdAt: updatedItem.created_at
       }
+
+      // 清除相關快取
+      clearImportantItemsCache()
       
       return NextResponse.json({
         success: true,
@@ -213,6 +296,9 @@ export async function POST(request: Request) {
         completedAt: deletedItem.completed_at,
         createdAt: deletedItem.created_at
       }
+
+      // 清除相關快取
+      clearImportantItemsCache()
       
       return NextResponse.json({
         success: true,

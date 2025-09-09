@@ -63,9 +63,9 @@ export default function ReportsContent() {
   const searchParams = useSearchParams()
   
   // Tab state with URL sync
-  const [activeTab, setActiveTab] = useState<'trends' | 'monthly'>(() => {
+  const [activeTab, setActiveTab] = useState<'trends' | 'monthly' | 'ai-chat'>(() => {
     const tab = searchParams.get('tab')
-    return (tab === 'monthly' || tab === 'trends') ? tab : 'trends'
+    return (tab === 'monthly' || tab === 'trends' || tab === 'ai-chat') ? tab : 'trends'
   })
   
   // Common loading states
@@ -96,6 +96,14 @@ export default function ReportsContent() {
     discountData?: DiscountData[]
     timestamp?: Date
   }>({})
+  
+  // AI Chat state
+  const [chatInput, setChatInput] = useState('')
+  const [loadingChat, setLoadingChat] = useState(false)
+  const [selectedCategory, setSelectedCategory] = useState<string>('')
+  const [selectedModel, setSelectedModel] = useState<string>('groq')
+  const [availableModels, setAvailableModels] = useState<{id: string, name: string, provider: string}[]>([])
+  const [answer, setAnswer] = useState<string>('')
 
   // 設計系統 10 色配色盤
   const chartColors = [
@@ -169,6 +177,79 @@ export default function ReportsContent() {
       setIsRefreshing(false)
     }
   }, [cachedData])
+
+  // 獲取可用的AI模型列表
+  useEffect(() => {
+    const fetchAvailableModels = async () => {
+      try {
+        const response = await fetch('/api/ai-chat')
+        if (response.ok) {
+          const result = await response.json()
+          setAvailableModels(result.models || [])
+        }
+      } catch (error) {
+        console.error('獲取模型列表失敗:', error)
+        // 設置默認模型列表
+        setAvailableModels([
+          { id: 'gemini', name: 'Google Gemini 1.5 Flash', provider: 'google' }
+        ])
+      }
+    }
+    fetchAvailableModels()
+  }, [])
+
+  // AI Chat functions
+  const sendChatMessage = useCallback(async (message: string) => {
+    if (!message.trim() || loadingChat) return
+    
+    setAnswer('')
+    setLoadingChat(true)
+    
+    try {
+      // 使用生產API端點，基於現有內部數據
+      const response = await fetch('/api/ai-chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message,
+          conversationHistory: [],
+          category: selectedCategory,
+          model: selectedModel
+        })
+      })
+
+      if (response.ok) {
+        const result = await response.json()
+        const responseText = result.response || '抱歉，我暫時無法處理您的問題'
+        setAnswer(responseText)
+        setChatInput('') // 只有在成功時才清空輸入框
+      } else {
+        const errorResult = await response.json()
+        setAnswer(`抱歉，處理您的問題時發生錯誤：${errorResult.error || '未知錯誤'}`)
+      }
+    } catch (error) {
+      console.error('Chat error:', error)
+      setAnswer('抱歉，連接服務時發生錯誤，請稍後再試')
+    } finally {
+      setLoadingChat(false)
+    }
+  }, [loadingChat, selectedCategory, selectedModel])
+
+
+  const handleSendMessage = useCallback(() => {
+    if (chatInput.trim()) {
+      sendChatMessage(chatInput)
+    }
+  }, [chatInput, sendChatMessage])
+
+  const handleKeyPress = useCallback((e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && e.shiftKey) {
+      e.preventDefault()
+      handleSendMessage()
+    }
+  }, [handleSendMessage])
 
   // Fetch monthly category data (used for 當月數字 tab)
   const fetchMonthlyCategoryData = useCallback(async (month: string) => {
@@ -695,7 +776,7 @@ export default function ReportsContent() {
               }}
               className={`px-6 py-3 rounded-lg font-medium transition-all ${
                 activeTab === 'trends'
-                  ? 'bg-purple-400 text-white shadow-sm'
+                  ? 'bg-secondary text-gray-800 shadow-sm'
                   : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50'
               }`}
             >
@@ -708,11 +789,28 @@ export default function ReportsContent() {
               }}
               className={`px-6 py-3 rounded-lg font-medium transition-all ${
                 activeTab === 'monthly'
-                  ? 'bg-purple-400 text-white shadow-sm'
+                  ? 'bg-secondary text-gray-800 shadow-sm'
                   : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50'
               }`}
             >
               當月數字
+            </button>
+            <button
+              onClick={() => {
+                setActiveTab('ai-chat')
+                router.push('/reports?tab=ai-chat', { scroll: false })
+              }}
+              className={`px-6 py-3 rounded-lg font-medium transition-all flex items-center space-x-2 ${
+                activeTab === 'ai-chat'
+                  ? 'text-gray-800 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50'
+              }`}
+              style={activeTab === 'ai-chat' ? { backgroundColor: '#98F5E1' } : {}}
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+              </svg>
+              <span>AI問答</span>
             </button>
           </div>
         </div>
@@ -779,6 +877,342 @@ export default function ReportsContent() {
             {lastRefreshTime && (
               <div className="text-center text-sm text-gray-500">
                 最後更新時間：{lastRefreshTime.toLocaleString('zh-TW')}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* AI Chat Tab Content */}
+        {activeTab === 'ai-chat' && (
+          <div className="space-y-6">
+            {/* AI 問答界面標題 */}
+            <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
+              <div className="flex items-center justify-center space-x-3 mb-4">
+                <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ backgroundColor: '#98F5E1' }}>
+                  <svg className="w-6 h-6 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                  </svg>
+                </div>
+                <div className="text-center">
+                  <h2 className="text-2xl font-bold text-gray-800">AI 智能問答</h2>
+                  <p className="text-gray-600 mt-1">基於餐廳銷售數據的智能分析助手 • Powered by {availableModels.find(m => m.id === selectedModel)?.name || 'Gemini'}</p>
+                </div>
+              </div>
+              
+              {/* 步驟指示器 */}
+              <div className="flex items-center justify-center space-x-4 mt-6">
+                <div className="flex items-center space-x-2">
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
+                    selectedCategory ? 'bg-mint_green-500 text-white' : 'bg-mint_green-200 text-gray-800'
+                  }`}>
+                    1
+                  </div>
+                  <span className={`text-sm font-medium ${selectedCategory ? 'text-mint_green-600' : 'text-gray-500'}`}>
+                    選擇問題分類
+                  </span>
+                </div>
+                <div className="w-8 h-px bg-gray-300"></div>
+                <div className="flex items-center space-x-2">
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
+                    selectedCategory && chatInput.trim() ? 'bg-mint_green-500 text-white' : 'bg-gray-200 text-gray-600'
+                  }`}>
+                    2
+                  </div>
+                  <span className={`text-sm font-medium ${selectedCategory && chatInput.trim() ? 'text-mint_green-600' : 'text-gray-500'}`}>
+                    輸入問題
+                  </span>
+                </div>
+                <div className="w-8 h-px bg-gray-300"></div>
+                <div className="flex items-center space-x-2">
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
+                    answer ? 'bg-mint_green-500 text-white' : 'bg-gray-200 text-gray-600'
+                  }`}>
+                    3
+                  </div>
+                  <span className={`text-sm font-medium ${answer ? 'text-mint_green-600' : 'text-gray-500'}`}>
+                    AI 回答
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* 步驟1：問題分類選擇 */}
+            <div className="bg-white rounded-2xl shadow-lg border border-gray-100">
+              <div className="p-6 border-b border-gray-100">
+                <div className="flex items-center space-x-3 mb-4">
+                  <div className="w-8 h-8 rounded-full bg-mint_green-500 text-white flex items-center justify-center text-sm font-medium">
+                    1
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-800">選擇問題分類</h3>
+                </div>
+                <p className="text-sm text-gray-600 mb-4">請先選擇您想要查詢的問題類型，系統將根據您的選擇載入對應的數據源：</p>
+              </div>
+              
+              <div className="p-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <button
+                    onClick={() => setSelectedCategory('product')}
+                    className={`p-4 rounded-xl border-2 transition-all text-left group ${
+                      selectedCategory === 'product'
+                        ? 'border-sky_blue bg-sky_blue-50 shadow-lg'
+                        : 'border-gray-200 bg-white hover:border-sky_blue-200 hover:shadow-md'
+                    }`}
+                  >
+                    <div className="flex items-center space-x-3 mb-3">
+                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                        selectedCategory === 'product' ? 'bg-sky_blue text-white' : 'bg-sky_blue-100 text-sky_blue-600'
+                      }`}>
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                        </svg>
+                      </div>
+                      <div>
+                        <div className="font-semibold text-gray-800">A. 商品銷售問題</div>
+                        <div className="text-xs text-gray-600">Product Sales Analysis</div>
+                      </div>
+                    </div>
+                    <div className="text-sm text-gray-700 mb-2">
+                      查詢範圍：商品銷售排名與商品主檔
+                    </div>
+                    <div className="text-xs text-gray-500">
+                      適用問題：特定商品銷售表現、商品排名、銷量趨勢分析等
+                    </div>
+                  </button>
+                  
+                  <button
+                    onClick={() => setSelectedCategory('order')}
+                    className={`p-4 rounded-xl border-2 transition-all text-left group ${
+                      selectedCategory === 'order'
+                        ? 'border-periwinkle bg-periwinkle-50 shadow-lg'
+                        : 'border-gray-200 bg-white hover:border-periwinkle-200 hover:shadow-md'
+                    }`}
+                  >
+                    <div className="flex items-center space-x-3 mb-3">
+                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                        selectedCategory === 'order' ? 'bg-periwinkle text-white' : 'bg-periwinkle-100 text-periwinkle-600'
+                      }`}>
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                      </div>
+                      <div>
+                        <div className="font-semibold text-gray-800">B. 訂單問題</div>
+                        <div className="text-xs text-gray-600">Order Analysis</div>
+                      </div>
+                    </div>
+                    <div className="text-sm text-gray-700 mb-2">
+                      查詢範圍：月銷售統計與訂單資料
+                    </div>
+                    <div className="text-xs text-gray-500">
+                      適用問題：訂單趨勢、支付方式分析、時段分析、客戶行為等
+                    </div>
+                  </button>
+                  
+                  <button
+                    onClick={() => setSelectedCategory('category')}
+                    className={`p-4 rounded-xl border-2 transition-all text-left group ${
+                      selectedCategory === 'category'
+                        ? 'border-mint_green bg-mint_green-50 shadow-lg'
+                        : 'border-gray-200 bg-white hover:border-mint_green-200 hover:shadow-md'
+                    }`}
+                  >
+                    <div className="flex items-center space-x-3 mb-3">
+                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                        selectedCategory === 'category' ? 'bg-mint_green text-white' : 'bg-mint_green-100 text-mint_green-600'
+                      }`}>
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                        </svg>
+                      </div>
+                      <div>
+                        <div className="font-semibold text-gray-800">C. 商品分類問題</div>
+                        <div className="text-xs text-gray-600">Category Analysis</div>
+                      </div>
+                    </div>
+                    <div className="text-sm text-gray-700 mb-2">
+                      查詢範圍：分類分佈+商品排名+商品主檔
+                    </div>
+                    <div className="text-xs text-gray-500">
+                      適用問題：分類表現比較、跨分類分析、商品分類統計等
+                    </div>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* 步驟2：問題輸入（只有選擇分類後才顯示） */}
+            {selectedCategory && (
+              <div className="bg-white rounded-2xl shadow-lg border border-gray-100">
+                <div className="p-6 border-b border-gray-100">
+                  <div className="flex items-center space-x-3 mb-4">
+                    <div className="w-8 h-8 rounded-full bg-mint_green-500 text-white flex items-center justify-center text-sm font-medium">
+                      2
+                    </div>
+                    <h3 className="text-lg font-semibold text-gray-800">輸入您的問題</h3>
+                  </div>
+                  <p className="text-sm text-gray-600">
+                    已選擇：
+                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ml-2 ${
+                      selectedCategory === 'product' ? 'bg-sky_blue-100 text-sky_blue-800' :
+                      selectedCategory === 'order' ? 'bg-periwinkle-100 text-periwinkle-800' :
+                      'bg-mint_green-100 text-mint_green-800'
+                    }`}>
+                      {selectedCategory === 'product' ? 'A. 商品銷售問題' :
+                       selectedCategory === 'order' ? 'B. 訂單問題' :
+                       'C. 商品分類問題'}
+                    </span>
+                  </p>
+                </div>
+                
+                <div className="p-6">
+                  {/* AI模型選擇 */}
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      🤖 選擇AI模型
+                    </label>
+                    <select
+                      value={selectedModel}
+                      onChange={(e) => setSelectedModel(e.target.value)}
+                      className="w-full max-w-sm p-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:bg-white focus:ring-2 focus:ring-mint_green/50 focus:border-mint_green/50 transition-all text-gray-900"
+                      disabled={loadingChat}
+                    >
+                      {availableModels.map((model) => (
+                        <option key={model.id} value={model.id}>
+                          {model.name} ({model.provider})
+                        </option>
+                      ))}
+                    </select>
+                    <p className="text-xs text-gray-500 mt-1">
+                      選擇不同AI模型可能有不同的回答風格和速度
+                    </p>
+                  </div>
+                  
+                  <div className="flex items-end space-x-3">
+                    <div className="flex-1">
+                      <textarea
+                        value={chatInput}
+                        onChange={(e) => setChatInput(e.target.value)}
+                        onKeyDown={handleKeyPress}
+                        placeholder={
+                          selectedCategory === 'product' ? 
+                          '請輸入您想了解的商品銷售相關問題...' :
+                          selectedCategory === 'order' ?
+                          '請輸入您想了解的訂單相關問題...' :
+                          '請輸入您想了解的商品分類相關問題...'
+                        }
+                        className="w-full p-4 bg-gray-50 border border-gray-200 rounded-xl resize-none focus:outline-none focus:bg-white focus:ring-2 focus:ring-mint_green/50 focus:border-mint_green/50 transition-all text-gray-900 placeholder-gray-500"
+                        rows={3}
+                        disabled={loadingChat}
+                      />
+                    </div>
+                    <button 
+                      onClick={handleSendMessage}
+                      disabled={!chatInput.trim() || !selectedCategory || loadingChat}
+                      className="px-6 py-4 bg-mint_green-600 text-white rounded-xl hover:bg-mint_green-700 transition-colors flex items-center space-x-2 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {loadingChat ? (
+                        <svg className="w-5 h-5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                      ) : (
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                        </svg>
+                      )}
+                      <span>{loadingChat ? '分析中...' : '送出問題'}</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* 步驟3：AI回答區域 */}
+            {(loadingChat || answer) && (
+              <div className="bg-white rounded-2xl shadow-lg border border-gray-100">
+                <div className="p-6 border-b border-gray-100">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-8 h-8 rounded-full bg-mint_green-500 text-white flex items-center justify-center text-sm font-medium">
+                      3
+                    </div>
+                    <h3 className="text-lg font-semibold text-gray-800">AI 分析結果</h3>
+                  </div>
+                </div>
+                
+                <div className="p-6">
+                  {/* 載入狀態 */}
+                  {loadingChat && (
+                    <div className="flex items-start space-x-3">
+                      <div className="w-10 h-10 rounded-full flex items-center justify-center bg-mint_green-200">
+                        <svg className="w-5 h-5 text-gray-800 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                      </div>
+                      <div className="flex-1">
+                        <div className="p-4 rounded-xl bg-mint_green-50 border border-mint_green-200">
+                          <p className="text-gray-800 font-medium">🔍 正在獲取餐廳數據並分析您的問題...</p>
+                          <div className="flex items-center space-x-2 mt-2 text-sm text-gray-600">
+                            <div className="flex space-x-1">
+                              <div className="w-1 h-1 bg-mint_green-400 rounded-full animate-bounce"></div>
+                              <div className="w-1 h-1 bg-mint_green-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                              <div className="w-1 h-1 bg-mint_green-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                            </div>
+                            <span>AI正在處理中</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* 回答顯示 */}
+                  {answer && !loadingChat && (
+                    <div className="flex items-start space-x-3">
+                      <div className="w-10 h-10 rounded-full flex items-center justify-center bg-mint_green-500">
+                        <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                        </svg>
+                      </div>
+                      <div className="flex-1">
+                        <div className="p-4 rounded-xl bg-gray-50 border border-gray-200">
+                          <div className="prose prose-sm max-w-none">
+                            <p className="whitespace-pre-wrap text-gray-800 leading-relaxed">{answer}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center justify-between mt-3">
+                          <div className="text-xs text-gray-500">
+                            🤖 AI 助手 • 基於餐廳最新數據分析
+                          </div>
+                          <button
+                            onClick={() => {
+                              setAnswer('')
+                              setChatInput('')
+                            }}
+                            className="text-xs text-mint_green-600 hover:text-mint_green-700 font-medium"
+                          >
+                            重新提問
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* 空狀態提示 */}
+            {!selectedCategory && !loadingChat && !answer && (
+              <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-12">
+                <div className="text-center">
+                  <div className="w-20 h-20 rounded-full bg-mint_green-100 mx-auto mb-4 flex items-center justify-center">
+                    <svg className="w-10 h-10 text-mint_green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-800 mb-2">開始您的數據分析之旅</h3>
+                  <p className="text-gray-600 mb-4">請先在上方選擇問題分類，系統將為您載入對應的數據源</p>
+                  <div className="text-sm text-gray-500">
+                    💫 支援即時數據分析 • 🎯 精準問題解答 • 📊 多維度數據洞察
+                  </div>
+                </div>
               </div>
             )}
           </div>

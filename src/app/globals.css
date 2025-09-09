@@ -1,8 +1,31 @@
 @import "tailwindcss";
 
+/* 餐廳管理系統 - 設計系統色彩變數 */
 :root {
+  /* 背景系統 */
   --background: #ffffff;
-  --foreground: #171717;
+  --foreground: #1F2937; /* gray-800 */
+  
+  /* 你的 10 色設計系統變數 */
+  --lemon-chiffon: #FBF8CC;
+  --fawn: #FDE4CF;
+  --melon: #FFCFD2;
+  --lavender-blush: #F1C0E8;
+  --mauve: #CFBAF0;
+  --periwinkle: #A3C4F3;
+  --sky-blue: #90DBF4;
+  --aquamarine: #8EECF5;
+  --mint-green: #98F5E1;
+  --tea-green: #B9FBC0;
+  
+  /* 語意化顏色 */
+  --primary: var(--sky-blue);
+  --secondary: var(--periwinkle);
+  --accent: var(--melon);
+  --success: var(--aquamarine);
+  --warning: var(--lemon-chiffon);
+  --error: var(--melon);
+  --info: var(--sky-blue);
 }
 
 @theme inline {
@@ -12,10 +35,11 @@
   --font-mono: var(--font-geist-mono);
 }
 
+/* 禁用暗模式 - 保持設計系統一致性 */
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #ffffff;
+    --foreground: #1F2937;
   }
 }
 
@@ -23,4 +47,91 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+/* 強制覆蓋任何預設連結顏色 */
+a {
+  color: var(--primary);
+  text-decoration: none;
+}
+
+a:hover {
+  color: var(--sky-blue);
+  opacity: 0.8;
+}
+
+/* 強制覆蓋任何預設按鈕顏色 */
+button:not([class*="bg-"]) {
+  background-color: var(--primary);
+  color: white;
+}
+
+button:not([class*="bg-"]):hover {
+  background-color: var(--sky-blue);
+  opacity: 0.9;
+}
+
+/* 表單元素顏色強制 */
+input:focus,
+textarea:focus,
+select:focus {
+  border-color: var(--primary) !important;
+  outline-color: var(--primary) !important;
+  box-shadow: 0 0 0 3px rgba(144, 219, 244, 0.1) !important;
+}
+
+/* 禁用任何瀏覽器預設的藍色/紫色連結 */
+a:visited {
+  color: var(--primary);
+}
+
+/* 強制數字和重要文字使用你的色彩系統 */
+.text-blue-600,
+.text-blue-500,
+.text-indigo-600,
+.text-purple-600,
+.text-violet-600 {
+  color: var(--primary) !important;
+}
+
+.bg-blue-600,
+.bg-blue-500,
+.bg-indigo-600,
+.bg-purple-600,
+.bg-violet-600 {
+  background-color: var(--primary) !important;
+}
+
+/* 實用工具類別 */
+@layer utilities {
+  .text-restaurant-primary {
+    color: var(--primary);
+  }
+  
+  .text-restaurant-secondary {
+    color: var(--secondary);
+  }
+  
+  .text-restaurant-accent {
+    color: var(--accent);
+  }
+  
+  .bg-restaurant-primary {
+    background-color: var(--primary);
+  }
+  
+  .bg-restaurant-secondary {
+    background-color: var(--secondary);
+  }
+  
+  .bg-restaurant-accent {
+    background-color: var(--accent);
+  }
+  
+  .bg-page-gradient {
+    background: linear-gradient(135deg, 
+      var(--lemon-chiffon) 0%, 
+      var(--fawn) 50%, 
+      var(--melon) 100%);
+  }
 }

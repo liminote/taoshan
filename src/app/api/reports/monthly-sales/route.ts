@@ -16,19 +16,19 @@ export async function GET() {
     }
 
     console.log('⚠️ 無快取資料，執行即時計算...')
-    // 生成包含所有實際資料的月份，然後取最近13個月
+    // 生成從2023-12開始到2025-09的所有月份（涵蓋更完整的時間範圍）
     const allMonths = []
-    // 生成從2023-09到2025-08的所有月份
+    // 生成從2023-12到2025-09的所有月份
     for (let year = 2023; year <= 2025; year++) {
-      const startMonth = year === 2023 ? 9 : 1
-      const endMonth = year === 2025 ? 8 : 12
+      const startMonth = year === 2023 ? 12 : 1  // 2023年從12月開始
+      const endMonth = year === 2025 ? 9 : 12
       for (let month = startMonth; month <= endMonth; month++) {
         const monthKey = `${year}-${String(month).padStart(2, '0')}`
         allMonths.push(monthKey)
       }
     }
-    // 取最新13個月（從最新往前推）
-    const recentMonths = allMonths.slice(-13)
+    // 使用所有月份（從2023-12開始）而不是只取最近13個月
+    const recentMonths = allMonths
 
     // 使用 Google Sheets 訂單資料
     const orderSheetUrl = 'https://docs.google.com/spreadsheets/d/1EWPECWQp_Ehz43Lfks_I8lcvEig8gV9DjyjEIzC5EO4/export?format=csv&gid=0'

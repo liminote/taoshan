@@ -435,7 +435,7 @@ export default function ProductsMasterSheetsPage() {
         <div className="mb-8">
           <Link 
             href="/" 
-            className="inline-flex items-center text-gray-600 hover:text-blue-600 transition-colors mb-6 group"
+            className="inline-flex items-center text-gray-600 hover:text-primary transition-colors mb-6 group"
           >
             <svg className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -458,7 +458,7 @@ export default function ProductsMasterSheetsPage() {
                   <p className="text-gray-600">管理商品資料和分類設定</p>
                   {meta.lastUpdated && (
                     <div className="flex items-center space-x-2">
-                      <div className={`w-2 h-2 rounded-full ${meta.fromCache ? 'bg-blue-500' : 'bg-green-500'}`}></div>
+                      <div className={`w-2 h-2 rounded-full ${meta.fromCache ? 'bg-primary' : 'bg-aquamarine'}`}></div>
                       <span className="text-sm text-gray-500">
                         {meta.fromCache ? '緩存資料' : '最新資料'} - 更新時間: {meta.lastUpdated}
                       </span>
@@ -531,8 +531,8 @@ export default function ProductsMasterSheetsPage() {
               onClick={() => setActiveTab('products')}
               className={`px-6 py-3 text-sm font-medium rounded-lg transition-all duration-200 flex items-center space-x-2 ${
                 activeTab === 'products'
-                  ? 'bg-white text-pink-600 shadow-sm'
-                  : 'text-gray-600 hover:text-pink-600'
+                  ? 'bg-white text-melon shadow-sm'
+                  : 'text-gray-600 hover:text-melon'
               }`}
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -544,8 +544,8 @@ export default function ProductsMasterSheetsPage() {
               onClick={() => setActiveTab('categories')}
               className={`px-6 py-3 text-sm font-medium rounded-lg transition-all duration-200 flex items-center space-x-2 ${
                 activeTab === 'categories'
-                  ? 'bg-white text-orange-600 shadow-sm'
-                  : 'text-gray-600 hover:text-orange-600'
+                  ? 'bg-white text-fawn shadow-sm'
+                  : 'text-gray-600 hover:text-fawn'
               }`}
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -560,12 +560,12 @@ export default function ProductsMasterSheetsPage() {
           <>
         {/* 未分類商品區域 */}
         {showUncategorized && (
-          <div className="bg-yellow-50 border-l-4 border-orange-400 rounded-2xl p-6 shadow-lg mb-6">
+          <div className="bg-lemon_chiffon-50 border-l-4 border-fawn rounded-2xl p-6 shadow-lg mb-6">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-semibold text-orange-900">未分類商品</h2>
+              <h2 className="text-xl font-semibold text-gray-800">未分類商品</h2>
               <button
                 onClick={() => setShowUncategorized(false)}
-                className="text-orange-500 hover:text-orange-700"
+                className="text-fawn hover:text-fawn-700"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -584,7 +584,7 @@ export default function ProductsMasterSheetsPage() {
                           {product.inMaster ? '在主檔中但未分類' : '不在主檔中'}
                         </p>
                         {product.category && (
-                          <p className="text-xs text-orange-600">目前分類: {product.category}</p>
+                          <p className="text-xs text-fawn-600">目前分類: {product.category}</p>
                         )}
                       </div>
                       <button
@@ -599,11 +599,11 @@ export default function ProductsMasterSheetsPage() {
                 ))}
               </div>
             ) : (
-              <p className="text-orange-700">沒有找到未分類商品</p>
+              <p className="text-gray-700">沒有找到未分類商品</p>
             )}
             
             {uncategorizedProducts.length > 20 && (
-              <p className="text-orange-600 text-sm mt-3">
+              <p className="text-gray-600 text-sm mt-3">
                 顯示前 20 個，總共 {uncategorizedProducts.length} 個未分類商品
               </p>
             )}
@@ -611,7 +611,7 @@ export default function ProductsMasterSheetsPage() {
         )}
 
         {/* 搜尋和新增表單區域 */}
-        <div className="bg-white/80 backdrop-blur-sm border border-orange-200/30 rounded-2xl p-6 shadow-lg mb-6">
+        <div className="bg-white/80 backdrop-blur-sm border border-gray-200/30 rounded-2xl p-6 shadow-lg mb-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* 搜尋區域 */}
             <div>
@@ -621,7 +621,7 @@ export default function ProductsMasterSheetsPage() {
                 value={search}
                 onChange={(e) => handleSearch(e.target.value)}
                 placeholder="輸入商品名稱、分類等..."
-                className="w-full px-3 py-2 border border-orange-200 rounded-lg bg-white/70 focus:ring-2 focus:ring-pink-400/50 focus:border-pink-400 text-gray-900"
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg bg-white/70 focus:ring-2 focus:ring-primary/50 focus:border-primary text-gray-900"
               />
             </div>
 
@@ -639,14 +639,14 @@ export default function ProductsMasterSheetsPage() {
                       onChange={(e) => setFormData({...formData, original_name: e.target.value})}
                       placeholder="商品名稱*"
                       required
-                      className="px-3 py-2 border border-orange-200 rounded-lg bg-white/70 focus:ring-2 focus:ring-pink-400/50 focus:border-pink-400 text-sm text-gray-900"
+                      className="px-3 py-2 border border-gray-200 rounded-lg bg-white/70 focus:ring-2 focus:ring-primary/50 focus:border-primary text-sm text-gray-900"
                     />
                     <input
                       type="text"
                       value={formData.new_name}
                       onChange={(e) => setFormData({...formData, new_name: e.target.value})}
                       placeholder="新商品名稱"
-                      className="px-3 py-2 border border-orange-200 rounded-lg bg-white/70 focus:ring-2 focus:ring-pink-400/50 focus:border-pink-400 text-sm text-gray-900"
+                      className="px-3 py-2 border border-gray-200 rounded-lg bg-white/70 focus:ring-2 focus:ring-primary/50 focus:border-primary text-sm text-gray-900"
                     />
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -659,7 +659,7 @@ export default function ProductsMasterSheetsPage() {
                           small_category: '' // 清空小分類選擇
                         })
                       }}
-                      className="px-3 py-2 border border-orange-200 rounded-lg bg-white/70 focus:ring-2 focus:ring-pink-400/50 focus:border-pink-400 text-sm text-gray-900"
+                      className="px-3 py-2 border border-gray-200 rounded-lg bg-white/70 focus:ring-2 focus:ring-primary/50 focus:border-primary text-sm text-gray-900"
                     >
                       <option value="">選擇大分類</option>
                       {categories.map((category) => (
@@ -672,7 +672,7 @@ export default function ProductsMasterSheetsPage() {
                       value={formData.small_category}
                       onChange={(e) => setFormData({...formData, small_category: e.target.value})}
                       disabled={!formData.category}
-                      className="px-3 py-2 border border-orange-200 rounded-lg bg-white/70 focus:ring-2 focus:ring-pink-400/50 focus:border-pink-400 text-sm text-gray-900 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="px-3 py-2 border border-gray-200 rounded-lg bg-white/70 focus:ring-2 focus:ring-primary/50 focus:border-primary text-sm text-gray-900 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <option value="">選擇小分類</option>
                       {formData.category && getSubcategories(formData.category).map((subcategory) => (
@@ -706,10 +706,10 @@ export default function ProductsMasterSheetsPage() {
         </div>
 
         {/* 商品列表 */}
-        <div className="bg-white/80 backdrop-blur-sm border border-orange-200/30 rounded-2xl shadow-lg overflow-hidden">
+        <div className="bg-white/80 backdrop-blur-sm border border-gray-200/30 rounded-2xl shadow-lg overflow-hidden">
           {loading ? (
             <div className="p-8 text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-pink-600 mx-auto mb-4"></div>
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
               <p className="text-gray-600">載入中...</p>
             </div>
           ) : error ? (
@@ -733,15 +733,15 @@ export default function ProductsMasterSheetsPage() {
               <div className="p-6 border-b border-white/50">
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div className="text-center">
-                    <div className="text-2xl font-bold text-blue-600">{pagination.total}</div>
+                    <div className="text-2xl font-bold text-primary">{pagination.total}</div>
                     <div className="text-sm text-gray-600">總商品數</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-2xl font-bold text-purple-600">第 {pagination.page} / {pagination.totalPages} 頁</div>
+                    <div className="text-2xl font-bold text-secondary">第 {pagination.page} / {pagination.totalPages} 頁</div>
                     <div className="text-sm text-gray-600">分頁資訊</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-2xl font-bold text-green-600">{products.length}</div>
+                    <div className="text-2xl font-bold text-mint_green">{products.length}</div>
                     <div className="text-sm text-gray-600">當前頁數量</div>
                   </div>
                 </div>
@@ -771,8 +771,8 @@ export default function ProductsMasterSheetsPage() {
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                           <span className={`px-2 py-1 rounded-full text-xs ${
                             product.category && product.category !== '未分類' 
-                              ? 'bg-green-100 text-green-800' 
-                              : 'bg-red-100 text-red-800'
+                              ? 'bg-aquamarine-100 text-gray-800' 
+                              : 'bg-melon-100 text-gray-800'
                           }`}>
                             {product.category || '未分類'}
                           </span>
@@ -783,7 +783,7 @@ export default function ProductsMasterSheetsPage() {
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                           <button
                             onClick={() => handleEdit(product)}
-                            className="text-blue-600 hover:text-blue-800 transition-colors"
+                            className="text-primary hover:text-primary-700 transition-colors"
                           >
                             編輯
                           </button>
@@ -800,7 +800,7 @@ export default function ProductsMasterSheetsPage() {
                   <button 
                     onClick={() => setPagination(prev => ({ ...prev, page: Math.max(1, prev.page - 1) }))}
                     disabled={pagination.page === 1}
-                    className="px-3 py-2 text-sm bg-white/50 border border-orange-200/50 rounded-lg hover:bg-white/80 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                    className="px-3 py-2 text-sm bg-white/50 border border-gray-200/50 rounded-lg hover:bg-white/80 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                   >
                     上一頁
                   </button>
@@ -817,7 +817,7 @@ export default function ProductsMasterSheetsPage() {
                           className={`px-3 py-2 text-sm rounded-lg transition-all ${
                             pageNum === pagination.page
                               ? 'text-white'
-                              : 'bg-white/50 border border-orange-200/50 hover:bg-white/80'
+                              : 'bg-white/50 border border-gray-200/50 hover:bg-white/80'
                           }`}
                           style={pageNum === pagination.page ? { backgroundColor: '#FFCFD2' } : {}}
                         >
@@ -830,7 +830,7 @@ export default function ProductsMasterSheetsPage() {
                   <button 
                     onClick={() => setPagination(prev => ({ ...prev, page: Math.min(pagination.totalPages, prev.page + 1) }))}
                     disabled={pagination.page === pagination.totalPages}
-                    className="px-3 py-2 text-sm bg-white/50 border border-orange-200/50 rounded-lg hover:bg-white/80 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                    className="px-3 py-2 text-sm bg-white/50 border border-gray-200/50 rounded-lg hover:bg-white/80 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                   >
                     下一頁
                   </button>
@@ -841,7 +841,7 @@ export default function ProductsMasterSheetsPage() {
         </div>
         
         {/* 說明卡片 */}
-        <div className="mt-6 bg-orange-50 border-l-4 border-orange-400 rounded-2xl p-6 shadow-lg">
+        <div className="mt-6 bg-fawn-50 border-l-4 border-orange-400 rounded-2xl p-6 shadow-lg">
           <div className="flex items-center space-x-3 mb-3">
             <div className="w-6 h-6 rounded-full flex items-center justify-center" style={{ backgroundColor: '#FDE4CF' }}>
               <svg className="w-4 h-4 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -850,7 +850,7 @@ export default function ProductsMasterSheetsPage() {
             </div>
             <h3 className="text-lg font-semibold text-orange-900">使用說明</h3>
           </div>
-          <div className="text-orange-800 space-y-2 text-sm">
+          <div className="text-gray-800 space-y-2 text-sm">
             <p>• <strong>資料來源：</strong>直接從 Google Sheets 商品主檔讀取</p>
             <p>• <strong>未分類商品：</strong>自動偵測銷售資料中沒有分類的商品</p>
             <p>• <strong>分類管理：</strong>可以在此頁面為商品設定大分類和小分類</p>
@@ -882,20 +882,20 @@ export default function ProductsMasterSheetsPage() {
             ) : (
               <>
                 {/* 統計摘要 */}
-                <div className="bg-white/80 backdrop-blur-sm border border-orange-200/30 rounded-2xl p-6 shadow-lg mb-6">
+                <div className="bg-white/80 backdrop-blur-sm border border-gray-200/30 rounded-2xl p-6 shadow-lg mb-6">
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div className="text-center">
-                      <div className="text-2xl font-bold text-purple-600">{categories.length}</div>
+                      <div className="text-2xl font-bold text-secondary">{categories.length}</div>
                       <div className="text-sm text-gray-600">主分類</div>
                     </div>
                     <div className="text-center">
-                      <div className="text-2xl font-bold text-pink-600">
+                      <div className="text-2xl font-bold text-melon">
                         {categories.reduce((total, cat) => total + (cat.subcategories?.length || 0), 0)}
                       </div>
                       <div className="text-sm text-gray-600">子分類</div>
                     </div>
                     <div className="text-center">
-                      <div className="text-2xl font-bold text-indigo-600">{expandedCategories.size}</div>
+                      <div className="text-2xl font-bold text-periwinkle">{expandedCategories.size}</div>
                       <div className="text-sm text-gray-600">展開的分類</div>
                     </div>
                   </div>
@@ -983,7 +983,7 @@ export default function ProductsMasterSheetsPage() {
                                   value={newSubcategoryName}
                                   onChange={(e) => setNewSubcategoryName(e.target.value)}
                                   placeholder="輸入子分類名稱..."
-                                  className="flex-1 px-3 py-2 bg-white border border-orange-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500/50 focus:border-transparent text-sm text-gray-900"
+                                  className="flex-1 px-3 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-transparent text-sm text-gray-900"
                                   onKeyPress={(e) => e.key === 'Enter' && addSubcategory(category.id)}
                                 />
                                 <button
@@ -1046,7 +1046,7 @@ export default function ProductsMasterSheetsPage() {
 
                 {/* 新增主分類表單 */}
                 {showAddCategory && (
-                  <div className="bg-white/80 backdrop-blur-sm border border-orange-200/30 rounded-2xl p-6 shadow-lg mb-6">
+                  <div className="bg-white/80 backdrop-blur-sm border border-gray-200/30 rounded-2xl p-6 shadow-lg mb-6">
                     <h3 className="text-lg font-semibold text-gray-900 mb-4">新增主分類</h3>
                     <div className="flex space-x-4">
                       <input
@@ -1054,7 +1054,7 @@ export default function ProductsMasterSheetsPage() {
                         value={newCategoryName}
                         onChange={(e) => setNewCategoryName(e.target.value)}
                         placeholder="輸入主分類名稱..."
-                        className="flex-1 px-4 py-2 bg-white/50 border border-orange-200/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-transparent text-gray-900"
+                        className="flex-1 px-4 py-2 bg-white/50 border border-gray-200/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-transparent text-gray-900"
                         onKeyPress={(e) => e.key === 'Enter' && addCategory()}
                       />
                       <button

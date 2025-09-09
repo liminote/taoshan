@@ -64,7 +64,9 @@ export const CACHE_KEYS = {
   SMALL_CATEGORY_DISTRIBUTION: 'small_category_distribution',
   RANKINGS: 'rankings',
   PAYMENT_DISTRIBUTION: 'payment_distribution',
-  ORDER_TYPE_DISTRIBUTION: 'order_type_distribution'
+  ORDER_TYPE_DISTRIBUTION: 'order_type_distribution',
+  ORDERS_FULL: 'orders_full',
+  PRODUCT_SALES: 'product_sales'
 } as const
 
 // 舊的快取系統保留給其他用途

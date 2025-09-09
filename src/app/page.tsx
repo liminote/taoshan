@@ -24,21 +24,45 @@ export default function Home() {
   })
   const [availableTags, setAvailableTags] = useState(['Allen', 'Luis', '香師傅', 'Vanny'])
   const [newTag, setNewTag] = useState('')
+  const [notification, setNotification] = useState<{type: 'success' | 'error', message: string} | null>(null)
 
-  const fetchPendingItems = async () => {
+  // 顯示通知的輔助函數
+  const showNotification = (type: 'success' | 'error', message: string) => {
+    setNotification({ type, message })
+    setTimeout(() => setNotification(null), 3000) // 3秒後自動隱藏
+  }
+
+  const fetchPendingItems = async (forceRefresh = false) => {
     try {
       setIsLoading(true)
-      const response = await fetch('/api/important-items')
+      
+      // 使用優化後的API參數
+      const queryParams = new URLSearchParams({
+        pending: 'true',
+        limit: '50'
+      })
+      
+      if (forceRefresh) {
+        queryParams.set('refresh', 'true')
+      }
+      
+      const response = await fetch(`/api/important-items?${queryParams}`)
       const result = await response.json()
       
       if (result.success) {
-        const pending = result.data.filter((item: ImportantItem) => !item.completed)
-        setPendingItems(pending.sort((a: ImportantItem, b: ImportantItem) => 
-          new Date(a.date).getTime() - new Date(b.date).getTime()
-        ))
+        // API已經過濾和排序，直接使用結果
+        setPendingItems(result.data)
+        
+        // 顯示快取狀態
+        if (result.cached) {
+          console.log('✅ 使用快取數據，快取時間:', new Date(result.cacheTimestamp).toLocaleTimeString())
+        } else {
+          console.log('🔄 使用最新數據')
+        }
       }
     } catch (error) {
       console.error('獲取重要事項失敗:', error)
+      showNotification('error', '載入重要事項失敗，請稍後再試')
     } finally {
       setIsLoading(false)
     }
@@ -58,10 +82,12 @@ export default function Home() {
       })
       
       if (response.ok) {
-        fetchPendingItems()
+        showNotification('success', '事項狀態已更新')
+        fetchPendingItems(true) // 強制刷新以獲取最新數據
       }
     } catch (error) {
       console.error('更新事項失敗:', error)
+      showNotification('error', '更新事項失敗，請稍後再試')
     }
   }
 
@@ -86,25 +112,27 @@ export default function Home() {
       })
       
       if (response.ok) {
+        showNotification('success', '重要事項已成功新增')
         setFormData({
           date: new Date().toISOString().split('T')[0],
           content: '',
           assignee: ''
         })
         setShowAddForm(false)
-        fetchPendingItems()
+        fetchPendingItems(true) // 強制刷新以獲取最新數據
       }
     } catch (error) {
       console.error('新增事項失敗:', error)
+      showNotification('error', '新增事項失敗，請稍後再試')
     }
   }
 
   const getAssigneeColor = (assignee: string) => {
     const colors = {
-      'Allen': 'bg-pink-200 text-pink-800',
-      'Luis': 'bg-orange-200 text-orange-800',
-      '香師傅': 'bg-yellow-200 text-yellow-800',
-      'Vanny': 'bg-green-200 text-green-800'
+      'Allen': 'bg-melon-100 text-gray-800',
+      'Luis': 'bg-fawn-100 text-gray-800',
+      '香師傅': 'bg-lemon_chiffon-100 text-gray-800',
+      'Vanny': 'bg-mint_green-100 text-gray-800'
     }
     return colors[assignee as keyof typeof colors] || 'bg-gray-100 text-gray-800'
   }
@@ -127,6 +155,27 @@ export default function Home() {
     <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-lg mx-auto">
         
+        {/* 通知訊息 */}
+        {notification && (
+          <div className={`fixed top-4 right-4 z-50 px-4 py-3 rounded-lg shadow-lg transition-all duration-300 ${
+            notification.type === 'success' 
+              ? 'bg-green-500 text-white' 
+              : 'bg-red-500 text-white'
+          }`}>
+            <div className="flex items-center space-x-2">
+              {notification.type === 'success' ? (
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              ) : (
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              )}
+              <span className="text-sm font-medium">{notification.message}</span>
+            </div>
+          </div>
+        )}
         
         {/* 重要事項清單 */}
         <div className="bg-white rounded-2xl shadow-lg border border-gray-200">
@@ -140,10 +189,32 @@ export default function Home() {
                 </div>
                 <h2 className="text-xl font-semibold text-gray-900">近期重要事項</h2>
                 <span className="text-sm text-gray-500">({pendingItems.length} 項待處理)</span>
+                
+                {/* 刷新按鈕 */}
+                <button 
+                  onClick={() => fetchPendingItems(true)}
+                  disabled={isLoading}
+                  className="ml-2 p-1.5 text-gray-400 hover:text-gray-600 disabled:text-gray-300 transition-colors"
+                  title="刷新數據"
+                >
+                  <svg 
+                    className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`}
+                    fill="none" 
+                    stroke="currentColor" 
+                    viewBox="0 0 24 24"
+                  >
+                    <path 
+                      strokeLinecap="round" 
+                      strokeLinejoin="round" 
+                      strokeWidth={2} 
+                      d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" 
+                    />
+                  </svg>
+                </button>
               </div>
               <button 
                 onClick={() => setShowAddForm(!showAddForm)}
-                className="px-4 py-2 bg-pink-400 text-white text-sm rounded-lg hover:shadow-lg transition-all duration-300 hover:scale-105 flex items-center space-x-2"
+                className="px-4 py-2 bg-melon text-white text-sm rounded-lg hover:shadow-lg transition-all duration-300 hover:scale-105 flex items-center space-x-2"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -154,7 +225,7 @@ export default function Home() {
 
             {/* 新增表單 */}
             {showAddForm && (
-              <form onSubmit={handleAddItem} className="bg-yellow-50 border border-gray-200 rounded-xl p-4 mb-4">
+              <form onSubmit={handleAddItem} className="bg-lemon_chiffon-50 border border-gray-200 rounded-xl p-4 mb-4">
                 <div className="grid grid-cols-1 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">日期</label>
@@ -162,7 +233,7 @@ export default function Home() {
                       type="date"
                       value={formData.date}
                       onChange={(e) => setFormData({...formData, date: e.target.value})}
-                      className="w-full p-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+                      className="w-full p-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-gray-900"
                       required
                     />
                   </div>
@@ -173,7 +244,7 @@ export default function Home() {
                       value={formData.content}
                       onChange={(e) => setFormData({...formData, content: e.target.value})}
                       placeholder="請輸入重要事項內容..."
-                      className="w-full p-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder-gray-500"
+                      className="w-full p-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-gray-900 placeholder-gray-500"
                       required
                     />
                   </div>
@@ -198,7 +269,7 @@ export default function Home() {
                             <button
                               type="button"
                               onClick={() => removeTag(tag)}
-                              className="w-4 h-4 rounded-full bg-red-500 text-white hover:bg-red-600 transition-colors flex items-center justify-center text-xs"
+                              className="w-4 h-4 rounded-full bg-melon text-white hover:bg-melon-600 transition-colors flex items-center justify-center text-xs"
                               title="刪除標籤"
                             >
                               ×
@@ -247,7 +318,7 @@ export default function Home() {
                   </button>
                   <button
                     type="submit"
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-600 transition-colors"
                   >
                     儲存
                   </button>
@@ -259,8 +330,20 @@ export default function Home() {
           <div className="p-6">
             {/* 待處理事項列表 */}
             {isLoading ? (
-              <div className="text-center py-8 text-gray-500">
-                載入中...
+              <div className="space-y-3">
+                {/* 骨架屏 - 模擬載入中的項目 */}
+                {[1, 2, 3].map((index) => (
+                  <div key={index} className="flex items-center space-x-3 p-3 bg-white border border-gray-200 rounded-xl">
+                    <div className="w-6 h-6 bg-gray-200 rounded-full animate-pulse"></div>
+                    <div className="flex-1 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <div className="h-4 bg-gray-200 rounded animate-pulse" style={{ width: `${60 + (index * 10)}%` }}></div>
+                        <div className="h-6 w-16 bg-gray-200 rounded-full animate-pulse"></div>
+                      </div>
+                      <div className="h-3 bg-gray-200 rounded animate-pulse w-24"></div>
+                    </div>
+                  </div>
+                ))}
               </div>
             ) : pendingItems.length === 0 ? (
               <div className="text-center py-8 text-gray-500">
@@ -306,7 +389,7 @@ export default function Home() {
             <div className="mt-6 pt-4 border-t border-gray-200/50">
               <Link 
                 href="/history"
-                className="inline-flex items-center space-x-2 text-blue-500 hover:text-blue-700 transition-colors"
+                className="inline-flex items-center space-x-2 text-primary hover:text-primary-700 transition-colors"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />

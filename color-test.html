@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>色彩系統測試 - 餐廳管理系統</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                colors: {
+                    transparent: 'transparent',
+                    current: 'currentColor',
+                    inherit: 'inherit',
+                    white: '#FFFFFF',
+                    black: '#000000',
+                    gray: {
+                        50: '#F9FAFB',
+                        100: '#F3F4F6', 
+                        200: '#E5E7EB',
+                        300: '#D1D5DB',
+                        400: '#9CA3AF',
+                        500: '#6B7280',
+                        600: '#4B5563',
+                        700: '#374151',
+                        800: '#1F2937',
+                        900: '#111827'
+                    },
+                    lemon_chiffon: {
+                        DEFAULT: '#FBF8CC',
+                        50: '#FEFDF8',
+                        100: '#FDF9E6',
+                        200: '#FBF8CC',
+                        300: '#F9F5B0',
+                        400: '#F7F294',
+                        500: '#F5EF78',
+                        600: '#F3EC5C',
+                        700: '#F1E940',
+                        800: '#EFE624',
+                        900: '#EDE308'
+                    },
+                    fawn: {
+                        DEFAULT: '#FDE4CF',
+                        50: '#FEF7F2',
+                        100: '#FDF2E8',
+                        200: '#FDE4CF',
+                        300: '#FCD7B6',
+                        400: '#FBC99D',
+                        500: '#FABC84',
+                        600: '#F9AE6B',
+                        700: '#F8A152',
+                        800: '#F79339',
+                        900: '#F68620'
+                    },
+                    melon: {
+                        DEFAULT: '#FFCFD2',
+                        50: '#FFF5F5',
+                        100: '#FFEBEC',
+                        200: '#FFCFD2',
+                        300: '#FFB3B8',
+                        400: '#FF979E',
+                        500: '#FF7B84',
+                        600: '#FF5F6A',
+                        700: '#FF4350',
+                        800: '#FF2736',
+                        900: '#FF0B1C'
+                    },
+                    lavender_blush: {
+                        DEFAULT: '#F1C0E8',
+                        50: '#FCF7FB',
+                        100: '#F9EFF7',
+                        200: '#F1C0E8',
+                        300: '#EA91D9',
+                        400: '#E362CA',
+                        500: '#DC33BB',
+                        600: '#D504AC',
+                        700: '#B00390',
+                        800: '#8B0274',
+                        900: '#660158'
+                    },
+                    mauve: {
+                        DEFAULT: '#CFBAF0',
+                        50: '#F5F1FC',
+                        100: '#EBE3F9',
+                        200: '#CFBAF0',
+                        300: '#B391E7',
+                        400: '#9768DE',
+                        500: '#7B3FD5',
+                        600: '#5F16CC',
+                        700: '#4C11A3',
+                        800: '#390C7A',
+                        900: '#260751'
+                    },
+                    periwinkle: {
+                        DEFAULT: '#A3C4F3',
+                        50: '#F0F6FE',
+                        100: '#E1EDFD',
+                        200: '#A3C4F3',
+                        300: '#659BE9',
+                        400: '#2772DF',
+                        500: '#1E5BC2',
+                        600: '#18489F',
+                        700: '#12357C',
+                        800: '#0C2259',
+                        900: '#060F36'
+                    },
+                    sky_blue: {
+                        DEFAULT: '#90DBF4',
+                        50: '#EDF9FE',
+                        100: '#DBF3FD',
+                        200: '#90DBF4',
+                        300: '#45C3EB',
+                        400: '#21B4E6',
+                        500: '#1B96C0',
+                        600: '#15789A',
+                        700: '#0F5A74',
+                        800: '#093C4E',
+                        900: '#031E28'
+                    },
+                    aquamarine: {
+                        DEFAULT: '#8EECF5',
+                        50: '#ECFDFE',
+                        100: '#D9FBFD',
+                        200: '#8EECF5',
+                        300: '#43DDED',
+                        400: '#20D4E8',
+                        500: '#1AB5C4',
+                        600: '#1496A0',
+                        700: '#0E777C',
+                        800: '#085858',
+                        900: '#023934'
+                    },
+                    mint_green: {
+                        DEFAULT: '#98F5E1',
+                        50: '#EDFDF9',
+                        100: '#DBFBF3',
+                        200: '#98F5E1',
+                        300: '#55EFCF',
+                        400: '#2EEBCA',
+                        500: '#26C4A7',
+                        600: '#1E9D84',
+                        700: '#167661',
+                        800: '#0E4F3E',
+                        900: '#06281B'
+                    },
+                    tea_green: {
+                        DEFAULT: '#B9FBC0',
+                        50: '#F1FEF2',
+                        100: '#E3FDE5',
+                        200: '#B9FBC0',
+                        300: '#8FF99B',
+                        400: '#65F776',
+                        500: '#3BF551',
+                        600: '#2FD441',
+                        700: '#25B335',
+                        800: '#1B9229',
+                        900: '#11711D'
+                    },
+                    primary: {
+                        DEFAULT: '#90DBF4',
+                        50: '#EDF9FE',
+                        100: '#DBF3FD', 
+                        200: '#90DBF4',
+                        300: '#45C3EB',
+                        400: '#21B4E6',
+                        500: '#1B96C0',
+                        600: '#15789A',
+                        700: '#0F5A74',
+                        800: '#093C4E',
+                        900: '#031E28'
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-lemon_chiffon-100 via-fawn-100 to-melon-100 p-8">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-4xl font-bold text-gray-800 mb-8 text-center">🎨 餐廳管理系統色彩測試</h1>
+        
+        <!-- 10色展示 -->
+        <div class="bg-white rounded-2xl p-8 shadow-lg mb-8">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6">你的 10 色設計系統</h2>
+            <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+                <div class="text-center">
+                    <div class="w-20 h-20 bg-lemon_chiffon rounded-lg shadow-md mx-auto mb-2"></div>
+                    <p class="text-sm font-medium">檸檬雪紡</p>
+                    <p class="text-xs text-gray-500">#FBF8CC</p>
+                </div>
+                <div class="text-center">
+                    <div class="w-20 h-20 bg-fawn rounded-lg shadow-md mx-auto mb-2"></div>
+                    <p class="text-sm font-medium">小鹿色</p>
+                    <p class="text-xs text-gray-500">#FDE4CF</p>
+                </div>
+                <div class="text-center">
+                    <div class="w-20 h-20 bg-melon rounded-lg shadow-md mx-auto mb-2"></div>
+                    <p class="text-sm font-medium">粉色</p>
+                    <p class="text-xs text-gray-500">#FFCFD2</p>
+                </div>
+                <div class="text-center">
+                    <div class="w-20 h-20 bg-lavender_blush rounded-lg shadow-md mx-auto mb-2"></div>
+                    <p class="text-sm font-medium">薰衣草紅</p>
+                    <p class="text-xs text-gray-500">#F1C0E8</p>
+                </div>
+                <div class="text-center">
+                    <div class="w-20 h-20 bg-mauve rounded-lg shadow-md mx-auto mb-2"></div>
+                    <p class="text-sm font-medium">淡紫色</p>
+                    <p class="text-xs text-gray-500">#CFBAF0</p>
+                </div>
+                <div class="text-center">
+                    <div class="w-20 h-20 bg-periwinkle rounded-lg shadow-md mx-auto mb-2"></div>
+                    <p class="text-sm font-medium">淺紫色</p>
+                    <p class="text-xs text-gray-500">#A3C4F3</p>
+                </div>
+                <div class="text-center">
+                    <div class="w-20 h-20 bg-sky_blue rounded-lg shadow-md mx-auto mb-2"></div>
+                    <p class="text-sm font-medium">天藍色</p>
+                    <p class="text-xs text-gray-500">#90DBF4</p>
+                </div>
+                <div class="text-center">
+                    <div class="w-20 h-20 bg-aquamarine rounded-lg shadow-md mx-auto mb-2"></div>
+                    <p class="text-sm font-medium">海藍色</p>
+                    <p class="text-xs text-gray-500">#8EECF5</p>
+                </div>
+                <div class="text-center">
+                    <div class="w-20 h-20 bg-mint_green rounded-lg shadow-md mx-auto mb-2"></div>
+                    <p class="text-sm font-medium">薄荷綠</p>
+                    <p class="text-xs text-gray-500">#98F5E1</p>
+                </div>
+                <div class="text-center">
+                    <div class="w-20 h-20 bg-tea_green rounded-lg shadow-md mx-auto mb-2"></div>
+                    <p class="text-sm font-medium">茶綠色</p>
+                    <p class="text-xs text-gray-500">#B9FBC0</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 測試元件 -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- 按鈕測試 -->
+            <div class="bg-white rounded-2xl p-6 shadow-lg">
+                <h3 class="text-xl font-bold text-gray-800 mb-4">按鈕測試</h3>
+                <div class="space-y-3">
+                    <button class="bg-sky_blue text-white px-6 py-2 rounded-lg hover:opacity-90 transition-opacity">主要按鈕</button>
+                    <button class="bg-periwinkle text-white px-6 py-2 rounded-lg hover:opacity-90 transition-opacity">次要按鈕</button>
+                    <button class="bg-melon text-white px-6 py-2 rounded-lg hover:opacity-90 transition-opacity">強調按鈕</button>
+                    <button class="border-2 border-sky_blue text-sky_blue px-6 py-2 rounded-lg hover:bg-sky_blue hover:text-white transition-colors">邊框按鈕</button>
+                </div>
+            </div>
+            
+            <!-- 文字測試 -->
+            <div class="bg-white rounded-2xl p-6 shadow-lg">
+                <h3 class="text-xl font-bold text-gray-800 mb-4">文字測試</h3>
+                <div class="space-y-2">
+                    <p class="text-sky_blue font-semibold">主要文字 (天藍色)</p>
+                    <p class="text-periwinkle font-semibold">次要文字 (淺紫色)</p>
+                    <p class="text-melon font-semibold">強調文字 (粉色)</p>
+                    <a href="#" class="text-primary hover:opacity-80">這是連結</a>
+                    <p class="text-gray-600">一般內文 (灰色)</p>
+                </div>
+            </div>
+            
+            <!-- 卡片測試 -->
+            <div class="bg-white rounded-2xl p-6 shadow-lg">
+                <h3 class="text-xl font-bold text-gray-800 mb-4">卡片測試</h3>
+                <div class="space-y-3">
+                    <div class="bg-lemon_chiffon-50 border-l-4 border-lemon_chiffon p-3 rounded">
+                        <p class="text-gray-800 font-medium">警告訊息</p>
+                    </div>
+                    <div class="bg-aquamarine-50 border-l-4 border-aquamarine p-3 rounded">
+                        <p class="text-gray-800 font-medium">成功訊息</p>
+                    </div>
+                    <div class="bg-melon-50 border-l-4 border-melon p-3 rounded">
+                        <p class="text-gray-800 font-medium">錯誤訊息</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 表單測試 -->
+            <div class="bg-white rounded-2xl p-6 shadow-lg">
+                <h3 class="text-xl font-bold text-gray-800 mb-4">表單測試</h3>
+                <div class="space-y-3">
+                    <input type="text" placeholder="測試輸入框" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:border-sky_blue focus:outline-none">
+                    <select class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:border-sky_blue focus:outline-none">
+                        <option>選擇選項</option>
+                        <option>選項 1</option>
+                        <option>選項 2</option>
+                    </select>
+                    <textarea placeholder="測試文字區域" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:border-sky_blue focus:outline-none h-20"></textarea>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 數據測試 -->
+        <div class="bg-white rounded-2xl p-6 shadow-lg mt-6">
+            <h3 class="text-xl font-bold text-gray-800 mb-4">數據顯示測試</h3>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="text-center">
+                    <div class="text-3xl font-bold text-sky_blue">1595</div>
+                    <div class="text-gray-600">總商品數</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-3xl font-bold text-periwinkle">第 1 / 32 頁</div>
+                    <div class="text-gray-600">分頁資訊</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-3xl font-bold text-mint_green">50</div>
+                    <div class="text-gray-600">當前頁數量</div>
+                </div>
+                <div class="text-center">
+                    <div class="bg-tea_green text-white px-3 py-1 rounded-full text-sm font-medium inline-block">1醬司刺身</div>
+                    <div class="text-gray-600 mt-1">標籤樣式</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="text-center mt-8">
+            <p class="text-gray-500">✅ 如果以上顏色都顯示正確，表示你的 10 色設計系統已經成功實施！</p>
+        </div>
+    </div>
+</body>
+</html>
