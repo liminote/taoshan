@@ -99,7 +99,7 @@ interface ChatRequest {
 
 export async function POST(request: NextRequest) {
   try {
-    const { message, conversationHistory = [], category, model = 'gemini' }: ChatRequest & { model?: string } = await request.json()
+    const { message, conversationHistory = [], category, model = 'groq' }: ChatRequest & { model?: string } = await request.json()
 
     if (!message?.trim()) {
       return NextResponse.json(
@@ -1743,7 +1743,7 @@ function performAdvancedAnalysis(data: any, category: string) {
 }
 
 // 生成回答
-async function generateResponse(question: string, history: ChatMessage[], data: any, category: string, modelType: string = 'gemini') {
+async function generateResponse(question: string, history: ChatMessage[], data: any, category: string, modelType: string = 'groq') {
   const selectedModel = AI_MODELS[modelType] || AI_MODELS.gemini
 
   const categoryInfo = getCategoryInfo(category)
