@@ -209,6 +209,30 @@ export async function GET(request: NextRequest) {
     
     console.log(`🔍 檢查完成: 已檢查 ${checkedProductCount} 個品項，發現 ${alcoholFoundCount} 個酒類商品`)
 
+    // 計算當月所有訂單總金額（不管有沒有電話號碼）
+    const allOrderData = orderLines.slice(1).map(line => {
+      const values = line.split(',').map(v => v.replace(/"/g, '').trim())
+      return {
+        checkout_time: values[checkoutTimeIndex],
+        invoice_amount: parseFloat(values[checkoutAmountIndex]) || 0
+      }
+    }).filter(record => record.checkout_time && record.checkout_time !== '')
+
+    const monthlyTotalAmount = allOrderData
+      .filter(record => {
+        const dateStr = record.checkout_time.replace(/\//g, '-')
+        const date = new Date(dateStr)
+        
+        if (!isNaN(date.getTime())) {
+          const orderMonth = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
+          return orderMonth === month
+        }
+        return false
+      })
+      .reduce((sum, record) => sum + (record.invoice_amount || 0), 0)
+
+    console.log(`📊 當月總訂單金額: ${monthlyTotalAmount.toLocaleString()}`)
+
     // 計算新客判斷
     console.log(`📝 開始計算新客判斷`)
     Object.keys(customerStats).forEach(phone => {
@@ -244,6 +268,8 @@ export async function GET(request: NextRequest) {
         orderCount: customer.orderCount,
         averageOrderAmount: Math.round(customer.totalAmount / customer.orderCount),
         totalOrderAmount: Math.round(customer.totalAmount * 100) / 100,
+        amountPercentage: Math.round((customer.totalAmount / monthlyTotalAmount) * 100 * 10) / 10, // 計算到小數點後一位
+        cumulativePercentage: 0, // 將在後面計算
         hasAlcohol: customer.hasAlcohol,
         isNewCustomer: customer.isNewCustomer
       }))
@@ -256,9 +282,12 @@ export async function GET(request: NextRequest) {
         return b.totalOrderAmount - a.totalOrderAmount
       })
 
-    // 設定排名
+    // 設定排名和累計佔比
+    let cumulativeSum = 0
     customerArray.forEach((customer, index) => {
       customer.rank = index + 1
+      cumulativeSum += customer.amountPercentage
+      customer.cumulativePercentage = Math.round(cumulativeSum * 10) / 10 // 計算到小數點後一位
     })
 
     // 取前 20 名

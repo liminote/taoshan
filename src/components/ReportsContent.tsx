@@ -1859,6 +1859,8 @@ export default function ReportsContent() {
                         <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">訂單張數 ↓</th>
                         <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">平均訂單金額</th>
                         <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">訂單總金額</th>
+                        <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">金額佔比</th>
+                        <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">累計佔比</th>
                         <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">消費明細</th>
                       </tr>
                     </thead>
@@ -1900,6 +1902,12 @@ export default function ReportsContent() {
                           <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 text-right">
                             {formatNumber(customer.totalOrderAmount)}
                           </td>
+                          <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600 text-right">
+                            {customer.amountPercentage ? `${customer.amountPercentage}%` : '--'}
+                          </td>
+                          <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600 text-right">
+                            {customer.cumulativePercentage ? `${customer.cumulativePercentage}%` : '--'}
+                          </td>
                           <td className="px-4 py-3 text-center">
                             <button 
                               className="text-emerald-600 hover:text-emerald-700 transition-colors hover:bg-transparent"
@@ -1913,7 +1921,7 @@ export default function ReportsContent() {
                       ))}
                       {customerFrequencyRanking.length === 0 && (
                         <tr>
-                          <td colSpan={7} className="px-4 py-8 text-center text-gray-500">
+                          <td colSpan={9} className="px-4 py-8 text-center text-gray-500">
                             暫無資料
                           </td>
                         </tr>
