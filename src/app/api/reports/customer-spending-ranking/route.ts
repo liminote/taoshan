@@ -26,7 +26,10 @@ export async function GET(request: NextRequest) {
     console.log(`⚠️ 無快取資料，計算客戶消費金額排行 (${month})...`)
 
     // 獲取商品主檔資料，建立商品名稱到子分類的映射
-    const productMasterResponse = await fetch('http://localhost:3000/api/products-master?limit=10000')
+    const baseUrl = process.env.VERCEL_URL 
+      ? `https://${process.env.VERCEL_URL}` 
+      : 'http://localhost:3000'
+    const productMasterResponse = await fetch(`${baseUrl}/api/products-master?limit=10000`)
     const productMasterData = await productMasterResponse.json()
     
     // 建立商品名稱到子分類 ID 的映射
