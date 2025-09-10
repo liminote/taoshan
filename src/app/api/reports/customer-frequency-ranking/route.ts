@@ -26,11 +26,8 @@ export async function GET(request: NextRequest) {
     console.log(`⚠️ 無快取資料，計算客戶消費次數排行 (${month})...`)
 
     // 獲取商品主檔資料，建立商品名稱到子分類的映射
-    const baseUrl = process.env.VERCEL_URL 
-      ? `https://${process.env.VERCEL_URL}` 
-      : 'http://localhost:3000'
-    const productMasterResponse = await fetch(`${baseUrl}/api/products-master?limit=10000`)
-    const productMasterData = await productMasterResponse.json()
+    const { SheetsCache } = await import('@/lib/sheets-cache')
+    const productMasterData = await SheetsCache.getProductsMaster()
     
     // 建立商品名稱到子分類 ID 的映射
     const productToSubcategoryMap: { [productName: string]: number } = {}
@@ -45,42 +42,14 @@ export async function GET(request: NextRequest) {
     // 定義酒類子分類 ID
     const alcoholSubcategoryIds = [22, 23, 26] // 西洋酒、東洋酒、啤酒
 
-    // Google Sheets 訂單資料
-    const orderSheetUrl = 'https://docs.google.com/spreadsheets/d/1EWPECWQp_Ehz43Lfks_I8lcvEig8gV9DjyjEIzC5EO4/export?format=csv&gid=0'
-    const productSheetUrl = 'https://docs.google.com/spreadsheets/d/1GeRbtCX_oHJBooYvZeRbREaSxJ4r8P8QoL-vHiSz2eo/export?format=csv&gid=0'
-    
-    const [orderResponse, productResponse] = await Promise.all([
-      fetch(orderSheetUrl),
-      fetch(productSheetUrl)
+    // 使用快取的 Google Sheets 資料
+    const [orderData, productData] = await Promise.all([
+      SheetsCache.getOrderData(),
+      SheetsCache.getProductData()
     ])
 
-    if (!orderResponse.ok || !productResponse.ok) {
-      console.error('無法獲取 Google Sheets 資料')
-      return NextResponse.json({ error: '查詢失敗' }, { status: 500 })
-    }
-
-    const orderCsv = await orderResponse.text()
-    const productCsv = await productResponse.text()
-
-    // 解析訂單 CSV 資料
-    const orderLines = orderCsv.split('\n').filter(line => line.trim())
-    const orderHeaders = orderLines[0].split(',').map(h => h.replace(/"/g, '').trim())
-    
-    // 找到需要的欄位索引
-    const checkoutTimeIndex = orderHeaders.findIndex(h => h.includes('結帳時間'))
-    const checkoutAmountIndex = orderHeaders.findIndex(h => h.includes('結帳金額'))
-    const customerNameIndex = orderHeaders.findIndex(h => h.includes('顧客姓名'))
-    const customerPhoneIndex = orderHeaders.findIndex(h => h.includes('顧客電話'))
-    
-    const orderData = orderLines.slice(1).map(line => {
-      const values = line.split(',').map(v => v.replace(/"/g, '').trim())
-      return {
-        checkout_time: values[checkoutTimeIndex],
-        invoice_amount: parseFloat(values[checkoutAmountIndex]) || 0,
-        customer_name: values[customerNameIndex] || '',
-        customer_phone: values[customerPhoneIndex] || ''
-      }
-    }).filter(record => 
+    // 篩選有效的訂單資料
+    const validOrderData = orderData.filter(record => 
       record.checkout_time && 
       record.checkout_time !== '' && 
       record.customer_phone && 
@@ -88,19 +57,6 @@ export async function GET(request: NextRequest) {
       record.customer_phone !== '--' &&
       record.customer_phone.trim() !== ''
     )
-
-    // 解析商品 CSV 資料
-    const productLines = productCsv.split('\n').filter(line => line.trim())
-    const productHeaders = productLines[0].split(',').map(h => h.replace(/"/g, '').trim())
-    
-    const productData = productLines.slice(1).map(line => {
-      const values = line.split(',').map(v => v.replace(/"/g, '').trim())
-      const record: Record<string, string> = {}
-      productHeaders.forEach((header, index) => {
-        record[header] = values[index] || ''
-      })
-      return record
-    }).filter(record => record['結帳時間'] && record['結帳時間'] !== '')
 
     // 按電話號碼分組客戶數據
     const customerStats: { [phone: string]: {
@@ -115,7 +71,7 @@ export async function GET(request: NextRequest) {
     } } = {}
 
     // 篩選指定月份的訂單並統計
-    orderData.forEach(record => {
+    validOrderData.forEach(record => {
       const dateStr = record.checkout_time.replace(/\//g, '-')
       const date = new Date(dateStr)
       
@@ -161,12 +117,8 @@ export async function GET(request: NextRequest) {
     
     // 建立結帳時間到客戶電話的映射
     const checkoutTimeToCustomerMap: { [checkoutTime: string]: string } = {}
-    orderData.forEach(order => {
-      if (order.checkout_time && order.customer_phone && 
-          order.customer_phone !== '' && order.customer_phone !== '--' && 
-          order.customer_phone.trim() !== '') {
-        checkoutTimeToCustomerMap[order.checkout_time] = order.customer_phone
-      }
+    validOrderData.forEach(order => {
+      checkoutTimeToCustomerMap[order.checkout_time] = order.customer_phone
     })
     
     console.log(`🔗 建立了 ${Object.keys(checkoutTimeToCustomerMap).length} 個結帳時間-客戶映射`)
@@ -210,15 +162,7 @@ export async function GET(request: NextRequest) {
     console.log(`🔍 檢查完成: 已檢查 ${checkedProductCount} 個品項，發現 ${alcoholFoundCount} 個酒類商品`)
 
     // 計算當月所有訂單總金額（不管有沒有電話號碼）
-    const allOrderData = orderLines.slice(1).map(line => {
-      const values = line.split(',').map(v => v.replace(/"/g, '').trim())
-      return {
-        checkout_time: values[checkoutTimeIndex],
-        invoice_amount: parseFloat(values[checkoutAmountIndex]) || 0
-      }
-    }).filter(record => record.checkout_time && record.checkout_time !== '')
-
-    const monthlyTotalAmount = allOrderData
+    const monthlyTotalAmount = orderData
       .filter(record => {
         const dateStr = record.checkout_time.replace(/\//g, '-')
         const date = new Date(dateStr)
@@ -229,7 +173,7 @@ export async function GET(request: NextRequest) {
         }
         return false
       })
-      .reduce((sum, record) => sum + (record.invoice_amount || 0), 0)
+      .reduce((sum, record) => sum + record.invoice_amount, 0)
 
     console.log(`📊 當月總訂單金額: ${monthlyTotalAmount.toLocaleString()}`)
 
@@ -237,7 +181,7 @@ export async function GET(request: NextRequest) {
     console.log(`📝 開始計算新客判斷`)
     Object.keys(customerStats).forEach(phone => {
       // 找出該客戶所有的訂單日期
-      const customerOrders = orderData
+      const customerOrders = validOrderData
         .filter(order => order.customer_phone === phone)
         .map(order => {
           const dateStr = order.checkout_time.replace(/\//g, '-')

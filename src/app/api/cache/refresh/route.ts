@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { reportCache, CACHE_KEYS } from '@/lib/cache'
+import { SheetsCache } from '@/lib/sheets-cache'
 
 // 手動刷新所有報表資料的API
 export async function POST() {
@@ -8,6 +9,7 @@ export async function POST() {
     
     // 清除所有舊快取
     reportCache.clear()
+    SheetsCache.clearAll()
     
     // Google Sheets URLs
     const orderSheetUrl = 'https://docs.google.com/spreadsheets/d/1EWPECWQp_Ehz43Lfks_I8lcvEig8gV9DjyjEIzC5EO4/export?format=csv&gid=0'
