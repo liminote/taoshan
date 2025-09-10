@@ -101,7 +101,7 @@ export default function CategoriesPage() {
         <div className="mb-8">
           <Link 
             href="/reports" 
-            className="inline-flex items-center text-gray-600 hover:text-blue-600 transition-colors mb-6 group"
+            className="inline-flex items-center text-gray-600 hover:text-emerald-600 transition-colors mb-6 group"
           >
             <svg className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -197,7 +197,7 @@ export default function CategoriesPage() {
                       {category.subcategories.map((sub) => (
                         <span
                           key={sub.id}
-                          className="px-3 py-1 bg-gradient-to-r from-blue-100 to-purple-100 text-gray-700 text-sm rounded-lg border border-blue-200/50"
+                          className="px-3 py-1 bg-gradient-to-r from-emerald-100 to-green-100 text-gray-700 text-sm rounded-lg border border-emerald-200/50"
                         >
                           {sub.name}
                         </span>

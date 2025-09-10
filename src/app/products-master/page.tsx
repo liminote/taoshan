@@ -203,7 +203,7 @@ export default function ProductsMasterPage() {
         <div className="mb-8">
           <Link 
             href="/" 
-            className="inline-flex items-center text-gray-600 hover:text-blue-600 transition-colors mb-6 group"
+            className="inline-flex items-center text-gray-600 hover:text-emerald-600 transition-colors mb-6 group"
           >
             <svg className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -353,7 +353,7 @@ export default function ProductsMasterPage() {
               <button
                 onClick={handleSubmit}
                 disabled={!formData.original_name.trim() || actionLoading}
-                className="px-6 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-6 py-2 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {actionLoading ? '處理中...' : (editingProduct ? '更新' : '新增')}
               </button>
@@ -363,7 +363,7 @@ export default function ProductsMasterPage() {
 
         {loading ? (
           <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600 mx-auto mb-4"></div>
             <p className="text-gray-600">載入中...</p>
           </div>
         ) : (
@@ -372,7 +372,7 @@ export default function ProductsMasterPage() {
             <div className="bg-white/70 backdrop-blur-sm border border-white/50 rounded-2xl p-6 shadow-lg mb-6">
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-blue-600">{pagination.total}</div>
+                  <div className="text-2xl font-bold text-emerald-600">{pagination.total}</div>
                   <div className="text-sm text-gray-600">總商品數</div>
                 </div>
                 <div className="text-center">
@@ -418,7 +418,7 @@ export default function ProductsMasterPage() {
                           <div className="flex space-x-2">
                             <button
                               onClick={() => handleEdit(product)}
-                              className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition-colors"
+                              className="p-2 text-emerald-600 hover:text-emerald-800 hover:bg-emerald-50 rounded-lg transition-colors"
                               title="編輯"
                             >
                               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -459,7 +459,7 @@ export default function ProductsMasterPage() {
                       >
                         上一頁
                       </button>
-                      <span className="px-4 py-2 bg-blue-600 text-white rounded-lg">
+                      <span className="px-4 py-2 bg-emerald-600 text-white rounded-lg">
                         {pagination.page}
                       </span>
                       <button

@@ -358,7 +358,7 @@ export default function Home() {
                   <div key={item.id} className="flex items-center space-x-3 p-3 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-all">
                     <button
                       onClick={() => handleToggleComplete(item.id)}
-                      className="w-6 h-6 border-2 border-sky_blue rounded-full hover:border-melon transition-colors flex items-center justify-center group"
+                      className="w-6 h-6 border-2 border-emerald-500 rounded-full hover:border-melon transition-colors flex items-center justify-center group"
                     >
                       <svg className="w-4 h-4 text-white opacity-0 group-hover:opacity-100 transition-opacity" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />

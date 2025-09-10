@@ -73,7 +73,7 @@ export default function Header() {
                     href={item.href}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 text-gray-600 hover:text-sky_blue hover:bg-sky_blue-50"
+                    className="inline-flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 text-gray-600 hover:text-emerald-600 hover:bg-emerald-50"
                   >
                     {item.icon}
                     <span>{item.name}</span>
@@ -90,8 +90,8 @@ export default function Header() {
                   href={item.href}
                   className={`inline-flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
                     isActive
-                      ? 'bg-sky_blue text-white shadow-sm'
-                      : 'text-gray-600 hover:text-sky_blue hover:bg-sky_blue-50'
+                      ? 'bg-emerald-600 text-white shadow-sm'
+                      : 'text-gray-600 hover:text-emerald-600 hover:bg-emerald-50'
                   }`}
                 >
                   {item.icon}
@@ -129,7 +129,7 @@ export default function Header() {
                   href={item.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center space-x-3 px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:text-sky_blue hover:bg-sky_blue-50"
+                  className="flex items-center space-x-3 px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:text-emerald-600 hover:bg-emerald-50"
                 >
                   {item.icon}
                   <span>{item.name}</span>
@@ -146,8 +146,8 @@ export default function Header() {
                 href={item.href}
                 className={`flex items-center space-x-3 px-3 py-2 rounded-md text-sm font-medium ${
                   isActive
-                    ? 'bg-sky_blue text-white'
-                    : 'text-gray-600 hover:text-sky_blue hover:bg-sky_blue-50'
+                    ? 'bg-emerald-600 text-white'
+                    : 'text-gray-600 hover:text-emerald-600 hover:bg-emerald-50'
                 }`}
               >
                 {item.icon}

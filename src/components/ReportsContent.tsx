@@ -58,14 +58,27 @@ interface RankingData {
   }
 }
 
+interface CustomerAnalysisData {
+  rank: number
+  customerName: string
+  customerPhone: string
+  orderCount: number
+  averageOrderAmount: number
+  totalOrderAmount: number
+  amountPercentage?: number
+  cumulativePercentage?: number
+  hasAlcohol?: boolean
+  isNewCustomer?: boolean
+}
+
 export default function ReportsContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   
   // Tab state with URL sync
-  const [activeTab, setActiveTab] = useState<'trends' | 'monthly' | 'ai-chat'>(() => {
+  const [activeTab, setActiveTab] = useState<'trends' | 'monthly' | 'customer-analysis' | 'ai-chat'>(() => {
     const tab = searchParams.get('tab')
-    return (tab === 'monthly' || tab === 'trends' || tab === 'ai-chat') ? tab : 'trends'
+    return (tab === 'monthly' || tab === 'trends' || tab === 'customer-analysis' || tab === 'ai-chat') ? tab : 'trends'
   })
   
   // Common loading states
@@ -89,6 +102,21 @@ export default function ReportsContent() {
   const [paymentData, setPaymentData] = useState<PaymentData[]>([])
   const [orderTypeData, setOrderTypeData] = useState<OrderTypeData[]>([])
   const [rankingData, setRankingData] = useState<RankingData | null>(null)
+  
+  // Customer analysis data (filtered by selected month for customer analysis tab)
+  const [customerAnalysisMonth, setCustomerAnalysisMonth] = useState<string>(() => {
+    const currentDate = new Date()
+    return `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`
+  })
+  const [customerSpendingRanking, setCustomerSpendingRanking] = useState<CustomerAnalysisData[]>([])
+  const [customerFrequencyRanking, setCustomerFrequencyRanking] = useState<CustomerAnalysisData[]>([])
+
+  // Customer details modal state
+  const [showCustomerModal, setShowCustomerModal] = useState(false)
+  const [selectedCustomerPhone, setSelectedCustomerPhone] = useState<string>('')
+  const [selectedCustomerName, setSelectedCustomerName] = useState<string>('')
+  const [customerDetails, setCustomerDetails] = useState<any>(null)
+  const [loadingCustomerDetails, setLoadingCustomerDetails] = useState(false)
 
   // Cache for trends data
   const [cachedData, setCachedData] = useState<{
@@ -318,6 +346,67 @@ export default function ReportsContent() {
     }
   }, [selectedMonth, activeTab, fetchMonthlyCategoryData])
 
+  // Handle view customer details
+  const handleViewCustomerDetails = async (phone: string, name: string) => {
+    setSelectedCustomerPhone(phone)
+    setSelectedCustomerName(name)
+    setShowCustomerModal(true)
+    setLoadingCustomerDetails(true)
+    setCustomerDetails(null)
+
+    try {
+      const response = await fetch(`/api/reports/customer-details?phone=${phone}&month=${customerAnalysisMonth}`)
+      const result = await response.json()
+
+      if (result.success) {
+        setCustomerDetails(result.data)
+      } else {
+        console.error('獲取客戶明細失敗:', result.error)
+        alert('獲取客戶明細失敗')
+      }
+    } catch (error) {
+      console.error('獲取客戶明細時發生錯誤:', error)
+      alert('獲取客戶明細時發生錯誤')
+    } finally {
+      setLoadingCustomerDetails(false)
+    }
+  }
+
+  // Fetch customer analysis data (used for 顧客分析 tab)
+  const fetchCustomerAnalysisData = useCallback(async (month: string) => {
+    try {
+      const [spendingResponse, frequencyResponse] = await Promise.all([
+        fetch(`/api/reports/customer-spending-ranking?month=${month}`),
+        fetch(`/api/reports/customer-frequency-ranking?month=${month}`)
+      ])
+
+      if (spendingResponse.ok) {
+        const spendingResult = await spendingResponse.json()
+        setCustomerSpendingRanking(spendingResult.data || spendingResult)
+      } else {
+        setCustomerSpendingRanking([])
+      }
+
+      if (frequencyResponse.ok) {
+        const frequencyResult = await frequencyResponse.json()
+        setCustomerFrequencyRanking(frequencyResult.data || frequencyResult)
+      } else {
+        setCustomerFrequencyRanking([])
+      }
+    } catch (error) {
+      console.error('獲取顧客分析資料失敗:', error)
+      setCustomerSpendingRanking([])
+      setCustomerFrequencyRanking([])
+    }
+  }, [])
+
+  // Fetch customer analysis data when selected month changes
+  useEffect(() => {
+    if (activeTab === 'customer-analysis') {
+      fetchCustomerAnalysisData(customerAnalysisMonth)
+    }
+  }, [customerAnalysisMonth, activeTab, fetchCustomerAnalysisData])
+
   // Manual cache refresh handler
   const handleManualRefresh = async () => {
     setIsManualRefreshing(true)
@@ -334,13 +423,17 @@ export default function ReportsContent() {
         setPaymentData([])
         setOrderTypeData([])
         setRankingData(null)
+        setCustomerSpendingRanking([])
+        setCustomerFrequencyRanking([])
         setCachedData({})
         
         // 重新載入當前標籤頁的資料
         if (activeTab === 'trends') {
           await fetchTrendsData(true)
-        } else {
+        } else if (activeTab === 'monthly') {
           await fetchMonthlyCategoryData(selectedMonth)
+        } else if (activeTab === 'customer-analysis') {
+          await fetchCustomerAnalysisData(customerAnalysisMonth)
         }
         
         setLastRefreshTime(new Date())
@@ -360,8 +453,10 @@ export default function ReportsContent() {
   const handleRefresh = () => {
     if (activeTab === 'trends') {
       fetchTrendsData(true)
-    } else {
+    } else if (activeTab === 'monthly') {
       fetchMonthlyCategoryData(selectedMonth)
+    } else if (activeTab === 'customer-analysis') {
+      fetchCustomerAnalysisData(customerAnalysisMonth)
     }
   }
 
@@ -707,7 +802,7 @@ export default function ReportsContent() {
         <div className="mb-8">
           <Link 
             href="/" 
-            className="inline-flex items-center text-gray-600 hover:text-blue-600 transition-colors mb-6 group"
+            className="inline-flex items-center text-gray-600 hover:text-emerald-600 transition-colors mb-6 group"
           >
             <svg className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -768,50 +863,67 @@ export default function ReportsContent() {
 
         {/* Tab Navigation */}
         <div className="mb-8">
-          <div className="bg-white rounded-xl shadow-sm p-1 inline-flex">
-            <button
-              onClick={() => {
-                setActiveTab('trends')
-                router.push('/reports?tab=trends', { scroll: false })
-              }}
-              className={`px-6 py-3 rounded-lg font-medium transition-all ${
-                activeTab === 'trends'
-                  ? 'bg-secondary text-gray-800 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50'
-              }`}
-            >
-              趨勢觀測
-            </button>
-            <button
-              onClick={() => {
-                setActiveTab('monthly')
-                router.push('/reports?tab=monthly', { scroll: false })
-              }}
-              className={`px-6 py-3 rounded-lg font-medium transition-all ${
-                activeTab === 'monthly'
-                  ? 'bg-secondary text-gray-800 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50'
-              }`}
-            >
-              當月數字
-            </button>
-            <button
-              onClick={() => {
-                setActiveTab('ai-chat')
-                router.push('/reports?tab=ai-chat', { scroll: false })
-              }}
-              className={`px-6 py-3 rounded-lg font-medium transition-all flex items-center space-x-2 ${
-                activeTab === 'ai-chat'
-                  ? 'text-gray-800 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50'
-              }`}
-              style={activeTab === 'ai-chat' ? { backgroundColor: '#98F5E1' } : {}}
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-              </svg>
-              <span>AI問答</span>
-            </button>
+          <div className="flex justify-between items-center">
+            <div className="bg-white rounded-xl shadow-sm p-1 inline-flex">
+              <button
+                onClick={() => {
+                  setActiveTab('trends')
+                  router.push('/reports?tab=trends', { scroll: false })
+                }}
+                className={`px-6 py-3 rounded-lg font-medium transition-all ${
+                  activeTab === 'trends'
+                    ? 'bg-secondary text-gray-800 shadow-sm'
+                    : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50'
+                }`}
+              >
+                趨勢觀測
+              </button>
+              <button
+                onClick={() => {
+                  setActiveTab('monthly')
+                  router.push('/reports?tab=monthly', { scroll: false })
+                }}
+                className={`px-6 py-3 rounded-lg font-medium transition-all ${
+                  activeTab === 'monthly'
+                    ? 'bg-secondary text-gray-800 shadow-sm'
+                    : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50'
+                }`}
+              >
+                當月數字
+              </button>
+              <button
+                onClick={() => {
+                  setActiveTab('customer-analysis')
+                  router.push('/reports?tab=customer-analysis', { scroll: false })
+                }}
+                className={`px-6 py-3 rounded-lg font-medium transition-all ${
+                  activeTab === 'customer-analysis'
+                    ? 'bg-secondary text-gray-800 shadow-sm'
+                    : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50'
+                }`}
+              >
+                顧客分析
+              </button>
+            </div>
+            <div className="bg-white rounded-xl shadow-sm p-1">
+              <button
+                onClick={() => {
+                  setActiveTab('ai-chat')
+                  router.push('/reports?tab=ai-chat', { scroll: false })
+                }}
+                className={`px-6 py-3 rounded-lg font-medium transition-all flex items-center space-x-2 ${
+                  activeTab === 'ai-chat'
+                    ? 'text-gray-800 shadow-sm'
+                    : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50'
+                }`}
+                style={activeTab === 'ai-chat' ? { backgroundColor: '#98F5E1' } : {}}
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                </svg>
+                <span>AI問答（不能用）</span>
+              </button>
+            </div>
           </div>
         </div>
 
@@ -894,7 +1006,7 @@ export default function ReportsContent() {
                   </svg>
                 </div>
                 <div className="text-center">
-                  <h2 className="text-2xl font-bold text-gray-800">AI 智能問答</h2>
+                  <h2 className="text-2xl font-bold text-gray-800">AI 智能問答（不能用）</h2>
                   <p className="text-gray-600 mt-1">基於餐廳銷售數據的智能分析助手 • Powered by {availableModels.find(m => m.id === selectedModel)?.name || 'Gemini'}</p>
                 </div>
               </div>
@@ -1442,8 +1554,8 @@ export default function ReportsContent() {
                   </div>
                   
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div className="text-center p-4 bg-blue-50 rounded-xl">
-                      <div className="text-2xl font-bold text-blue-600">{formatNumber(rankingData.totals.totalQuantity)}</div>
+                    <div className="text-center p-4 bg-emerald-50 rounded-xl">
+                      <div className="text-2xl font-bold text-emerald-600">{formatNumber(rankingData.totals.totalQuantity)}</div>
                       <div className="text-sm text-gray-600 mt-1">總銷量</div>
                     </div>
                     <div className="text-center p-4 bg-green-50 rounded-xl">
@@ -1477,7 +1589,7 @@ export default function ReportsContent() {
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-200">
                           {rankingData.quantityRanking.slice(0, 20).map((item, index) => (
-                            <tr key={index} className={`${index < 3 ? 'bg-blue-50' : ''} hover:bg-gray-50 transition-colors`}>
+                            <tr key={index} className={`${index < 3 ? 'bg-emerald-50' : ''} hover:bg-gray-50 transition-colors`}>
                               <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
                                 {index < 3 ? (
                                   <span className="inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold text-white" 
@@ -1604,7 +1716,319 @@ export default function ReportsContent() {
             )}
           </div>
         )}
+
+        {/* Customer Analysis Tab Content */}
+        {activeTab === 'customer-analysis' && (
+          <div className="space-y-8">
+            {/* 月份篩選器 */}
+            <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
+              <div className="flex items-center space-x-4">
+                <label htmlFor="customer-month-select" className="text-lg font-medium text-gray-700">
+                  選擇月份：
+                </label>
+                <select
+                  id="customer-month-select"
+                  value={customerAnalysisMonth}
+                  onChange={(e) => setCustomerAnalysisMonth(e.target.value)}
+                  className="px-4 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-transparent text-gray-900 min-w-[140px]"
+                >
+                  {/* 生成最近13個月的選項 */}
+                  {Array.from({ length: 13 }, (_, i) => {
+                    const date = new Date()
+                    date.setMonth(date.getMonth() - i)
+                    const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
+                    const monthDisplay = `${date.getFullYear()}年${String(date.getMonth() + 1).padStart(2, '0')}月`
+                    return (
+                      <option key={monthKey} value={monthKey}>
+                        {monthDisplay}
+                      </option>
+                    )
+                  })}
+                </select>
+              </div>
+            </div>
+
+            {/* 顧客排名表格 */}
+            <div className="space-y-8">
+              
+              {/* 客戶消費金額 Top 20 */}
+              <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+                <div className="px-6 py-4" style={{ backgroundColor: '#90DBF4' }}>
+                  <h3 className="text-lg font-semibold text-gray-900">客戶消費金額 TOP 20</h3>
+                  <p className="text-sm text-gray-700 mt-1">依訂單總金額排序</p>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">名次</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">顧客姓名</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">顧客電話</th>
+                        <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">喝酒</th>
+                        <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">新客</th>
+                        <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">訂單張數</th>
+                        <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">平均訂單金額</th>
+                        <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">訂單總金額 ↓</th>
+                        <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">金額佔比</th>
+                        <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">累計佔比</th>
+                        <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">消費明細</th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {customerSpendingRanking.slice(0, 20).map((customer, index) => (
+                        <tr key={customer.customerPhone} className={`${index < 3 ? 'bg-emerald-50' : ''} hover:bg-gray-50 transition-colors`}>
+                          <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
+                            {index < 3 ? (
+                              <span className="inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold text-white" 
+                                    style={{ backgroundColor: index === 0 ? '#FFD700' : index === 1 ? '#C0C0C0' : '#CD7F32' }}>
+                                {customer.rank}
+                              </span>
+                            ) : (
+                              `${customer.rank}.`
+                            )}
+                          </td>
+                          <td className="px-4 py-3 text-sm text-gray-900 max-w-xs truncate" title={customer.customerName}>
+                            {customer.customerName}
+                          </td>
+                          <td className="px-4 py-3 text-sm text-gray-600">
+                            {customer.customerPhone}
+                          </td>
+                          <td className="px-4 py-3 text-center">
+                            {customer.hasAlcohol && (
+                              <span className="text-lg" title="此客戶有酒類消費">🍷</span>
+                            )}
+                          </td>
+                          <td className="px-4 py-3 text-center">
+                            {customer.isNewCustomer && (
+                              <span className="text-xs font-medium text-green-600 bg-green-100 px-2 py-1 rounded-full" title="新客戶">新</span>
+                            )}
+                          </td>
+                          <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 text-right">
+                            {formatNumber(customer.orderCount)}
+                          </td>
+                          <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600 text-right">
+                            {formatNumber(customer.averageOrderAmount)}
+                          </td>
+                          <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 text-right font-medium">
+                            {formatNumber(customer.totalOrderAmount)}
+                          </td>
+                          <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600 text-right">
+                            {customer.amountPercentage ? `${customer.amountPercentage}%` : '--'}
+                          </td>
+                          <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600 text-right">
+                            {customer.cumulativePercentage ? `${customer.cumulativePercentage}%` : '--'}
+                          </td>
+                          <td className="px-4 py-3 text-center">
+                            <button 
+                              className="text-emerald-600 hover:text-emerald-700 transition-colors hover:bg-transparent"
+                              onClick={() => handleViewCustomerDetails(customer.customerPhone, customer.customerName)}
+                              title="查看消費明細"
+                            >
+                              🔍
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                      {customerSpendingRanking.length === 0 && (
+                        <tr>
+                          <td colSpan={8} className="px-4 py-8 text-center text-gray-500">
+                            暫無資料
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* 客戶消費次數 Top 20 */}
+              <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+                <div className="px-6 py-4" style={{ backgroundColor: '#FFCFD2' }}>
+                  <h3 className="text-lg font-semibold text-gray-900">客戶消費次數 TOP 20</h3>
+                  <p className="text-sm text-gray-700 mt-1">依訂單張數排序</p>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">名次</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">顧客姓名</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">顧客電話</th>
+                        <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">喝酒</th>
+                        <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">新客</th>
+                        <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">訂單張數 ↓</th>
+                        <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">平均訂單金額</th>
+                        <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">訂單總金額</th>
+                        <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">消費明細</th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {customerFrequencyRanking.slice(0, 20).map((customer, index) => (
+                        <tr key={customer.customerPhone} className={`${index < 3 ? 'bg-red-50' : ''} hover:bg-gray-50 transition-colors`}>
+                          <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
+                            {index < 3 ? (
+                              <span className="inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold text-white" 
+                                    style={{ backgroundColor: index === 0 ? '#FFD700' : index === 1 ? '#C0C0C0' : '#CD7F32' }}>
+                                {customer.rank}
+                              </span>
+                            ) : (
+                              `${customer.rank}.`
+                            )}
+                          </td>
+                          <td className="px-4 py-3 text-sm text-gray-900 max-w-xs truncate" title={customer.customerName}>
+                            {customer.customerName}
+                          </td>
+                          <td className="px-4 py-3 text-sm text-gray-600">
+                            {customer.customerPhone}
+                          </td>
+                          <td className="px-4 py-3 text-center">
+                            {customer.hasAlcohol && (
+                              <span className="text-lg" title="此客戶有酒類消費">🍷</span>
+                            )}
+                          </td>
+                          <td className="px-4 py-3 text-center">
+                            {customer.isNewCustomer && (
+                              <span className="text-xs font-medium text-green-600 bg-green-100 px-2 py-1 rounded-full" title="新客戶">新</span>
+                            )}
+                          </td>
+                          <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 text-right font-medium">
+                            {formatNumber(customer.orderCount)}
+                          </td>
+                          <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600 text-right">
+                            {formatNumber(customer.averageOrderAmount)}
+                          </td>
+                          <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 text-right">
+                            {formatNumber(customer.totalOrderAmount)}
+                          </td>
+                          <td className="px-4 py-3 text-center">
+                            <button 
+                              className="text-emerald-600 hover:text-emerald-700 transition-colors hover:bg-transparent"
+                              onClick={() => handleViewCustomerDetails(customer.customerPhone, customer.customerName)}
+                              title="查看消費明細"
+                            >
+                              🔍
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                      {customerFrequencyRanking.length === 0 && (
+                        <tr>
+                          <td colSpan={7} className="px-4 py-8 text-center text-gray-500">
+                            暫無資料
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        )}
       </div>
+      
+      {/* 客戶消費明細 Modal */}
+      {showCustomerModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-hidden">
+            <div className="flex items-center justify-between p-6 border-b border-gray-200">
+              <div>
+                <h3 className="text-xl font-semibold text-gray-900">
+                  客戶消費明細
+                </h3>
+                <p className="text-sm text-gray-600 mt-1">
+                  {selectedCustomerName} ({selectedCustomerPhone}) • {customerAnalysisMonth}
+                </p>
+              </div>
+              <button 
+                onClick={() => setShowCustomerModal(false)}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            
+            <div className="p-6 overflow-y-auto max-h-[70vh]">
+              {loadingCustomerDetails ? (
+                <div className="flex items-center justify-center py-12">
+                  <div className="flex items-center space-x-3">
+                    <svg className="w-6 h-6 text-purple-600 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    <span className="text-gray-600">載入消費明細中...</span>
+                  </div>
+                </div>
+              ) : customerDetails ? (
+                <div className="space-y-6">
+                  {/* 摘要統計 */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="text-center p-4 bg-emerald-50 rounded-xl">
+                      <div className="text-2xl font-bold text-emerald-600">{customerDetails.summary.totalOrders}</div>
+                      <div className="text-sm text-gray-600 mt-1">總訂單數</div>
+                    </div>
+                    <div className="text-center p-4 bg-purple-50 rounded-xl">
+                      <div className="text-2xl font-bold text-purple-600">NT$ {customerDetails.summary.totalAmount}</div>
+                      <div className="text-sm text-gray-600 mt-1">總金額</div>
+                    </div>
+                  </div>
+
+                  {/* 訂單明細 */}
+                  <div className="space-y-4">
+                    <h4 className="text-lg font-semibold text-gray-800">訂單明細</h4>
+                    {customerDetails.orders.map((order: any, index: number) => (
+                      <div key={index} className="border border-gray-200 rounded-xl p-4">
+                        <div className="flex items-center justify-between mb-3">
+                          <div>
+                            <div className="font-medium text-gray-900">
+                              訂單編號: {order.orderId}
+                            </div>
+                            <div className="text-sm text-gray-600">
+                              {order.orderTime}
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-lg font-bold text-gray-900">
+                              NT$ {order.totalAmount}
+                            </div>
+                          </div>
+                        </div>
+                        
+                        {/* 品項列表 */}
+                        <div className="space-y-2">
+                          {order.items.map((item: any, itemIndex: number) => (
+                            <div key={itemIndex} className="grid grid-cols-12 gap-2 items-center p-2 bg-gray-50 rounded">
+                              <span className="text-sm text-gray-700 col-span-7">{item.name}</span>
+                              <span className="text-sm font-medium text-gray-900 col-span-3 text-right font-mono">
+                                NT$ {item.price}
+                              </span>
+                              <span className="text-sm text-emerald-600 font-medium col-span-2 text-center font-mono">
+                                {item.quantity > 1 ? `x${item.quantity}` : ''}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+
+                    {customerDetails.orders.length === 0 && (
+                      <div className="text-center py-8 text-gray-500">
+                        該月份暫無訂單記錄
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-12">
+                  <div className="text-gray-500">無法載入消費明細</div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
