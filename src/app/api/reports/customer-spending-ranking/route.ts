@@ -68,7 +68,7 @@ async function getProductCategoryMap(): Promise<Map<string, { large: string, sma
     console.log(`📋 載入 ${categoryMap.size} 個商品分類映射`)
     
     // 調試：檢查特定酒類商品是否在映射中
-    const debugProducts = ['Asahi生啤酒機', '神息 櫻木桶 威士忌', '雪梅 純米吟釀']
+    const debugProducts = ['Asahi生啤酒機', 'Asahi生啤酒', '神息 櫻木桶 威士忌', '雪梅 純米吟釀']
     debugProducts.forEach(product => {
       const mapping = categoryMap.get(product)
       if (mapping) {
@@ -77,6 +77,14 @@ async function getProductCategoryMap(): Promise<Map<string, { large: string, sma
         console.log(`❌ 調試 - 未找到商品映射: "${product}"`)
       }
     })
+    
+    // 額外調試：列出所有啤酒類商品
+    console.log(`🍺 所有啤酒類商品:`)
+    Array.from(categoryMap.entries())
+      .filter(([name, category]) => category.small === '啤酒')
+      .forEach(([name, category]) => {
+        console.log(`  "${name}" → ${category.large}/${category.small}`)
+      })
     
     return categoryMap
   } catch (error) {
@@ -87,7 +95,14 @@ async function getProductCategoryMap(): Promise<Map<string, { large: string, sma
 
 // 檢查商品是否為酒類
 function isAlcoholProduct(productName: string, categoryMap: Map<string, { large: string, small: string }>): boolean {
-  console.log(`🔍 檢查商品是否為酒類: "${productName}"`)
+  console.log(`🔍 檢查商品是否為酒類: "${productName}" (長度: ${productName.length})`)
+  console.log(`📊 商品分類映射大小: ${categoryMap.size}`)
+  
+  // 如果分類映射為空，記錄錯誤
+  if (categoryMap.size === 0) {
+    console.log(`❌ 警告：商品分類映射為空！`)
+    return false
+  }
   
   // 清理商品名稱，移除規格信息
   const cleanProductName = productName.replace(/\s*\d+ml\s*/g, '').replace(/\s*\/\s*/g, ' ').trim()
@@ -102,6 +117,13 @@ function isAlcoholProduct(productName: string, categoryMap: Map<string, { large:
     )
     console.log(`✅ 直接匹配成功(原始): ${productName} → 大分類:${exactMatch.large}, 小分類:${exactMatch.small}, 是酒類:${isAlcohol}`)
     if (isAlcohol) return true
+  } else {
+    console.log(`❌ 原始名稱無直接匹配: "${productName}"`)
+    // 記錄一些相關的匹配嘗試
+    const similarKeys = Array.from(categoryMap.keys()).filter(key => key.includes('Asahi') || key.includes('啤酒'))
+    if (similarKeys.length > 0) {
+      console.log(`📝 相關的商品主檔條目: ${similarKeys.join(', ')}`)
+    }
   }
   
   // 直接匹配 - 清理後名稱
@@ -273,11 +295,25 @@ export async function GET(request: NextRequest) {
               
               // 檢查每個品項是否為酒類 - 必須檢查所有品項，不要break
               console.log(`📝 檢查訂單品項 (${itemNames.length}個): ${itemNames.join(', ')}`)
+              
+              // 特別關注吳先生的訂單
+              if (phone === '988202618' || record.顧客姓名 === '吳先生') {
+                console.log(`🎯 吳先生的訂單詳情 - 電話: ${phone}, 姓名: ${record.顧客姓名}`)
+                console.log(`🎯 訂單日期: ${record.結帳時間}`)
+                console.log(`🎯 品項數量: ${itemNames.length}`)
+                console.log(`🎯 品項內容: ${itemNames.join(' | ')}`)
+              }
+              
               for (const itemName of itemNames) {
                 if (isAlcoholProduct(itemName, productCategoryMap)) {
                   customerStats[phone].hasAlcohol = true
                   customerStats[phone].alcoholProducts.add(itemName)
                   console.log(`🍺 客戶 ${phone} 發現酒類商品: ${itemName}`)
+                  
+                  // 特別關注吳先生
+                  if (phone === '988202618' || record.顧客姓名 === '吳先生') {
+                    console.log(`🎯 吳先生的酒類商品確認: ${itemName}`)
+                  }
                   // ❌ 移除 break - 要繼續檢查其他品項
                 }
               }
