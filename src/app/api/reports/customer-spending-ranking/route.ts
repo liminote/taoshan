@@ -170,12 +170,24 @@ export async function GET(request: NextRequest) {
             
             // 檢查是否有酒類商品
             if (record.品項) {
-              for (const alcoholProduct of alcoholProducts) {
-                if (record.品項.includes(alcoholProduct)) {
-                  customerStats[phone].hasAlcohol = true
-                  customerStats[phone].alcoholProducts.add(alcoholProduct)
-                  break
+              // 解析品項字串，提取商品名稱（去除價格部分）
+              const itemNames = record.品項.split(',').map(item => {
+                const trimmed = item.trim()
+                const priceIndex = trimmed.lastIndexOf(' $')
+                return priceIndex !== -1 ? trimmed.substring(0, priceIndex).trim() : trimmed
+              })
+              
+              // 檢查每個品項是否為酒類
+              for (const itemName of itemNames) {
+                for (const alcoholProduct of alcoholProducts) {
+                  // 使用部分匹配：檢查訂單品項是否包含酒類商品名稱或酒類商品名稱是否包含訂單品項
+                  if (itemName.includes(alcoholProduct) || alcoholProduct.includes(itemName)) {
+                    customerStats[phone].hasAlcohol = true
+                    customerStats[phone].alcoholProducts.add(itemName)
+                    break
+                  }
                 }
+                if (customerStats[phone].hasAlcohol) break
               }
             }
             
