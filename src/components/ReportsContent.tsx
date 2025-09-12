@@ -69,6 +69,7 @@ interface CustomerAnalysisData {
   cumulativePercentage?: number
   hasAlcohol?: boolean
   isNewCustomer?: boolean
+  hasReturnedAfterNew?: boolean
 }
 
 export default function ReportsContent() {
@@ -1800,7 +1801,12 @@ export default function ReportsContent() {
                           </td>
                           <td className="px-4 py-3 text-center">
                             {customer.isNewCustomer && (
-                              <span className="text-xs font-medium text-green-600 bg-green-100 px-2 py-1 rounded-full" title="新客戶">新</span>
+                              <span 
+                                className="text-xs font-medium text-green-600 bg-green-100 px-2 py-1 rounded-full" 
+                                title={customer.hasReturnedAfterNew ? "新客戶且已回訪" : "新客戶"}
+                              >
+                                {customer.hasReturnedAfterNew ? '新回' : '新'}
+                              </span>
                             )}
                           </td>
                           <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 text-right">
@@ -1890,7 +1896,12 @@ export default function ReportsContent() {
                           </td>
                           <td className="px-4 py-3 text-center">
                             {customer.isNewCustomer && (
-                              <span className="text-xs font-medium text-green-600 bg-green-100 px-2 py-1 rounded-full" title="新客戶">新</span>
+                              <span 
+                                className="text-xs font-medium text-green-600 bg-green-100 px-2 py-1 rounded-full" 
+                                title={customer.hasReturnedAfterNew ? "新客戶且已回訪" : "新客戶"}
+                              >
+                                {customer.hasReturnedAfterNew ? '新回' : '新'}
+                              </span>
                             )}
                           </td>
                           <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 text-right font-medium">

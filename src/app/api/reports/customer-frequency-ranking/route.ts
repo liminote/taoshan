@@ -247,7 +247,8 @@ export async function GET(request: NextRequest) {
                 lastOrderTime: date,
                 hasAlcohol: false,
                 alcoholProducts: new Set(),
-                isNewCustomer: false // 預設為 false，稍後會重新計算
+                isNewCustomer: false, // 預設為 false，稍後會重新計算
+                hasReturnedAfterNew: false // 預設為 false，稍後會重新計算
               }
             }
             
@@ -328,6 +329,43 @@ export async function GET(request: NextRequest) {
     const newCustomerCount = Object.values(customerStats).filter(c => c.isNewCustomer).length
     console.log(`📝 新客判斷完成: 共 ${Object.keys(customerStats).length} 位客戶，其中 ${newCustomerCount} 位為新客`)
 
+    // 計算新客回訪判斷
+    console.log(`📝 開始計算新客回訪判斷`)
+    Object.keys(customerStats).forEach(phone => {
+      const customer = customerStats[phone]
+      
+      // 只對新客進行回訪判斷
+      if (customer.isNewCustomer) {
+        // 找出該客戶在查詢月份之後的所有訂單
+        const futureOrders = validOrderData
+          .filter(order => order.顧客電話 === phone)
+          .map(order => {
+            const dateStr = order.結帳時間.replace(/\//g, '-')
+            const orderDate = new Date(dateStr)
+            if (!isNaN(orderDate.getTime())) {
+              const orderMonth = `${orderDate.getFullYear()}-${String(orderDate.getMonth() + 1).padStart(2, '0')}`
+              return { date: orderDate, month: orderMonth }
+            }
+            return null
+          })
+          .filter(order => order !== null)
+          .filter(order => order!.month > month) // 只取查詢月份之後的訂單
+
+        // 如果在查詢月份之後有訂單，則標記為已回訪
+        customer.hasReturnedAfterNew = futureOrders.length > 0
+        
+        if (customer.hasReturnedAfterNew) {
+          console.log(`🔄 新客回訪: ${phone} (${customer.name}) 在 ${month} 後有 ${futureOrders.length} 筆訂單`)
+        }
+      } else {
+        // 非新客不需要回訪標記
+        customer.hasReturnedAfterNew = false
+      }
+    })
+
+    const returnedNewCustomerCount = Object.values(customerStats).filter(c => c.isNewCustomer && c.hasReturnedAfterNew).length
+    console.log(`📝 新客回訪判斷完成: 共 ${newCustomerCount} 位新客，其中 ${returnedNewCustomerCount} 位有回訪`)
+
     // 轉換為陣列並按訂單數量排序
     const customerArray = Object.values(customerStats)
       .filter(customer => customer.orderCount > 0)
@@ -341,7 +379,8 @@ export async function GET(request: NextRequest) {
         amountPercentage: Math.round((customer.totalAmount / monthlyTotalAmount) * 100 * 10) / 10, // 計算到小數點後一位
         cumulativePercentage: 0, // 將在後面計算
         hasAlcohol: customer.hasAlcohol,
-        isNewCustomer: customer.isNewCustomer
+        isNewCustomer: customer.isNewCustomer,
+        hasReturnedAfterNew: customer.hasReturnedAfterNew
       }))
       .sort((a, b) => {
         // 首先按訂單數量排序（降序）
