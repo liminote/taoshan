@@ -1775,7 +1775,7 @@ export default function ReportsContent() {
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                      {customerSpendingRanking.slice(0, 20).map((customer, index) => (
+                      {customerSpendingRanking.slice(0, 30).map((customer, index) => (
                         <tr key={customer.customerPhone} className={`${index < 3 ? 'bg-emerald-50' : ''} hover:bg-gray-50 transition-colors`}>
                           <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
                             {index < 3 ? (
@@ -1865,7 +1865,7 @@ export default function ReportsContent() {
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                      {customerFrequencyRanking.slice(0, 20).map((customer, index) => (
+                      {customerFrequencyRanking.slice(0, 30).map((customer, index) => (
                         <tr key={customer.customerPhone} className={`${index < 3 ? 'bg-red-50' : ''} hover:bg-gray-50 transition-colors`}>
                           <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
                             {index < 3 ? (
