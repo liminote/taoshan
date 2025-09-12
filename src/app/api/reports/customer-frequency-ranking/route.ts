@@ -1,19 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { reportCache, CACHE_KEYS } from '@/lib/cache'
 
-// 酒類商品快取
-let alcoholProductsCache: Set<string> | null = null
-let alcoholCacheTime = 0
-const ALCOHOL_CACHE_TTL = 3600000 // 1小時
+// 商品分類映射快取
+let productCategoryCache: Map<string, { large: string, small: string }> | null = null
+let categoryCacheTime = 0
+const CATEGORY_CACHE_TTL = 3600000 // 1小時
 
-// 獲取酒類商品清單
-async function getAlcoholProducts(): Promise<Set<string>> {
+// 獲取商品分類映射
+async function getProductCategoryMap(): Promise<Map<string, { large: string, small: string }>> {
   const now = Date.now()
-  if (alcoholProductsCache && (now - alcoholCacheTime) < ALCOHOL_CACHE_TTL) {
-    return alcoholProductsCache
+  if (productCategoryCache && (now - categoryCacheTime) < CATEGORY_CACHE_TTL) {
+    return productCategoryCache
   }
 
-  console.log('🍺 載入酒類商品清單...')
+  console.log('📋 載入商品分類映射...')
   const masterSheetUrl = 'https://docs.google.com/spreadsheets/d/18iWZVRT8LB7I_WBNXGPl3WI8S3zEVq5ANq5yTj8Nzd8/export?format=csv&gid=909084406'
   
   try {
@@ -28,7 +28,7 @@ async function getAlcoholProducts(): Promise<Set<string>> {
     const largeCategoryIndex = headers.findIndex(h => h === '大分類')
     const smallCategoryIndex = headers.findIndex(h => h === '小分類')
     
-    const alcoholProducts = new Set<string>()
+    const categoryMap = new Map<string, { large: string, small: string }>()
     
     if (nameIndex !== -1 && largeCategoryIndex !== -1 && smallCategoryIndex !== -1) {
       lines.slice(1).forEach(line => {
@@ -37,24 +37,50 @@ async function getAlcoholProducts(): Promise<Set<string>> {
         const largeCategory = values[largeCategoryIndex]
         const smallCategory = values[smallCategoryIndex]
         
-        if (productName && largeCategory === '6酒水' && (
-          smallCategory === '東洋酒' || 
-          smallCategory === '西洋酒' || 
-          smallCategory === '啤酒'
-        )) {
-          alcoholProducts.add(productName)
+        if (productName && largeCategory && smallCategory) {
+          categoryMap.set(productName, {
+            large: largeCategory,
+            small: smallCategory
+          })
         }
       })
     }
     
-    alcoholProductsCache = alcoholProducts
-    alcoholCacheTime = now
-    console.log(`🍺 載入 ${alcoholProducts.size} 個酒類商品`)
-    return alcoholProducts
+    productCategoryCache = categoryMap
+    categoryCacheTime = now
+    console.log(`📋 載入 ${categoryMap.size} 個商品分類映射`)
+    return categoryMap
   } catch (error) {
-    console.error('載入酒類商品清單失敗:', error)
-    return new Set()
+    console.error('載入商品分類映射失敗:', error)
+    return new Map()
   }
+}
+
+// 檢查商品是否為酒類
+function isAlcoholProduct(productName: string, categoryMap: Map<string, { large: string, small: string }>): boolean {
+  // 直接匹配
+  const exactMatch = categoryMap.get(productName)
+  if (exactMatch) {
+    return exactMatch.large === '6酒水' && (
+      exactMatch.small === '東洋酒' || 
+      exactMatch.small === '西洋酒' || 
+      exactMatch.small === '啤酒'
+    )
+  }
+  
+  // 部分匹配（處理商品名稱略有差異的情況）
+  for (const [masterProductName, category] of categoryMap.entries()) {
+    if ((productName.includes(masterProductName) || masterProductName.includes(productName)) &&
+        category.large === '6酒水' && (
+          category.small === '東洋酒' || 
+          category.small === '西洋酒' || 
+          category.small === '啤酒'
+        )) {
+      return true
+    }
+  }
+  
+  return false
 }
 
 export async function GET(request: NextRequest) {
@@ -81,8 +107,8 @@ export async function GET(request: NextRequest) {
 
     console.log(`⚠️ 無快取資料，計算客戶消費次數排行 (${month})...`)
 
-    // 獲取酒類商品清單
-    const alcoholProducts = await getAlcoholProducts()
+    // 獲取商品分類映射
+    const productCategoryMap = await getProductCategoryMap()
 
     // 獲取訂單資料
     console.log('📥 載入訂單資料...')
@@ -179,15 +205,11 @@ export async function GET(request: NextRequest) {
               
               // 檢查每個品項是否為酒類
               for (const itemName of itemNames) {
-                for (const alcoholProduct of alcoholProducts) {
-                  // 使用部分匹配：檢查訂單品項是否包含酒類商品名稱或酒類商品名稱是否包含訂單品項
-                  if (itemName.includes(alcoholProduct) || alcoholProduct.includes(itemName)) {
-                    customerStats[phone].hasAlcohol = true
-                    customerStats[phone].alcoholProducts.add(itemName)
-                    break
-                  }
+                if (isAlcoholProduct(itemName, productCategoryMap)) {
+                  customerStats[phone].hasAlcohol = true
+                  customerStats[phone].alcoholProducts.add(itemName)
+                  break
                 }
-                if (customerStats[phone].hasAlcohol) break
               }
             }
             
@@ -201,7 +223,7 @@ export async function GET(request: NextRequest) {
       }
     })
 
-    console.log(`🍺 使用 ${alcoholProducts.size} 個酒類商品進行檢測`)
+    console.log(`🍺 使用 ${productCategoryMap.size} 個商品分類映射進行酒類檢測`)
 
     // 計算當月所有訂單總金額（不管有沒有電話號碼）
     const monthlyTotalAmount = orderData
