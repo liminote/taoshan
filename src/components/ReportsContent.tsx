@@ -1751,10 +1751,10 @@ export default function ReportsContent() {
             {/* 顧客排名表格 */}
             <div className="space-y-8">
               
-              {/* 客戶消費金額 Top 20 */}
+              {/* 客戶消費金額 Top 30 */}
               <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
                 <div className="px-6 py-4" style={{ backgroundColor: '#90DBF4' }}>
-                  <h3 className="text-lg font-semibold text-gray-900">客戶消費金額 TOP 20</h3>
+                  <h3 className="text-lg font-semibold text-gray-900">客戶消費金額 TOP 30</h3>
                   <p className="text-sm text-gray-700 mt-1">依訂單總金額排序</p>
                 </div>
                 <div className="overflow-x-auto">
@@ -1841,10 +1841,10 @@ export default function ReportsContent() {
                 </div>
               </div>
 
-              {/* 客戶消費次數 Top 20 */}
+              {/* 客戶消費次數 Top 30 */}
               <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
                 <div className="px-6 py-4" style={{ backgroundColor: '#FFCFD2' }}>
-                  <h3 className="text-lg font-semibold text-gray-900">客戶消費次數 TOP 20</h3>
+                  <h3 className="text-lg font-semibold text-gray-900">客戶消費次數 TOP 30</h3>
                   <p className="text-sm text-gray-700 mt-1">依訂單張數排序</p>
                 </div>
                 <div className="overflow-x-auto">

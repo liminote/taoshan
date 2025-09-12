@@ -363,7 +363,7 @@ export async function GET(request: NextRequest) {
     // 取前 30 名
     const result = customerArray.slice(0, 30)
 
-    console.log(`計算完成，共 ${customerArray.length} 位客戶，取前 20 名`)
+    console.log(`計算完成，共 ${customerArray.length} 位客戶，取前 30 名`)
 
     // 儲存到快取
     reportCache.set(cacheKey, result)
