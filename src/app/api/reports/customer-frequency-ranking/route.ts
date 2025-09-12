@@ -24,24 +24,41 @@ async function getProductCategoryMap(): Promise<Map<string, { large: string, sma
     const lines = csv.split('\n').filter(line => line.trim())
     const headers = lines[0].split(',').map(h => h.replace(/"/g, '').trim())
     
-    const nameIndex = headers.findIndex(h => h.includes('商品名稱') || h.includes('品項'))
+    const oldNameIndex = headers.findIndex(h => h.includes('商品名稱') && !h.includes('新'))
+    const newNameIndex = headers.findIndex(h => h.includes('新商品名稱'))
     const largeCategoryIndex = headers.findIndex(h => h === '大分類')
     const smallCategoryIndex = headers.findIndex(h => h === '小分類')
     
+    console.log(`📋 商品主檔欄位索引: 商品名稱=${oldNameIndex}, 新商品名稱=${newNameIndex}, 大分類=${largeCategoryIndex}, 小分類=${smallCategoryIndex}`)
+    
     const categoryMap = new Map<string, { large: string, small: string }>()
     
-    if (nameIndex !== -1 && largeCategoryIndex !== -1 && smallCategoryIndex !== -1) {
-      lines.slice(1).forEach(line => {
+    if ((oldNameIndex !== -1 || newNameIndex !== -1) && largeCategoryIndex !== -1 && smallCategoryIndex !== -1) {
+      lines.slice(1).forEach((line, index) => {
         const values = line.split(',').map(v => v.replace(/"/g, '').trim())
-        const productName = values[nameIndex]
+        const oldProductName = oldNameIndex !== -1 ? values[oldNameIndex] : ''
+        const newProductName = newNameIndex !== -1 ? values[newNameIndex] : ''
         const largeCategory = values[largeCategoryIndex]
         const smallCategory = values[smallCategoryIndex]
         
-        if (productName && largeCategory && smallCategory) {
-          categoryMap.set(productName, {
+        // 使用舊商品名稱和新商品名稱都建立映射
+        if (oldProductName && largeCategory && smallCategory) {
+          categoryMap.set(oldProductName, {
             large: largeCategory,
             small: smallCategory
           })
+        }
+        
+        if (newProductName && newProductName !== oldProductName && largeCategory && smallCategory) {
+          categoryMap.set(newProductName, {
+            large: largeCategory,
+            small: smallCategory
+          })
+        }
+        
+        // 記錄啤酒類商品用於調試
+        if (smallCategory === '啤酒') {
+          console.log(`🍺 發現啤酒商品 #${index}: 舊名="${oldProductName}", 新名="${newProductName}", 分類=${largeCategory}/${smallCategory}`)
         }
       })
     }
@@ -58,28 +75,36 @@ async function getProductCategoryMap(): Promise<Map<string, { large: string, sma
 
 // 檢查商品是否為酒類
 function isAlcoholProduct(productName: string, categoryMap: Map<string, { large: string, small: string }>): boolean {
+  console.log(`🔍 檢查商品是否為酒類: "${productName}"`)
+  
   // 直接匹配
   const exactMatch = categoryMap.get(productName)
   if (exactMatch) {
-    return exactMatch.large === '6酒水' && (
+    const isAlcohol = exactMatch.large === '6酒水' && (
       exactMatch.small === '東洋酒' || 
       exactMatch.small === '西洋酒' || 
       exactMatch.small === '啤酒'
     )
+    console.log(`✅ 直接匹配成功: ${productName} → 大分類:${exactMatch.large}, 小分類:${exactMatch.small}, 是酒類:${isAlcohol}`)
+    return isAlcohol
   }
   
   // 部分匹配（處理商品名稱略有差異的情況）
   for (const [masterProductName, category] of categoryMap.entries()) {
-    if ((productName.includes(masterProductName) || masterProductName.includes(productName)) &&
-        category.large === '6酒水' && (
-          category.small === '東洋酒' || 
-          category.small === '西洋酒' || 
-          category.small === '啤酒'
-        )) {
+    const hasPartialMatch = productName.includes(masterProductName) || masterProductName.includes(productName)
+    const isAlcoholCategory = category.large === '6酒水' && (
+      category.small === '東洋酒' || 
+      category.small === '西洋酒' || 
+      category.small === '啤酒'
+    )
+    
+    if (hasPartialMatch && isAlcoholCategory) {
+      console.log(`✅ 部分匹配成功: "${productName}" ↔ "${masterProductName}" → 大分類:${category.large}, 小分類:${category.small}`)
       return true
     }
   }
   
+  console.log(`❌ 無匹配: "${productName}" 不是酒類商品`)
   return false
 }
 
