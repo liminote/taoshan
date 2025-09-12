@@ -9,9 +9,16 @@ const CATEGORY_CACHE_TTL = 3600000 // 1小時
 // 獲取商品分類映射
 async function getProductCategoryMap(): Promise<Map<string, { large: string, small: string }>> {
   const now = Date.now()
-  if (productCategoryCache && (now - categoryCacheTime) < CATEGORY_CACHE_TTL) {
-    return productCategoryCache
-  }
+  
+  // 臨時強制重新載入，用於調試
+  console.log(`⏰ 檢查快取狀態 - 現在: ${now}, 快取時間: ${categoryCacheTime}, 差異: ${now - categoryCacheTime}, TTL: ${CATEGORY_CACHE_TTL}`)
+  
+  // 臨時禁用快取進行調試
+  console.log(`🚨 強制重新載入商品分類映射 (調試模式)`)
+  // if (productCategoryCache && (now - categoryCacheTime) < CATEGORY_CACHE_TTL) {
+  //   console.log(`📋 使用快取的商品分類映射 (${productCategoryCache.size} 個項目)`)
+  //   return productCategoryCache
+  // }
 
   console.log('📋 載入商品分類映射...')
   const masterSheetUrl = 'https://docs.google.com/spreadsheets/d/18iWZVRT8LB7I_WBNXGPl3WI8S3zEVq5ANq5yTj8Nzd8/export?format=csv&gid=909084406'
