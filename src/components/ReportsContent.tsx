@@ -1802,7 +1802,11 @@ export default function ReportsContent() {
                           <td className="px-4 py-3 text-center">
                             {customer.isNewCustomer && (
                               <span 
-                                className="text-xs font-medium text-green-600 bg-green-100 px-2 py-1 rounded-full" 
+                                className={`text-xs font-medium px-2 py-1 rounded-full ${
+                                  customer.hasReturnedAfterNew 
+                                    ? 'text-blue-700 bg-blue-100' 
+                                    : 'text-green-600 bg-green-100'
+                                }`}
                                 title={customer.hasReturnedAfterNew ? "新客戶且已回訪" : "新客戶"}
                               >
                                 {customer.hasReturnedAfterNew ? '新回' : '新'}
@@ -1897,7 +1901,11 @@ export default function ReportsContent() {
                           <td className="px-4 py-3 text-center">
                             {customer.isNewCustomer && (
                               <span 
-                                className="text-xs font-medium text-green-600 bg-green-100 px-2 py-1 rounded-full" 
+                                className={`text-xs font-medium px-2 py-1 rounded-full ${
+                                  customer.hasReturnedAfterNew 
+                                    ? 'text-blue-700 bg-blue-100' 
+                                    : 'text-green-600 bg-green-100'
+                                }`}
                                 title={customer.hasReturnedAfterNew ? "新客戶且已回訪" : "新客戶"}
                               >
                                 {customer.hasReturnedAfterNew ? '新回' : '新'}
