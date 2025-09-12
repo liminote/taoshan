@@ -1,6 +1,60 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { reportCache, CACHE_KEYS } from '@/lib/cache'
 
+// 酒類商品快取
+let alcoholProductsCache: Set<string> | null = null
+let alcoholCacheTime = 0
+const ALCOHOL_CACHE_TTL = 3600000 // 1小時
+
+// 獲取酒類商品清單
+async function getAlcoholProducts(): Promise<Set<string>> {
+  const now = Date.now()
+  if (alcoholProductsCache && (now - alcoholCacheTime) < ALCOHOL_CACHE_TTL) {
+    return alcoholProductsCache
+  }
+
+  console.log('🍺 載入酒類商品清單...')
+  const masterSheetUrl = 'https://docs.google.com/spreadsheets/d/18iWZVRT8LB7I_WBNXGPl3WI8S3zEVq5ANq5yTj8Nzd8/export?format=csv&gid=909084406'
+  
+  try {
+    const response = await fetch(masterSheetUrl)
+    if (!response.ok) throw new Error('無法獲取商品主檔')
+    
+    const csv = await response.text()
+    const lines = csv.split('\n').filter(line => line.trim())
+    const headers = lines[0].split(',').map(h => h.replace(/"/g, '').trim())
+    
+    const nameIndex = headers.findIndex(h => h.includes('商品名稱') || h.includes('品項'))
+    const categoryIndex = headers.findIndex(h => h.includes('分類') || h.includes('category'))
+    
+    const alcoholProducts = new Set<string>()
+    
+    if (nameIndex !== -1 && categoryIndex !== -1) {
+      lines.slice(1).forEach(line => {
+        const values = line.split(',').map(v => v.replace(/"/g, '').trim())
+        const productName = values[nameIndex]
+        const category = values[categoryIndex]
+        
+        if (productName && category && (
+          category.includes('東洋酒') || 
+          category.includes('西洋酒') || 
+          category.includes('啤酒')
+        )) {
+          alcoholProducts.add(productName)
+        }
+      })
+    }
+    
+    alcoholProductsCache = alcoholProducts
+    alcoholCacheTime = now
+    console.log(`🍺 載入 ${alcoholProducts.size} 個酒類商品`)
+    return alcoholProducts
+  } catch (error) {
+    console.error('載入酒類商品清單失敗:', error)
+    return new Set()
+  }
+}
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
@@ -25,37 +79,49 @@ export async function GET(request: NextRequest) {
 
     console.log(`⚠️ 無快取資料，計算客戶消費次數排行 (${month})...`)
 
-    // 獲取商品主檔資料，建立商品名稱到子分類的映射
-    const { SheetsCache } = await import('@/lib/sheets-cache')
-    const productMasterData = await SheetsCache.getProductsMaster()
+    // 獲取酒類商品清單
+    const alcoholProducts = await getAlcoholProducts()
+
+    // 獲取訂單資料
+    console.log('📥 載入訂單資料...')
+    const orderSheetUrl = 'https://docs.google.com/spreadsheets/d/1EWPECWQp_Ehz43Lfks_I8lcvEig8gV9DjyjEIzC5EO4/export?format=csv&gid=0'
+    const response = await fetch(orderSheetUrl)
+    if (!response.ok) throw new Error('無法獲取訂單資料')
     
-    // 建立商品名稱到子分類 ID 的映射
-    const productToSubcategoryMap: { [productName: string]: number } = {}
-    if (productMasterData.products) {
-      productMasterData.products.forEach((product: any) => {
-        if (product.original_name && product.subcategory_id) {
-          productToSubcategoryMap[product.original_name] = product.subcategory_id
-        }
-      })
+    const orderCsv = await response.text()
+    const orderLines = orderCsv.split('\n').filter(line => line.trim())
+    const orderHeaders = orderLines[0].split(',').map(h => h.replace(/"/g, '').trim())
+    
+    // 找到正確的欄位索引
+    const checkoutTimeIndex = orderHeaders.findIndex(h => h.includes('結帳時間'))
+    const checkoutAmountIndex = orderHeaders.findIndex(h => h.includes('結帳金額'))
+    const customerNameIndex = orderHeaders.findIndex(h => h.includes('顧客姓名'))
+    const customerPhoneIndex = orderHeaders.findIndex(h => h.includes('顧客電話'))
+    const itemsIndex = orderHeaders.findIndex(h => h.includes('品項'))
+    
+    if (checkoutTimeIndex === -1 || checkoutAmountIndex === -1 || customerNameIndex === -1 || customerPhoneIndex === -1) {
+      throw new Error('找不到必要的欄位')
     }
     
-    // 定義酒類子分類 ID
-    const alcoholSubcategoryIds = [22, 23, 26] // 西洋酒、東洋酒、啤酒
-
-    // 使用快取的 Google Sheets 資料
-    const [orderData, productData] = await Promise.all([
-      SheetsCache.getOrderData(),
-      SheetsCache.getProductData()
-    ])
+    const orderData = orderLines.slice(1).map(line => {
+      const values = line.split(',').map(v => v.replace(/"/g, '').trim())
+      return {
+        結帳時間: values[checkoutTimeIndex] || '',
+        結帳金額: parseFloat(values[checkoutAmountIndex]) || 0,
+        顧客姓名: values[customerNameIndex] || '',
+        顧客電話: values[customerPhoneIndex] || '',
+        品項: values[itemsIndex] || ''
+      }
+    })
 
     // 篩選有效的訂單資料
     const validOrderData = orderData.filter(record => 
-      record.checkout_time && 
-      record.checkout_time !== '' && 
-      record.customer_phone && 
-      record.customer_phone !== '' &&
-      record.customer_phone !== '--' &&
-      record.customer_phone.trim() !== ''
+      record.結帳時間 && 
+      record.結帳時間 !== '' && 
+      record.顧客電話 && 
+      record.顧客電話 !== '' &&
+      record.顧客電話 !== '--' &&
+      record.顧客電話.trim() !== ''
     )
 
     // 按電話號碼分組客戶數據
@@ -72,7 +138,7 @@ export async function GET(request: NextRequest) {
 
     // 篩選指定月份的訂單並統計
     validOrderData.forEach(record => {
-      const dateStr = record.checkout_time.replace(/\//g, '-')
+      const dateStr = record.結帳時間.replace(/\//g, '-')
       const date = new Date(dateStr)
       
       if (!isNaN(date.getTime())) {
@@ -80,91 +146,53 @@ export async function GET(request: NextRequest) {
         
         // 只統計指定月份的數據
         if (orderMonth === month) {
-          const phone = record.customer_phone
+          const phone = record.顧客電話
           
           // 確保電話號碼有效（與過濾條件一致）
           if (phone && phone !== '' && phone !== '--' && phone.trim() !== '') {
             if (!customerStats[phone]) {
-            customerStats[phone] = {
-              name: record.customer_name,
-              phone: phone,
-              orderCount: 0,
-              totalAmount: 0,
-              lastOrderTime: date,
-              hasAlcohol: false,
-              alcoholProducts: new Set(),
-              isNewCustomer: false // 預設為 false，稍後會重新計算
+              customerStats[phone] = {
+                name: record.顧客姓名,
+                phone: phone,
+                orderCount: 0,
+                totalAmount: 0,
+                lastOrderTime: date,
+                hasAlcohol: false,
+                alcoholProducts: new Set(),
+                isNewCustomer: false // 預設為 false，稍後會重新計算
+              }
             }
-          }
-          
-          customerStats[phone].orderCount += 1
-          customerStats[phone].totalAmount += record.invoice_amount
-          
+            
+            customerStats[phone].orderCount += 1
+            customerStats[phone].totalAmount += record.結帳金額
+            
+            // 檢查是否有酒類商品
+            if (record.品項) {
+              for (const alcoholProduct of alcoholProducts) {
+                if (record.品項.includes(alcoholProduct)) {
+                  customerStats[phone].hasAlcohol = true
+                  customerStats[phone].alcoholProducts.add(alcoholProduct)
+                  break
+                }
+              }
+            }
+            
             // 更新最新訂單時間和姓名
             if (date > customerStats[phone].lastOrderTime) {
               customerStats[phone].lastOrderTime = date
-              customerStats[phone].name = record.customer_name
+              customerStats[phone].name = record.顧客姓名
             }
           }
         }
       }
     })
 
-    // 檢查客戶是否有酒類消費
-    console.log(`🔍 開始檢查酒類消費`)
-    console.log(`🔍 酒類子分類: 東洋酒(23), 西洋酒(22), 啤酒(26)`)
-    console.log(`🔍 商品分類映射總數: ${Object.keys(productToSubcategoryMap).length}`)
-    
-    // 建立結帳時間到客戶電話的映射
-    const checkoutTimeToCustomerMap: { [checkoutTime: string]: string } = {}
-    validOrderData.forEach(order => {
-      checkoutTimeToCustomerMap[order.checkout_time] = order.customer_phone
-    })
-    
-    console.log(`🔗 建立了 ${Object.keys(checkoutTimeToCustomerMap).length} 個結帳時間-客戶映射`)
-    
-    let alcoholFoundCount = 0
-    let checkedProductCount = 0
-    
-    // 檢查商品資料中的每個品項
-    productData.forEach(record => {
-      const checkoutTime = record['結帳時間']
-      const productName = record['商品名稱'] || ''
-      
-      if (checkoutTime && productName) {
-        // 通過結帳時間找到客戶電話
-        const customerPhone = checkoutTimeToCustomerMap[checkoutTime]
-        
-        if (customerPhone) {
-          const dateStr = checkoutTime.replace(/\//g, '-')
-          const date = new Date(dateStr)
-          
-          if (!isNaN(date.getTime())) {
-            const orderMonth = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
-            
-            // 只檢查指定月份且客戶存在於統計中
-            if (orderMonth === month && customerStats[customerPhone]) {
-              checkedProductCount++
-              
-              // 檢查品項是否為酒類
-              const subcategoryId = productToSubcategoryMap[productName]
-              if (subcategoryId && alcoholSubcategoryIds.includes(subcategoryId)) {
-                customerStats[customerPhone].hasAlcohol = true
-                customerStats[customerPhone].alcoholProducts.add(productName)
-                alcoholFoundCount++
-              }
-            }
-          }
-        }
-      }
-    })
-    
-    console.log(`🔍 檢查完成: 已檢查 ${checkedProductCount} 個品項，發現 ${alcoholFoundCount} 個酒類商品`)
+    console.log(`🍺 使用 ${alcoholProducts.size} 個酒類商品進行檢測`)
 
     // 計算當月所有訂單總金額（不管有沒有電話號碼）
     const monthlyTotalAmount = orderData
       .filter(record => {
-        const dateStr = record.checkout_time.replace(/\//g, '-')
+        const dateStr = record.結帳時間.replace(/\//g, '-')
         const date = new Date(dateStr)
         
         if (!isNaN(date.getTime())) {
@@ -173,7 +201,7 @@ export async function GET(request: NextRequest) {
         }
         return false
       })
-      .reduce((sum, record) => sum + record.invoice_amount, 0)
+      .reduce((sum, record) => sum + record.結帳金額, 0)
 
     console.log(`📊 當月總訂單金額: ${monthlyTotalAmount.toLocaleString()}`)
 
@@ -182,9 +210,9 @@ export async function GET(request: NextRequest) {
     Object.keys(customerStats).forEach(phone => {
       // 找出該客戶所有的訂單日期
       const customerOrders = validOrderData
-        .filter(order => order.customer_phone === phone)
+        .filter(order => order.顧客電話 === phone)
         .map(order => {
-          const dateStr = order.checkout_time.replace(/\//g, '-')
+          const dateStr = order.結帳時間.replace(/\//g, '-')
           return new Date(dateStr)
         })
         .filter(date => !isNaN(date.getTime()))
@@ -234,8 +262,8 @@ export async function GET(request: NextRequest) {
       customer.cumulativePercentage = Math.round(cumulativeSum * 10) / 10 // 計算到小數點後一位
     })
 
-    // 取前 20 名
-    const result = customerArray.slice(0, 20)
+    // 取前 30 名
+    const result = customerArray.slice(0, 30)
 
     console.log(`計算完成，共 ${customerArray.length} 位客戶，取前 20 名`)
 
