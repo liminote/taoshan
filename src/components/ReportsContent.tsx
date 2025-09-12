@@ -104,10 +104,7 @@ export default function ReportsContent() {
   const [rankingData, setRankingData] = useState<RankingData | null>(null)
   
   // Customer analysis data (filtered by selected month for customer analysis tab)
-  const [customerAnalysisMonth, setCustomerAnalysisMonth] = useState<string>(() => {
-    const currentDate = new Date()
-    return `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`
-  })
+  const [customerAnalysisMonth, setCustomerAnalysisMonth] = useState<string>('2023-12')
   const [customerSpendingRanking, setCustomerSpendingRanking] = useState<CustomerAnalysisData[]>([])
   const [customerFrequencyRanking, setCustomerFrequencyRanking] = useState<CustomerAnalysisData[]>([])
 

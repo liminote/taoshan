@@ -77,34 +77,65 @@ async function getProductCategoryMap(): Promise<Map<string, { large: string, sma
 function isAlcoholProduct(productName: string, categoryMap: Map<string, { large: string, small: string }>): boolean {
   console.log(`🔍 檢查商品是否為酒類: "${productName}"`)
   
-  // 直接匹配
-  const exactMatch = categoryMap.get(productName)
+  // 清理商品名稱，移除規格信息
+  const cleanProductName = productName.replace(/\s*\d+ml\s*/g, '').replace(/\s*\/\s*/g, ' ').trim()
+  
+  // 直接匹配 - 原始名稱
+  let exactMatch = categoryMap.get(productName)
   if (exactMatch) {
     const isAlcohol = exactMatch.large === '6酒水' && (
       exactMatch.small === '東洋酒' || 
       exactMatch.small === '西洋酒' || 
       exactMatch.small === '啤酒'
     )
-    console.log(`✅ 直接匹配成功: ${productName} → 大分類:${exactMatch.large}, 小分類:${exactMatch.small}, 是酒類:${isAlcohol}`)
-    return isAlcohol
+    console.log(`✅ 直接匹配成功(原始): ${productName} → 大分類:${exactMatch.large}, 小分類:${exactMatch.small}, 是酒類:${isAlcohol}`)
+    if (isAlcohol) return true
   }
   
-  // 部分匹配（處理商品名稱略有差異的情況）
+  // 直接匹配 - 清理後名稱
+  exactMatch = categoryMap.get(cleanProductName)
+  if (exactMatch) {
+    const isAlcohol = exactMatch.large === '6酒水' && (
+      exactMatch.small === '東洋酒' || 
+      exactMatch.small === '西洋酒' || 
+      exactMatch.small === '啤酒'
+    )
+    console.log(`✅ 直接匹配成功(清理): ${cleanProductName} → 大分類:${exactMatch.large}, 小分類:${exactMatch.small}, 是酒類:${isAlcohol}`)
+    if (isAlcohol) return true
+  }
+  
+  // 寬鬆部分匹配（更積極的匹配策略）
   for (const [masterProductName, category] of categoryMap.entries()) {
-    const hasPartialMatch = productName.includes(masterProductName) || masterProductName.includes(productName)
     const isAlcoholCategory = category.large === '6酒水' && (
       category.small === '東洋酒' || 
       category.small === '西洋酒' || 
       category.small === '啤酒'
     )
     
-    if (hasPartialMatch && isAlcoholCategory) {
-      console.log(`✅ 部分匹配成功: "${productName}" ↔ "${masterProductName}" → 大分類:${category.large}, 小分類:${category.small}`)
+    if (!isAlcoholCategory) continue
+    
+    // 多種匹配策略
+    const originalMatch = productName.includes(masterProductName) || masterProductName.includes(productName)
+    const cleanMatch = cleanProductName.includes(masterProductName) || masterProductName.includes(cleanProductName)
+    
+    // 分詞匹配：檢查主要關鍵詞
+    const productWords = cleanProductName.split(/\s+/).filter(w => w.length > 1)
+    const masterWords = masterProductName.split(/\s+/).filter(w => w.length > 1)
+    let wordMatch = false
+    
+    if (productWords.length >= 2 && masterWords.length >= 2) {
+      // 至少要有2個關鍵詞匹配
+      const matchingWords = productWords.filter(pw => masterWords.some(mw => pw.includes(mw) || mw.includes(pw)))
+      wordMatch = matchingWords.length >= 2
+    }
+    
+    if (originalMatch || cleanMatch || wordMatch) {
+      console.log(`✅ 部分匹配成功: "${productName}" ↔ "${masterProductName}" → 大分類:${category.large}, 小分類:${category.small} (原始:${originalMatch}, 清理:${cleanMatch}, 分詞:${wordMatch})`)
       return true
     }
   }
   
-  console.log(`❌ 無匹配: "${productName}" 不是酒類商品`)
+  console.log(`❌ 無匹配: "${productName}" (清理後: "${cleanProductName}") 不是酒類商品`)
   return false
 }
 
@@ -228,12 +259,14 @@ export async function GET(request: NextRequest) {
                 return priceIndex !== -1 ? trimmed.substring(0, priceIndex).trim() : trimmed
               })
               
-              // 檢查每個品項是否為酒類
+              // 檢查每個品項是否為酒類 - 必須檢查所有品項，不要break
+              console.log(`📝 檢查訂單品項 (${itemNames.length}個): ${itemNames.join(', ')}`)
               for (const itemName of itemNames) {
                 if (isAlcoholProduct(itemName, productCategoryMap)) {
                   customerStats[phone].hasAlcohol = true
                   customerStats[phone].alcoholProducts.add(itemName)
-                  break
+                  console.log(`🍺 客戶 ${phone} 發現酒類商品: ${itemName}`)
+                  // ❌ 移除 break - 要繼續檢查其他品項
                 }
               }
             }

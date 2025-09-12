@@ -228,12 +228,14 @@ export async function GET(request: NextRequest) {
                 return priceIndex !== -1 ? trimmed.substring(0, priceIndex).trim() : trimmed
               })
               
-              // 檢查每個品項是否為酒類
+              // 檢查每個品項是否為酒類 - 必須檢查所有品項，不要break
+              console.log(`📝 檢查訂單品項 (${itemNames.length}個): ${itemNames.join(', ')}`)
               for (const itemName of itemNames) {
                 if (isAlcoholProduct(itemName, productCategoryMap)) {
                   customerStats[phone].hasAlcohol = true
                   customerStats[phone].alcoholProducts.add(itemName)
-                  break
+                  console.log(`🍺 客戶 ${phone} 發現酒類商品: ${itemName}`)
+                  // ❌ 移除 break - 要繼續檢查其他品項
                 }
               }
             }
