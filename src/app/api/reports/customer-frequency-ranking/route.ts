@@ -168,8 +168,31 @@ export async function GET(request: NextRequest) {
       throw new Error('找不到必要的欄位')
     }
     
+    // 正確的 CSV 解析函數，處理引號內的逗號
+    function parseCSVLine(line: string): string[] {
+      const result: string[] = []
+      let current = ''
+      let inQuotes = false
+      
+      for (let i = 0; i < line.length; i++) {
+        const char = line[i]
+        
+        if (char === '"') {
+          inQuotes = !inQuotes
+        } else if (char === ',' && !inQuotes) {
+          result.push(current.trim())
+          current = ''
+        } else {
+          current += char
+        }
+      }
+      
+      result.push(current.trim()) // 添加最後一個字段
+      return result
+    }
+
     const orderData = orderLines.slice(1).map(line => {
-      const values = line.split(',').map(v => v.replace(/"/g, '').trim())
+      const values = parseCSVLine(line).map(v => v.replace(/^"|"$/g, '').trim()) // 移除首尾引號
       return {
         結帳時間: values[checkoutTimeIndex] || '',
         結帳金額: parseFloat(values[checkoutAmountIndex]) || 0,

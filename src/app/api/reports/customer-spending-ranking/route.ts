@@ -10,15 +10,10 @@ const CATEGORY_CACHE_TTL = 3600000 // 1小時
 async function getProductCategoryMap(): Promise<Map<string, { large: string, small: string }>> {
   const now = Date.now()
   
-  // 臨時強制重新載入，用於調試
-  console.log(`⏰ 檢查快取狀態 - 現在: ${now}, 快取時間: ${categoryCacheTime}, 差異: ${now - categoryCacheTime}, TTL: ${CATEGORY_CACHE_TTL}`)
-  
-  // 臨時禁用快取進行調試
-  console.log(`🚨 強制重新載入商品分類映射 (調試模式)`)
-  // if (productCategoryCache && (now - categoryCacheTime) < CATEGORY_CACHE_TTL) {
-  //   console.log(`📋 使用快取的商品分類映射 (${productCategoryCache.size} 個項目)`)
-  //   return productCategoryCache
-  // }
+  if (productCategoryCache && (now - categoryCacheTime) < CATEGORY_CACHE_TTL) {
+    console.log(`📋 使用快取的商品分類映射 (${productCategoryCache.size} 個項目)`)
+    return productCategoryCache
+  }
 
   console.log('📋 載入商品分類映射...')
   const masterSheetUrl = 'https://docs.google.com/spreadsheets/d/18iWZVRT8LB7I_WBNXGPl3WI8S3zEVq5ANq5yTj8Nzd8/export?format=csv&gid=909084406'
@@ -228,8 +223,41 @@ export async function GET(request: NextRequest) {
       throw new Error('找不到必要的欄位')
     }
     
-    const orderData = orderLines.slice(1).map(line => {
-      const values = line.split(',').map(v => v.replace(/"/g, '').trim())
+    // 正確的 CSV 解析函數，處理引號內的逗號
+    function parseCSVLine(line: string): string[] {
+      const result: string[] = []
+      let current = ''
+      let inQuotes = false
+      
+      for (let i = 0; i < line.length; i++) {
+        const char = line[i]
+        
+        if (char === '"') {
+          inQuotes = !inQuotes
+        } else if (char === ',' && !inQuotes) {
+          result.push(current.trim())
+          current = ''
+        } else {
+          current += char
+        }
+      }
+      
+      result.push(current.trim()) // 添加最後一個字段
+      return result
+    }
+
+    const orderData = orderLines.slice(1).map((line, lineIndex) => {
+      const values = parseCSVLine(line).map(v => v.replace(/^"|"$/g, '').trim()) // 移除首尾引號
+      
+      // 特別記錄吳先生的解析結果
+      if (values[customerPhoneIndex] === '988202618' || values[customerNameIndex] === '吳先生') {
+        console.log(`🎯 吳先生訂單解析 #${lineIndex}:`)
+        console.log(`  電話: "${values[customerPhoneIndex]}"`)
+        console.log(`  姓名: "${values[customerNameIndex]}"`)
+        console.log(`  品項長度: ${(values[itemsIndex] || '').length}`)
+        console.log(`  品項前50字: "${(values[itemsIndex] || '').substring(0, 50)}..."`)
+      }
+      
       return {
         結帳時間: values[checkoutTimeIndex] || '',
         結帳金額: parseFloat(values[checkoutAmountIndex]) || 0,
