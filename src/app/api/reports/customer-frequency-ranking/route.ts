@@ -66,6 +66,18 @@ async function getProductCategoryMap(): Promise<Map<string, { large: string, sma
     productCategoryCache = categoryMap
     categoryCacheTime = now
     console.log(`📋 載入 ${categoryMap.size} 個商品分類映射`)
+    
+    // 調試：檢查特定酒類商品是否在映射中
+    const debugProducts = ['Asahi生啤酒機', '神息 櫻木桶 威士忌', '雪梅 純米吟釀']
+    debugProducts.forEach(product => {
+      const mapping = categoryMap.get(product)
+      if (mapping) {
+        console.log(`🍺 調試 - 找到商品映射: "${product}" → 大分類:${mapping.large}, 小分類:${mapping.small}`)
+      } else {
+        console.log(`❌ 調試 - 未找到商品映射: "${product}"`)
+      }
+    })
+    
     return categoryMap
   } catch (error) {
     console.error('載入商品分類映射失敗:', error)
