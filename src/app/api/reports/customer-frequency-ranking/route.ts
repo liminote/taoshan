@@ -25,20 +25,22 @@ async function getAlcoholProducts(): Promise<Set<string>> {
     const headers = lines[0].split(',').map(h => h.replace(/"/g, '').trim())
     
     const nameIndex = headers.findIndex(h => h.includes('商品名稱') || h.includes('品項'))
-    const categoryIndex = headers.findIndex(h => h.includes('分類') || h.includes('category'))
+    const largeCategoryIndex = headers.findIndex(h => h === '大分類')
+    const smallCategoryIndex = headers.findIndex(h => h === '小分類')
     
     const alcoholProducts = new Set<string>()
     
-    if (nameIndex !== -1 && categoryIndex !== -1) {
+    if (nameIndex !== -1 && largeCategoryIndex !== -1 && smallCategoryIndex !== -1) {
       lines.slice(1).forEach(line => {
         const values = line.split(',').map(v => v.replace(/"/g, '').trim())
         const productName = values[nameIndex]
-        const category = values[categoryIndex]
+        const largeCategory = values[largeCategoryIndex]
+        const smallCategory = values[smallCategoryIndex]
         
-        if (productName && category && (
-          category.includes('東洋酒') || 
-          category.includes('西洋酒') || 
-          category.includes('啤酒')
+        if (productName && largeCategory === '6酒水' && (
+          smallCategory === '東洋酒' || 
+          smallCategory === '西洋酒' || 
+          smallCategory === '啤酒'
         )) {
           alcoholProducts.add(productName)
         }
