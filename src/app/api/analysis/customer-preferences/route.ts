@@ -27,49 +27,44 @@ export async function GET() {
   try {
     console.log('開始分析新客與新回客的消費偏好...')
     
-    // 讀取商品銷售資料
-    const productSheetUrl = 'https://docs.google.com/spreadsheets/d/1GeRbtCX_oHJBooYvZeRbREaSxJ4r8P8QoL-vHiSz2eo/export?format=csv&gid=0'
-    const productResponse = await fetch(productSheetUrl)
+    // 讀取訂單資料（使用正確的URL和欄位名稱）
+    const orderSheetUrl = 'https://docs.google.com/spreadsheets/d/1EWPECWQp_Ehz43Lfks_I8lcvEig8gV9DjyjEIzC5EO4/export?format=csv&gid=0'
+    const orderResponse = await fetch(orderSheetUrl)
     
-    if (!productResponse.ok) {
-      throw new Error('無法獲取商品銷售資料')
+    if (!orderResponse.ok) {
+      throw new Error('無法獲取訂單資料')
     }
 
-    const productCsv = await productResponse.text()
-    const productLines = productCsv.split('\n').filter(line => line.trim())
-    const productHeaders = productLines[0].split(',').map(h => h.replace(/"/g, '').trim())
+    const orderCsv = await orderResponse.text()
+    const orderLines = orderCsv.split('\n').filter(line => line.trim())
+    const orderHeaders = orderLines[0].split(',').map(h => h.replace(/"/g, '').trim())
     
-    const customerNameIndex = productHeaders.findIndex(h => h.includes('顧客名稱'))
-    const phoneIndex = productHeaders.findIndex(h => h.includes('顧客電話'))
-    const amountIndex = productHeaders.findIndex(h => h.includes('金額'))
-    const checkoutTimeIndex = productHeaders.findIndex(h => h.includes('結帳時間'))
-    const itemsIndex = productHeaders.findIndex(h => h.includes('品項') || h.includes('商品'))
+    const customerNameIndex = orderHeaders.findIndex(h => h.includes('顧客姓名'))
+    const phoneIndex = orderHeaders.findIndex(h => h.includes('顧客電話'))
+    const amountIndex = orderHeaders.findIndex(h => h.includes('結帳金額'))
+    const checkoutTimeIndex = orderHeaders.findIndex(h => h.includes('結帳時間'))
+    const itemsIndex = orderHeaders.findIndex(h => h.includes('品項'))
     
     console.log('欄位索引:', { customerNameIndex, phoneIndex, amountIndex, checkoutTimeIndex, itemsIndex })
 
-    // 解析所有訂單資料
-    const allOrders = productLines.slice(1).map(line => {
-      const values = parseCSVLine(line)
+    // 解析所有訂單資料（使用和客戶排行榜相同的邏輯）
+    const allOrders = orderLines.slice(1).map(line => {
+      const values = parseCSVLine(line).map(v => v.replace(/^"|"$/g, '').trim())
       const checkoutTime = values[checkoutTimeIndex] || ''
       const amount = parseFloat(values[amountIndex]) || 0
       
-      // 改進日期解析
+      // 日期解析
       let date = null
       if (checkoutTime) {
         try {
-          // 嘗試多種日期格式
           const dateStr = checkoutTime.replace(/\//g, '-')
           date = new Date(dateStr)
           if (isNaN(date.getTime())) {
-            // 如果解析失敗，嘗試其他格式
             const parts = checkoutTime.split(/[\/\-]/)
             if (parts.length >= 3) {
-              // 假設格式是 YYYY/MM/DD 或 MM/DD/YYYY
               if (parts[0].length === 4) {
-                // YYYY/MM/DD
                 date = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]))
               } else {
-                // MM/DD/YYYY
                 date = new Date(parseInt(parts[2]), parseInt(parts[0]) - 1, parseInt(parts[1]))
               }
             }
