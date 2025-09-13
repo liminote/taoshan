@@ -96,7 +96,11 @@ export async function POST(request: NextRequest) {
 
     if (error) {
       console.error('Supabase insert error:', error)
-      return NextResponse.json({ error: '儲存分析檔案失敗' }, { status: 500 })
+      return NextResponse.json({ 
+        error: '儲存分析檔案失敗', 
+        details: error.message,
+        code: error.code 
+      }, { status: 500 })
     }
 
     const formattedArchive = {
@@ -114,7 +118,10 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('儲存分析檔案失敗:', error)
-    return NextResponse.json({ error: '儲存分析檔案失敗' }, { status: 500 })
+    return NextResponse.json({ 
+      error: '儲存分析檔案失敗', 
+      details: error instanceof Error ? error.message : '未知錯誤' 
+    }, { status: 500 })
   }
 }
 
