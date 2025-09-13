@@ -31,17 +31,6 @@ interface ApiMeta {
   fromCache: boolean
 }
 
-interface Subcategory {
-  id: number
-  name: string
-  category_id: number
-}
-
-interface Category {
-  id: number
-  name: string
-  subcategories?: Subcategory[]
-}
 
 export default function ProductsMasterSheetsPage() {
   const [products, setProducts] = useState<ProductMaster[]>([])
@@ -57,25 +46,6 @@ export default function ProductsMasterSheetsPage() {
   const [actionLoading, setActionLoading] = useState(false)
   const [meta, setMeta] = useState<ApiMeta>({ lastUpdated: null, fromCache: false })
   const [refreshLoading, setRefreshLoading] = useState(false)
-  const [activeTab, setActiveTab] = useState('products') // 'products' 或 'categories'
-  
-  // 分類管理相關狀態
-  const [categories, setCategories] = useState<Category[]>([])
-  const [categoriesLoading, setCategoriesLoading] = useState(false)
-  const [categoriesError, setCategoriesError] = useState('')
-  const [expandedCategories, setExpandedCategories] = useState<Set<number>>(new Set())
-  const [showAddCategory, setShowAddCategory] = useState(false)
-  const [showAddSubcategory, setShowAddSubcategory] = useState<number | null>(null)
-  const [newCategoryName, setNewCategoryName] = useState('')
-  const [newSubcategoryName, setNewSubcategoryName] = useState('')
-  const [categoryActionLoading, setCategoryActionLoading] = useState(false)
-  const [cacheClearing, setCacheClearing] = useState(false)
-  
-  // 取得選中大分類的小分類列表
-  const getSubcategories = (categoryName: string) => {
-    const category = categories.find(cat => cat.name === categoryName)
-    return category?.subcategories || []
-  }
 
   // 表單狀態
   const [formData, setFormData] = useState({
@@ -89,18 +59,6 @@ export default function ProductsMasterSheetsPage() {
     fetchProducts()
   }, [pagination.page, search])
   
-  useEffect(() => {
-    if (activeTab === 'categories' && categories.length === 0) {
-      fetchCategories()
-    }
-  }, [activeTab])
-  
-  // 當顯示新增表單時，確保載入分類資料
-  useEffect(() => {
-    if (showAddForm && categories.length === 0) {
-      fetchCategories()
-    }
-  }, [showAddForm])
 
   const fetchProducts = async (forceRefresh = false) => {
     try {
@@ -231,180 +189,7 @@ export default function ProductsMasterSheetsPage() {
     setShowUncategorized(false)
   }
 
-  // 分類管理相關函數
-  const fetchCategories = async () => {
-    try {
-      setCategoriesLoading(true)
-      const response = await fetch('/api/categories')
-      if (!response.ok) {
-        throw new Error('獲取分類資料失敗')
-      }
-      const data = await response.json()
-      setCategories(data)
-      
-      // 默認展開前3個分類
-      setExpandedCategories(new Set([1, 2, 3]))
-    } catch (err) {
-      setCategoriesError(err instanceof Error ? err.message : '未知錯誤')
-    } finally {
-      setCategoriesLoading(false)
-    }
-  }
-
-  const toggleCategory = (categoryId: number) => {
-    const newExpanded = new Set(expandedCategories)
-    if (newExpanded.has(categoryId)) {
-      newExpanded.delete(categoryId)
-    } else {
-      newExpanded.add(categoryId)
-    }
-    setExpandedCategories(newExpanded)
-  }
-
-  const getCategoryIcon = (categoryName: string) => {
-    switch (categoryName) {
-      case '壽司刺身':
-      case '1壽司刺身':
-        return '🍣'
-      case '黑板料理':
-      case '2黑板料理':
-        return '📋'
-      case '烤炸串':
-      case '3烤炸串':
-        return '🍢'
-      case '配菜':
-      case '4配菜':
-        return '🥗'
-      case '主食':
-      case '5主食':
-        return '🍱'
-      case '酒水':
-      case '6酒水':
-        return '🍷'
-      case '便當':
-      case '7便當':
-        return '🍙'
-      case '外帶送':
-      case '8外帶送':
-        return '🚚'
-      case '其他':
-      case '9其他':
-        return '📦'
-      default:
-        return '🏷️'
-    }
-  }
-
-  const getCategoryColor = (categoryId: number) => {
-    const colors = [
-      'bg-sky_blue',      // 天藍色
-      'bg-melon',         // 粉色
-      'bg-mint_green',    // 薄荷綠
-      'bg-periwinkle',    // 淺紫色
-      'bg-fawn',          // 小鹿色
-      'bg-aquamarine',    // 海藍色
-      'bg-lavender_blush',// 薰衣草紅
-      'bg-tea_green',     // 茶綠色
-      'bg-mauve',         // 淡紫色
-      'bg-lemon_chiffon'  // 檸檬色
-    ]
-    return colors[(categoryId - 1) % colors.length]
-  }
-
-  const addCategory = async () => {
-    if (!newCategoryName.trim()) return
-    
-    setCategoryActionLoading(true)
-    try {
-      const response = await fetch('/api/categories', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: newCategoryName.trim(), type: 'category' })
-      })
-
-      if (!response.ok) {
-        throw new Error('新增主分類失敗')
-      }
-
-      setNewCategoryName('')
-      setShowAddCategory(false)
-      await fetchCategories()
-    } catch (err) {
-      setCategoriesError(err instanceof Error ? err.message : '新增失敗')
-    } finally {
-      setCategoryActionLoading(false)
-    }
-  }
-
-  const addSubcategory = async (categoryId: number) => {
-    if (!newSubcategoryName.trim()) return
-    
-    setCategoryActionLoading(true)
-    try {
-      const response = await fetch('/api/subcategories', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: newSubcategoryName.trim(), category_id: categoryId })
-      })
-
-      if (!response.ok) {
-        throw new Error('新增子分類失敗')
-      }
-
-      setNewSubcategoryName('')
-      setShowAddSubcategory(null)
-      await fetchCategories()
-    } catch (err) {
-      setCategoriesError(err instanceof Error ? err.message : '新增失敗')
-    } finally {
-      setCategoryActionLoading(false)
-    }
-  }
-
-  const deleteCategory = async (categoryId: number, categoryName: string) => {
-    if (!confirm(`確定要刪除主分類「${categoryName}」？這將同時刪除其所有子分類。`)) return
-    
-    setCategoryActionLoading(true)
-    try {
-      const response = await fetch(`/api/categories?id=${categoryId}&type=category`, {
-        method: 'DELETE'
-      })
-
-      if (!response.ok) {
-        throw new Error('刪除主分類失敗')
-      }
-
-      await fetchCategories()
-    } catch (err) {
-      setCategoriesError(err instanceof Error ? err.message : '刪除失敗')
-    } finally {
-      setCategoryActionLoading(false)
-    }
-  }
-
-  const deleteSubcategory = async (subcategoryId: number, subcategoryName: string) => {
-    if (!confirm(`確定要刪除子分類「${subcategoryName}」？`)) return
-    
-    setCategoryActionLoading(true)
-    try {
-      const response = await fetch(`/api/categories?id=${subcategoryId}&type=subcategory`, {
-        method: 'DELETE'
-      })
-
-      if (!response.ok) {
-        throw new Error('刪除子分類失敗')
-      }
-
-      await fetchCategories()
-    } catch (err) {
-      setCategoriesError(err instanceof Error ? err.message : '刪除失敗')
-    } finally {
-      setCategoryActionLoading(false)
-    }
-  }
-
   const handleClearCache = async () => {
-    setCacheClearing(true)
     try {
       const response = await fetch('/api/cache/clear', {
         method: 'POST'
@@ -423,8 +208,6 @@ export default function ProductsMasterSheetsPage() {
       }
     } catch (err) {
       alert('清除緩存失敗：' + (err instanceof Error ? err.message : '未知錯誤'))
-    } finally {
-      setCacheClearing(false)
     }
   }
 
@@ -483,14 +266,13 @@ export default function ProductsMasterSheetsPage() {
               
               <button
                 onClick={handleClearCache}
-                disabled={cacheClearing}
-                className="inline-flex items-center px-4 py-2 text-white rounded-xl hover:shadow-lg transition-all duration-300 hover:scale-105 disabled:opacity-50"
+                className="inline-flex items-center px-4 py-2 text-white rounded-xl hover:shadow-lg transition-all duration-300 hover:scale-105"
                 style={{ backgroundColor: '#A3C4F3' }}
               >
-                <svg className={`w-5 h-5 mr-2 ${cacheClearing ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                 </svg>
-                {cacheClearing ? '清除中...' : '清除緩存'}
+                清除緩存
               </button>
               
               <button
@@ -524,40 +306,6 @@ export default function ProductsMasterSheetsPage() {
           </div>
         </div>
 
-        {/* 選項卡 */}
-        <div className="mb-6">
-          <div className="flex space-x-1 bg-gray-100 backdrop-blur-sm p-1 rounded-xl">
-            <button
-              onClick={() => setActiveTab('products')}
-              className={`px-6 py-3 text-sm font-medium rounded-lg transition-all duration-200 flex items-center space-x-2 ${
-                activeTab === 'products'
-                  ? 'bg-white text-melon shadow-sm'
-                  : 'text-gray-600 hover:text-melon'
-              }`}
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-              </svg>
-              <span>商品主檔</span>
-            </button>
-            <button
-              onClick={() => setActiveTab('categories')}
-              className={`px-6 py-3 text-sm font-medium rounded-lg transition-all duration-200 flex items-center space-x-2 ${
-                activeTab === 'categories'
-                  ? 'bg-white text-fawn shadow-sm'
-                  : 'text-gray-600 hover:text-fawn'
-              }`}
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-              </svg>
-              <span>分類管理</span>
-            </button>
-          </div>
-        </div>
-
-        {activeTab === 'products' && (
-          <>
         {/* 未分類商品區域 */}
         {showUncategorized && (
           <div className="bg-lemon_chiffon-50 border-l-4 border-fawn rounded-2xl p-6 shadow-lg mb-6">
@@ -853,261 +601,10 @@ export default function ProductsMasterSheetsPage() {
           <div className="text-gray-800 space-y-2 text-sm">
             <p>• <strong>資料來源：</strong>直接從 Google Sheets 商品主檔讀取</p>
             <p>• <strong>未分類商品：</strong>自動偵測銷售資料中沒有分類的商品</p>
-            <p>• <strong>分類管理：</strong>可以在此頁面為商品設定大分類和小分類</p>
             <p>• <strong>即時更新：</strong>更新後會立即反映在報表分析中</p>
             <p>• <strong>注意：</strong>目前寫入功能為模擬模式，需要設定 Google Sheets API 認證才能實際寫入</p>
           </div>
         </div>
-          </>
-        )}
-
-        {activeTab === 'categories' && (
-          <>
-            {categoriesLoading ? (
-              <div className="text-center py-12">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mx-auto mb-4"></div>
-                <p className="text-gray-600">載入中...</p>
-              </div>
-            ) : categoriesError ? (
-              <div className="text-center py-12">
-                <div className="text-red-600 mb-4">❌ {categoriesError}</div>
-                <button 
-                  onClick={fetchCategories}
-                  className="px-4 py-2 text-gray-800 rounded-lg hover:opacity-80 transition-opacity"
-                  style={{ backgroundColor: '#FDE4CF' }}
-                >
-                  重新載入
-                </button>
-              </div>
-            ) : (
-              <>
-                {/* 統計摘要 */}
-                <div className="bg-white/80 backdrop-blur-sm border border-gray-200/30 rounded-2xl p-6 shadow-lg mb-6">
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-secondary">{categories.length}</div>
-                      <div className="text-sm text-gray-600">主分類</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-melon">
-                        {categories.reduce((total, cat) => total + (cat.subcategories?.length || 0), 0)}
-                      </div>
-                      <div className="text-sm text-gray-600">子分類</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-periwinkle">{expandedCategories.size}</div>
-                      <div className="text-sm text-gray-600">展開的分類</div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* 分類列表 */}
-                <div className="space-y-4">
-                  {categories.map((category) => (
-                    <div 
-                      key={category.id}
-                      className="bg-white/70 backdrop-blur-sm border border-white/50 rounded-2xl shadow-lg overflow-hidden"
-                    >
-                      {/* 主分類標題 */}
-                      <div 
-                        className="p-6 cursor-pointer hover:bg-white/50 transition-colors"
-                        onClick={() => toggleCategory(category.id)}
-                      >
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-4">
-                            <div className={`w-12 h-12 ${getCategoryColor(category.id)} rounded-xl flex items-center justify-center shadow-md text-2xl`}>
-                              {getCategoryIcon(category.name)}
-                            </div>
-                            <div>
-                              <h2 className="text-xl font-bold text-gray-900">{category.name}</h2>
-                              <p className="text-gray-600 text-sm">
-                                {category.subcategories?.length || 0} 個子分類
-                              </p>
-                            </div>
-                          </div>
-                          
-                          <div className="flex items-center space-x-2">
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                deleteCategory(category.id, category.name)
-                              }}
-                              className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
-                              title="刪除主分類"
-                            >
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                              </svg>
-                            </button>
-                            <span className="text-sm text-gray-500">
-                              {expandedCategories.has(category.id) ? '收起' : '展開'}
-                            </span>
-                            <svg 
-                              className={`w-5 h-5 text-gray-400 transform transition-transform ${
-                                expandedCategories.has(category.id) ? 'rotate-180' : ''
-                              }`} 
-                              fill="none" 
-                              stroke="currentColor" 
-                              viewBox="0 0 24 24"
-                            >
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                            </svg>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* 子分類列表 */}
-                      {expandedCategories.has(category.id) && category.subcategories && (
-                        <div className="border-t border-white/50 bg-gray-50/50 p-6">
-                          {/* 新增子分類按鈕 */}
-                          <div className="mb-4 flex justify-end">
-                            <button
-                              onClick={() => setShowAddSubcategory(category.id)}
-                              className="px-4 py-2 text-white text-sm rounded-lg hover:opacity-80 transition-opacity flex items-center space-x-2"
-                              style={{ backgroundColor: '#FFCFD2' }}
-                            >
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                              </svg>
-                              <span>新增子分類</span>
-                            </button>
-                          </div>
-
-                          {/* 新增子分類表單 */}
-                          {showAddSubcategory === category.id && (
-                            <div className="mb-4 bg-white/50 rounded-xl p-4 border border-gray-200/50">
-                              <h4 className="font-medium text-gray-900 mb-3">新增子分類到「{category.name}」</h4>
-                              <div className="flex space-x-3">
-                                <input
-                                  type="text"
-                                  value={newSubcategoryName}
-                                  onChange={(e) => setNewSubcategoryName(e.target.value)}
-                                  placeholder="輸入子分類名稱..."
-                                  className="flex-1 px-3 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-transparent text-sm text-gray-900"
-                                  onKeyPress={(e) => e.key === 'Enter' && addSubcategory(category.id)}
-                                />
-                                <button
-                                  onClick={() => addSubcategory(category.id)}
-                                  disabled={!newSubcategoryName.trim() || categoryActionLoading}
-                                  className="px-4 py-2 text-white text-sm rounded-lg hover:opacity-80 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
-                                  style={{ backgroundColor: '#FFCFD2' }}
-                                >
-                                  {categoryActionLoading ? '新增中...' : '確認'}
-                                </button>
-                                <button
-                                  onClick={() => {
-                                    setShowAddSubcategory(null)
-                                    setNewSubcategoryName('')
-                                  }}
-                                  className="px-4 py-2 bg-gray-500 text-white text-sm rounded-lg hover:bg-gray-600 transition-colors"
-                                >
-                                  取消
-                                </button>
-                              </div>
-                            </div>
-                          )}
-
-                          {/* 子分類網格 */}
-                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                            {category.subcategories.map((subcategory) => (
-                              <div 
-                                key={subcategory.id}
-                                className="bg-white/80 rounded-xl p-4 border border-gray-200/50 hover:shadow-md transition-all hover:scale-105 group"
-                              >
-                                <div className="flex items-center space-x-3">
-                                  <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center">
-                                    <span className="text-xs font-medium text-gray-600">
-                                      {subcategory.id}
-                                    </span>
-                                  </div>
-                                  <div className="flex-1">
-                                    <h3 className="font-medium text-gray-900 text-sm leading-tight">
-                                      {subcategory.name}
-                                    </h3>
-                                  </div>
-                                  <button
-                                    onClick={() => deleteSubcategory(subcategory.id, subcategory.name)}
-                                    className="p-1 text-red-500 hover:text-red-700 hover:bg-red-50 rounded opacity-0 group-hover:opacity-100 transition-opacity"
-                                    title="刪除子分類"
-                                  >
-                                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                    </svg>
-                                  </button>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-
-                {/* 新增主分類表單 */}
-                {showAddCategory && (
-                  <div className="bg-white/80 backdrop-blur-sm border border-gray-200/30 rounded-2xl p-6 shadow-lg mb-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">新增主分類</h3>
-                    <div className="flex space-x-4">
-                      <input
-                        type="text"
-                        value={newCategoryName}
-                        onChange={(e) => setNewCategoryName(e.target.value)}
-                        placeholder="輸入主分類名稱..."
-                        className="flex-1 px-4 py-2 bg-white/50 border border-gray-200/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-transparent text-gray-900"
-                        onKeyPress={(e) => e.key === 'Enter' && addCategory()}
-                      />
-                      <button
-                        onClick={addCategory}
-                        disabled={!newCategoryName.trim() || categoryActionLoading}
-                        className="px-6 py-2 text-gray-800 rounded-xl hover:opacity-80 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
-                        style={{ backgroundColor: '#FDE4CF' }}
-                      >
-                        {categoryActionLoading ? '新增中...' : '確認'}
-                      </button>
-                      <button
-                        onClick={() => {
-                          setShowAddCategory(false)
-                          setNewCategoryName('')
-                        }}
-                        className="px-6 py-2 bg-gray-500 text-white rounded-xl hover:bg-gray-600 transition-colors"
-                      >
-                        取消
-                      </button>
-                    </div>
-                  </div>
-                )}
-
-                {/* 操作按鈕 */}
-                <div className="mt-8 flex flex-wrap justify-center gap-4">
-                  <button 
-                    onClick={() => setShowAddCategory(true)}
-                    className="px-6 py-3 text-gray-800 rounded-xl hover:opacity-80 transition-opacity shadow-lg flex items-center space-x-2"
-                    style={{ backgroundColor: '#B9FBC0' }}
-                  >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                    </svg>
-                    <span>新增主分類</span>
-                  </button>
-                  <button 
-                    onClick={() => setExpandedCategories(new Set(categories.map(c => c.id)))}
-                    className="px-6 py-3 text-gray-800 rounded-xl hover:opacity-80 transition-opacity shadow-lg"
-                    style={{ backgroundColor: '#FDE4CF' }}
-                  >
-                    展開所有分類
-                  </button>
-                  <button 
-                    onClick={() => setExpandedCategories(new Set())}
-                    className="px-6 py-3 bg-gray-500 text-white rounded-xl hover:bg-gray-600 transition-colors shadow-lg"
-                  >
-                    收起所有分類
-                  </button>
-                </div>
-              </>
-            )}
-          </>
-        )}
       </div>
     </div>
   )
