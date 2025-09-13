@@ -27,23 +27,74 @@ export async function GET() {
   try {
     console.log('🎯 分析有標籤客戶的品項偏好 (2024/9-2025/9)...')
     
-    // 第一步：從客戶排行榜API獲取有標籤的客戶
-    console.log('🏷️ 獲取客戶標籤資訊...')
-    const rankingResponse = await fetch('https://restaurant-management-pi.vercel.app/api/reports/customer-spending-ranking?month=2024-12')
+    // 第一步：從重點月份的客戶排行榜API獲取有標籤的客戶 (先分析幾個代表性月份)
+    console.log('🏷️ 獲取代表性月份客戶標籤資訊...')
     
-    if (!rankingResponse.ok) {
-      throw new Error('無法獲取客戶排行榜資料')
-    }
-
-    const rankingData = await rankingResponse.json()
+    const keyMonths = ['2025-01', '2025-02', '2025-03', '2025-04', '2025-05', '2025-06'] // 分析2025年1-6月
     
-    if (!rankingData.success || !rankingData.data?.customers) {
-      throw new Error('客戶資料格式錯誤')
-    }
+    const allNewCustomers: any[] = []
+    const allReturningCustomers: any[] = []
+    const seenNewCustomers = new Set<string>()
+    const seenReturningCustomers = new Set<string>()
+    
+    for (const month of keyMonths) {
+      try {
+        console.log(`📅 處理 ${month}...`)
+        const rankingResponse = await fetch(`https://restaurant-management-pi.vercel.app/api/reports/customer-spending-ranking?month=${month}`)
+        
+        if (!rankingResponse.ok) {
+          console.log(`⚠️ ${month} 資料獲取失敗`)
+          continue
+        }
 
-    // 分離新客和新回客
-    const newCustomers = rankingData.data.customers.filter(c => c.isNewCustomer && !c.hasReturnedAfterNew)
-    const returningCustomers = rankingData.data.customers.filter(c => c.isNewCustomer && c.hasReturnedAfterNew)
+        const rankingData = await rankingResponse.json()
+        
+        if (!rankingData.success || !rankingData.data) {
+          console.log(`⚠️ ${month} 資料格式錯誤`)
+          continue
+        }
+
+        // 分離新客和新回客
+        const monthNewCustomers = rankingData.data.filter((c: any) => c.isNewCustomer && !c.hasReturnedAfterNew)
+        const monthReturningCustomers = rankingData.data.filter((c: any) => c.isNewCustomer && c.hasReturnedAfterNew)
+        
+        // 去重並累積
+        monthNewCustomers.forEach((customer: any) => {
+          if (!seenNewCustomers.has(customer.customerPhone)) {
+            seenNewCustomers.add(customer.customerPhone)
+            allNewCustomers.push({
+              ...customer,
+              month: month,
+              name: customer.customerName,
+              phone: customer.customerPhone,
+              totalAmount: customer.totalOrderAmount,
+              orderCount: customer.orderCount
+            })
+          }
+        })
+        
+        monthReturningCustomers.forEach((customer: any) => {
+          if (!seenReturningCustomers.has(customer.customerPhone)) {
+            seenReturningCustomers.add(customer.customerPhone)
+            allReturningCustomers.push({
+              ...customer,
+              month: month,
+              name: customer.customerName,
+              phone: customer.customerPhone,
+              totalAmount: customer.totalOrderAmount,
+              orderCount: customer.orderCount
+            })
+          }
+        })
+        
+        console.log(`📊 ${month}: 新客 ${monthNewCustomers.length}，新回客 ${monthReturningCustomers.length}`)
+      } catch (error) {
+        console.log(`❌ ${month} 處理失敗:`, error)
+      }
+    }
+    
+    const newCustomers = allNewCustomers
+    const returningCustomers = allReturningCustomers
     
     console.log(`👥 找到 ${newCustomers.length} 個新客，${returningCustomers.length} 個新回客`)
     
@@ -114,7 +165,7 @@ export async function GET() {
       
       if (!isNewCustomer && !isReturningCustomer) return
       
-      // 檢查時間是否在2024/9-2025/9期間
+      // 檢查時間是否在2025年1-6月期間
       if (orderTime) {
         let isInTargetPeriod = false
         const dateMatch = orderTime.match(/(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/)
@@ -122,7 +173,7 @@ export async function GET() {
           const year = parseInt(dateMatch[1])
           const month = parseInt(dateMatch[2])
           
-          if ((year === 2024 && month >= 9) || (year === 2025 && month <= 9)) {
+          if (year === 2025 && month >= 1 && month <= 6) {
             isInTargetPeriod = true
           }
         }
@@ -183,8 +234,8 @@ export async function GET() {
     
     return NextResponse.json({
       success: true,
-      period: '2024年9月至2025年9月',
-      analysisScope: '有標籤的新客與新回客',
+      period: '2025年1月至6月',
+      analysisScope: '有標籤的新客與新回客品項偏好分析',
       summary: {
         新客人數: newCustomers.length,
         新回客人數: returningCustomers.length,
