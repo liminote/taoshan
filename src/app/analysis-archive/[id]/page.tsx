@@ -10,8 +10,6 @@ interface AnalysisArchive {
   title: string
   content: string
   createdAt: string
-  tags: string[]
-  summary?: string
 }
 
 export default function AnalysisArchiveDetailPage() {
@@ -75,18 +73,6 @@ export default function AnalysisArchiveDetailPage() {
     })
   }
 
-  const getTagColor = (tag: string) => {
-    const colors = [
-      'bg-blue-100 text-blue-800',
-      'bg-green-100 text-green-800', 
-      'bg-purple-100 text-purple-800',
-      'bg-orange-100 text-orange-800',
-      'bg-pink-100 text-pink-800',
-      'bg-indigo-100 text-indigo-800'
-    ]
-    const hash = tag.split('').reduce((a, b) => a + b.charCodeAt(0), 0)
-    return colors[hash % colors.length]
-  }
 
   useEffect(() => {
     if (id) {
@@ -182,29 +168,20 @@ export default function AnalysisArchiveDetailPage() {
                     </svg>
                     建立時間：{formatDate(archive.createdAt)}
                   </span>
-                  
-                  {archive.tags.length > 0 && (
-                    <div className="flex items-center space-x-2">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-                      </svg>
-                      <div className="flex flex-wrap gap-1">
-                        {archive.tags.map((tag, index) => (
-                          <span
-                            key={index}
-                            className={`px-2 py-1 rounded-full text-xs font-medium ${getTagColor(tag)}`}
-                          >
-                            {tag}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
                 </div>
               </div>
               
               {/* 操作按鈕 */}
               <div className="flex items-center space-x-3 ml-6">
+                <button
+                  onClick={() => router.push(`/analysis-archive/${id}/edit`)}
+                  className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                  </svg>
+                  <span>編輯</span>
+                </button>
                 <button
                   onClick={handleDelete}
                   className="px-4 py-2 bg-red-600 text-white text-sm rounded-lg hover:bg-red-700 transition-colors flex items-center space-x-2"

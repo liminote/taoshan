@@ -6,8 +6,6 @@ interface AnalysisArchive {
   title: string
   content: string
   createdAt: string
-  tags: string[]
-  summary?: string
 }
 
 // 暫時使用記憶體儲存，實際應用中應該使用資料庫
@@ -35,9 +33,7 @@ let analysisArchives: AnalysisArchive[] = [
 1. 加強新客戶回頭率培養
 2. 維持日式高檔食材品質
 3. 推廣酒類商品搭配`,
-    createdAt: '2024-12-28T10:30:00Z',
-    tags: ['客戶分析', '消費分析', '2024年12月'],
-    summary: 'Top 30客戶消費行為分析，新回客價值比純新客高30%'
+    createdAt: '2024-12-28T10:30:00Z'
   },
   {
     id: '2',
@@ -61,9 +57,7 @@ let analysisArchives: AnalysisArchive[] = [
 - 生魚片品質控制
 - 酒類推薦服務
 - 日式料理培訓`,
-    createdAt: '2024-12-27T15:45:00Z',
-    tags: ['品項分析', '銷售分析', '日式料理'],
-    summary: '分析最受歡迎的品項和客戶偏好趨勢'
+    createdAt: '2024-12-27T15:45:00Z'
   },
   {
     id: '3',
@@ -86,9 +80,7 @@ let analysisArchives: AnalysisArchive[] = [
 1. 繼續推廣餐酒搭配
 2. 新增季節性特色菜品
 3. 強化會員服務體驗`,
-    createdAt: '2024-12-26T09:20:00Z',
-    tags: ['營收分析', '月度報告', '趨勢分析'],
-    summary: '月度營收表現分析和下月策略建議'
+    createdAt: '2024-12-26T09:20:00Z'
   }
 ]
 
@@ -114,8 +106,7 @@ export async function GET(request: NextRequest) {
       const searchLower = search.toLowerCase()
       filteredArchives = analysisArchives.filter(item => 
         item.title.toLowerCase().includes(searchLower) ||
-        item.content.toLowerCase().includes(searchLower) ||
-        item.tags.some(tag => tag.toLowerCase().includes(searchLower))
+        item.content.toLowerCase().includes(searchLower)
       )
     }
 
@@ -127,9 +118,7 @@ export async function GET(request: NextRequest) {
       data: filteredArchives.map(item => ({
         id: item.id,
         title: item.title,
-        summary: item.summary,
-        createdAt: item.createdAt,
-        tags: item.tags
+        createdAt: item.createdAt
       }))
     })
 
@@ -141,7 +130,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const { title, content, tags, summary } = await request.json()
+    const { title, content } = await request.json()
 
     if (!title || !content) {
       return NextResponse.json({ error: '標題和內容為必填欄位' }, { status: 400 })
@@ -151,9 +140,7 @@ export async function POST(request: NextRequest) {
       id: Date.now().toString(),
       title,
       content,
-      createdAt: new Date().toISOString(),
-      tags: tags || [],
-      summary
+      createdAt: new Date().toISOString()
     }
 
     analysisArchives.unshift(newArchive) // 新增到開頭
@@ -167,6 +154,43 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('儲存分析檔案失敗:', error)
     return NextResponse.json({ error: '儲存分析檔案失敗' }, { status: 500 })
+  }
+}
+
+export async function PUT(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url)
+    const id = searchParams.get('id')
+    const { title, content } = await request.json()
+
+    if (!id) {
+      return NextResponse.json({ error: '缺少檔案 ID' }, { status: 400 })
+    }
+
+    if (!title || !content) {
+      return NextResponse.json({ error: '標題和內容為必填欄位' }, { status: 400 })
+    }
+
+    const index = analysisArchives.findIndex(item => item.id === id)
+    if (index === -1) {
+      return NextResponse.json({ error: '找不到指定的分析檔案' }, { status: 404 })
+    }
+
+    analysisArchives[index] = {
+      ...analysisArchives[index],
+      title,
+      content
+    }
+
+    return NextResponse.json({ 
+      success: true, 
+      message: '分析檔案已更新',
+      data: analysisArchives[index]
+    })
+
+  } catch (error) {
+    console.error('更新分析檔案失敗:', error)
+    return NextResponse.json({ error: '更新分析檔案失敗' }, { status: 500 })
   }
 }
 

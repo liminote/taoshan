@@ -7,9 +7,7 @@ import { useRouter } from 'next/navigation'
 interface AnalysisArchiveItem {
   id: string
   title: string
-  summary?: string
   createdAt: string
-  tags: string[]
 }
 
 export default function AnalysisArchivePage() {
@@ -63,18 +61,6 @@ export default function AnalysisArchivePage() {
     })
   }
 
-  const getTagColor = (tag: string) => {
-    const colors = [
-      'bg-blue-100 text-blue-800',
-      'bg-green-100 text-green-800', 
-      'bg-purple-100 text-purple-800',
-      'bg-orange-100 text-orange-800',
-      'bg-pink-100 text-pink-800',
-      'bg-indigo-100 text-indigo-800'
-    ]
-    const hash = tag.split('').reduce((a, b) => a + b.charCodeAt(0), 0)
-    return colors[hash % colors.length]
-  }
 
   useEffect(() => {
     fetchArchives()
@@ -124,7 +110,7 @@ export default function AnalysisArchivePage() {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="搜尋標題、內容或標籤..."
+                placeholder="搜尋標題或內容..."
                 className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder-gray-500"
               />
             </div>
@@ -217,11 +203,6 @@ export default function AnalysisArchivePage() {
                         <h3 className="text-lg font-semibold text-gray-900 mb-2 hover:text-blue-600 transition-colors">
                           {archive.title}
                         </h3>
-                        {archive.summary && (
-                          <p className="text-gray-600 text-sm mb-3 line-clamp-2">
-                            {archive.summary}
-                          </p>
-                        )}
                         <div className="flex items-center space-x-4">
                           <span className="text-xs text-gray-500 flex items-center">
                             <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -229,23 +210,6 @@ export default function AnalysisArchivePage() {
                             </svg>
                             {formatDate(archive.createdAt)}
                           </span>
-                          {archive.tags.length > 0 && (
-                            <div className="flex flex-wrap gap-1">
-                              {archive.tags.slice(0, 3).map((tag, index) => (
-                                <span
-                                  key={index}
-                                  className={`px-2 py-1 rounded-full text-xs font-medium ${getTagColor(tag)}`}
-                                >
-                                  {tag}
-                                </span>
-                              ))}
-                              {archive.tags.length > 3 && (
-                                <span className="px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
-                                  +{archive.tags.length - 3}
-                                </span>
-                              )}
-                            </div>
-                          )}
                         </div>
                       </div>
                       <svg className="w-5 h-5 text-gray-400 ml-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
