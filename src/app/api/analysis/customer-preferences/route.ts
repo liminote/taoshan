@@ -53,13 +53,39 @@ export async function GET() {
       const checkoutTime = values[checkoutTimeIndex] || ''
       const amount = parseFloat(values[amountIndex]) || 0
       
+      // 改進日期解析
+      let date = null
+      if (checkoutTime) {
+        try {
+          // 嘗試多種日期格式
+          const dateStr = checkoutTime.replace(/\//g, '-')
+          date = new Date(dateStr)
+          if (isNaN(date.getTime())) {
+            // 如果解析失敗，嘗試其他格式
+            const parts = checkoutTime.split(/[\/\-]/)
+            if (parts.length >= 3) {
+              // 假設格式是 YYYY/MM/DD 或 MM/DD/YYYY
+              if (parts[0].length === 4) {
+                // YYYY/MM/DD
+                date = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]))
+              } else {
+                // MM/DD/YYYY
+                date = new Date(parseInt(parts[2]), parseInt(parts[0]) - 1, parseInt(parts[1]))
+              }
+            }
+          }
+        } catch (e) {
+          console.warn('日期解析失敗:', checkoutTime)
+        }
+      }
+      
       return {
         customerName: values[customerNameIndex] || '',
         phone: values[phoneIndex] || '',
         amount,
         checkoutTime,
         items: values[itemsIndex] || '',
-        date: checkoutTime ? new Date(checkoutTime.replace(/\//g, '-')) : null
+        date
       }
     }).filter(order => 
       order.customerName && 
@@ -70,13 +96,13 @@ export async function GET() {
 
     console.log(`總訂單數: ${allOrders.length}`)
 
-    // 篩選 2024/9 至 2025/9 的訂單
+    // 篩選過去一年的訂單
     const targetOrders = allOrders.filter(order => {
       if (!order.date) return false
       const orderDate = order.date
-      const start = new Date('2024-09-01')
-      const end = new Date('2025-09-30')
-      return orderDate >= start && orderDate <= end
+      const oneYearAgo = new Date()
+      oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1)
+      return orderDate >= oneYearAgo
     })
 
     console.log(`目標期間訂單數: ${targetOrders.length}`)
@@ -194,7 +220,7 @@ export async function GET() {
 
     return NextResponse.json({
       success: true,
-      period: '2024/9 - 2025/9',
+      period: '過去一年',
       summary: {
         totalTop30: top30Customers.length,
         newCustomers: newCustomers.length,
