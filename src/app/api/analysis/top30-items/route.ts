@@ -127,42 +127,76 @@ export async function GET() {
     
     console.log(`💰 找到TOP30客戶，總消費範圍: $${Math.round(top30Customers[29][1].totalAmount)} - $${Math.round(top30Customers[0][1].totalAmount)}`)
     
-    // 第二步：分析新客和新回客（使用簡化邏輯）
-    // 檢查每個TOP30客戶的首次訂單時間和後續訂單
-    const newCustomers: Array<{ key: string, data: typeof customerTotals[''] }> = []
-    const returningCustomers: Array<{ key: string, data: typeof customerTotals[''] }> = []
+    // 第二步：使用現有的客戶排行榜API來獲取正確的客戶標籤
+    console.log('🏷️ 獲取客戶標籤資訊...')
+    let newCustomers: Array<{ key: string, data: typeof customerTotals[''] }> = []
+    let returningCustomers: Array<{ key: string, data: typeof customerTotals[''] }> = []
     
-    top30Customers.forEach(([customerKey, customerData]) => {
-      // 按日期排序訂單
-      const sortedOrders = customerData.orders.sort((a, b) => 
-        new Date(a.date).getTime() - new Date(b.date).getTime()
-      )
+    try {
+      // 嘗試從客戶排行榜API獲取標籤
+      const rankingResponse = await fetch('https://restaurant-management-pi.vercel.app/api/reports/customer-spending-ranking?month=2024-12')
       
-      if (sortedOrders.length === 0) return
-      
-      const firstOrderDate = new Date(sortedOrders[0].date)
-      const firstOrderMonth = `${firstOrderDate.getFullYear()}-${String(firstOrderDate.getMonth() + 1).padStart(2, '0')}`
-      
-      // 檢查首次訂單是否在2024/9-2025/9期間（定義為新客）
-      const year = firstOrderDate.getFullYear()
-      const month = firstOrderDate.getMonth() + 1
-      const isNewInTargetPeriod = (year === 2024 && month >= 9) || (year === 2025 && month <= 9)
-      
-      if (isNewInTargetPeriod) {
-        // 檢查是否有在首次訂單月份之後的訂單
-        const hasLaterOrders = sortedOrders.some(order => {
-          const orderDate = new Date(order.date)
-          const orderMonth = `${orderDate.getFullYear()}-${String(orderDate.getMonth() + 1).padStart(2, '0')}`
-          return orderMonth > firstOrderMonth
-        })
+      if (rankingResponse.ok) {
+        const rankingData = await rankingResponse.json()
         
-        if (hasLaterOrders) {
-          returningCustomers.push({ key: customerKey, data: customerData })
-        } else {
-          newCustomers.push({ key: customerKey, data: customerData })
+        if (rankingData.success && rankingData.data?.customers) {
+          console.log('✅ 成功獲取客戶標籤資訊')
+          
+          // 建立電話號碼到標籤的映射
+          const customerLabels: { [phone: string]: { isNew: boolean, hasReturned: boolean } } = {}
+          
+          rankingData.data.customers.forEach((customer: any) => {
+            if (customer.phone) {
+              customerLabels[customer.phone] = {
+                isNew: customer.isNewCustomer || false,
+                hasReturned: customer.hasReturnedAfterNew || false
+              }
+            }
+          })
+          
+          // 根據標籤分類TOP30客戶
+          top30Customers.forEach(([customerKey, customerData]) => {
+            const phone = customerData.phone
+            const label = customerLabels[phone]
+            
+            if (label && label.isNew) {
+              if (label.hasReturned) {
+                returningCustomers.push({ key: customerKey, data: customerData })
+              } else {
+                newCustomers.push({ key: customerKey, data: customerData })
+              }
+            }
+          })
+          
+          console.log(`📋 根據API標籤分類: ${newCustomers.length} 個新客，${returningCustomers.length} 個新回客`)
         }
       }
-    })
+    } catch (error) {
+      console.warn('⚠️ 無法獲取客戶標籤，使用備用邏輯')
+    }
+    
+    // 如果API標籤獲取失敗，使用備用邏輯
+    if (newCustomers.length === 0 && returningCustomers.length === 0) {
+      console.log('🔄 使用備用分類邏輯...')
+      
+      top30Customers.forEach(([customerKey, customerData]) => {
+        // 按日期排序訂單
+        const sortedOrders = customerData.orders.sort((a, b) => 
+          new Date(a.date).getTime() - new Date(b.date).getTime()
+        )
+        
+        if (sortedOrders.length === 0) return
+        
+        // 簡單分類：訂單數量少的視為新客，多的視為回頭客
+        if (customerData.orderCount <= 2) {
+          newCustomers.push({ key: customerKey, data: customerData })
+        } else {
+          returningCustomers.push({ key: customerKey, data: customerData })
+        }
+      })
+      
+      console.log(`📋 備用邏輯分類: ${newCustomers.length} 個新客，${returningCustomers.length} 個新回客`)
+    }
     
     console.log(`👥 TOP30中找到: ${newCustomers.length} 個新客，${returningCustomers.length} 個新回客`)
     
