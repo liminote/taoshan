@@ -159,12 +159,20 @@ export async function GET() {
             const phone = customerData.phone
             const label = customerLabels[phone]
             
+            console.log(`檢查客戶 ${customerData.name} (${phone}):`, label)
+            
             if (label && label.isNew) {
               if (label.hasReturned) {
                 returningCustomers.push({ key: customerKey, data: customerData })
+                console.log(`  -> 新回客`)
               } else {
                 newCustomers.push({ key: customerKey, data: customerData })
+                console.log(`  -> 新客`)
               }
+            } else if (label) {
+              console.log(`  -> 非新客 (isNew: ${label.isNew})`)
+            } else {
+              console.log(`  -> 無標籤資料`)
             }
           })
           
