@@ -65,22 +65,34 @@ export async function GET(request: Request) {
     
     // 建立商品名稱對應表（同時支援原始名稱和新商品名稱）
     const productMapping: { [key: string]: string } = {}
+    let emptyCategories = 0
     masterLines.slice(1).forEach(line => {
       const values = line.split(',').map(v => v.replace(/"/g, '').trim())
       const productName = values[masterNameIndex] || ''
       const newProductName = values[newNameIndex] || ''
-      const category = values[categoryIndex] || '未分類'
-      
+      let category = values[categoryIndex] || ''
+
+      // 記錄空分類的商品
+      if (!category || category === '') {
+        console.log(`空分類商品: "${productName}" (新名稱: "${newProductName}")`)
+        category = '未分類'
+        emptyCategories++
+      }
+
       // 原始商品名稱對應
       if (productName) {
         productMapping[productName] = category
       }
-      
+
       // 新商品名稱對應（如果存在且不同於原始名稱）
       if (newProductName && newProductName !== productName) {
         productMapping[newProductName] = category
       }
     })
+
+    if (emptyCategories > 0) {
+      console.log(`發現 ${emptyCategories} 個商品在主檔中沒有設定大分類`)
+    }
 
     console.log(`建立了 ${Object.keys(productMapping).length} 個商品對應關係`)
     console.log(`處理 ${productSales.length} 筆商品銷售資料${selectedMonth ? `（篩選月份：${selectedMonth}）` : ''}`)

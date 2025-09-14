@@ -1667,8 +1667,8 @@ export default function ReportsContent() {
                 {rankingData.alcoholRanking && rankingData.alcoholRanking.length > 0 && (
                   <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
                     <div className="px-6 py-4" style={{ backgroundColor: '#98F5E1' }}>
-                      <h3 className="text-lg font-semibold text-gray-900">酒水排名 TOP 20</h3>
-                      <p className="text-sm text-gray-700 mt-1">大分類為 6酒水</p>
+                      <h3 className="text-lg font-semibold text-gray-900">酒水排名 TOP 20（總金額最高）</h3>
+                      <p className="text-sm text-gray-700 mt-1">大分類為 6酒水，按總金額排序</p>
                     </div>
                     <div className="overflow-x-auto">
                       <table className="w-full">

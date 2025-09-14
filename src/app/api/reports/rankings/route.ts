@@ -151,10 +151,10 @@ export async function GET(request: NextRequest) {
         category: item.category
       }))
 
-    // 6酒水分類排名 (前20名)
+    // 6酒水分類排名 (前20名) - 按總金額排序
     const alcoholRanking = allProducts
       .filter(item => item.category === '6酒水')
-      .sort((a, b) => b.quantity - a.quantity)
+      .sort((a, b) => b.amount - a.amount)
       .slice(0, 20)
       .map((item, index) => ({
         rank: index + 1,
