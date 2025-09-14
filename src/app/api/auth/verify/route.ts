@@ -14,9 +14,9 @@ export async function POST(request: NextRequest) {
     }
 
     if (password === correctPassword) {
-      const cookieStore = await cookies();
+      const response = NextResponse.json({ success: true });
 
-      cookieStore.set('auth-token', 'authenticated', {
+      response.cookies.set('auth-token', 'authenticated', {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'strict',
@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
         path: '/',
       });
 
-      return NextResponse.json({ success: true });
+      return response;
     } else {
       return NextResponse.json(
         { error: 'Invalid password' },
