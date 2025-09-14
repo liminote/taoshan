@@ -16,6 +16,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "餐廳管理系統",
   description: "餐廳銷售報表管理和資料分析系統",
+  robots: "noindex, nofollow",
 };
 
 export default function RootLayout({
