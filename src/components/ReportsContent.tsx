@@ -1767,6 +1767,7 @@ export default function ReportsContent() {
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">顧客電話</th>
                         <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">喝酒</th>
                         <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">新客</th>
+                        <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">舊回</th>
                         <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">訂單張數</th>
                         <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">平均訂單金額</th>
                         <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">訂單總金額 ↓</th>
@@ -1810,6 +1811,16 @@ export default function ReportsContent() {
                                 title={customer.hasReturnedAfterNew ? "新客戶且已回訪" : "新客戶"}
                               >
                                 {customer.hasReturnedAfterNew ? '新回' : '新'}
+                              </span>
+                            )}
+                          </td>
+                          <td className="px-4 py-3 text-center">
+                            {!customer.isNewCustomer && customer.hasReturnedAfterOld && (
+                              <span
+                                className="text-xs font-medium px-2 py-1 rounded-full text-orange-700 bg-orange-100"
+                                title="舊客戶且有回訪"
+                              >
+                                舊回
                               </span>
                             )}
                           </td>
@@ -1866,6 +1877,7 @@ export default function ReportsContent() {
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">顧客電話</th>
                         <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">喝酒</th>
                         <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">新客</th>
+                        <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">舊回</th>
                         <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">訂單張數 ↓</th>
                         <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">平均訂單金額</th>
                         <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">訂單總金額</th>
@@ -1909,6 +1921,16 @@ export default function ReportsContent() {
                                 title={customer.hasReturnedAfterNew ? "新客戶且已回訪" : "新客戶"}
                               >
                                 {customer.hasReturnedAfterNew ? '新回' : '新'}
+                              </span>
+                            )}
+                          </td>
+                          <td className="px-4 py-3 text-center">
+                            {!customer.isNewCustomer && customer.hasReturnedAfterOld && (
+                              <span
+                                className="text-xs font-medium px-2 py-1 rounded-full text-orange-700 bg-orange-100"
+                                title="舊客戶且有回訪"
+                              >
+                                舊回
                               </span>
                             )}
                           </td>
