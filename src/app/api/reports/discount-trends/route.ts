@@ -2,19 +2,19 @@ import { NextResponse } from 'next/server'
 
 export async function GET() {
   try {
-    // 生成包含所有實際資料的月份，然後取最近13個月
-    const allMonths = []
-    // 生成從2023-09到2025-08的所有月份
-    for (let year = 2023; year <= 2025; year++) {
-      const startMonth = year === 2023 ? 9 : 1
-      const endMonth = year === 2025 ? 9 : 12
-      for (let month = startMonth; month <= endMonth; month++) {
-        const monthKey = `${year}-${String(month).padStart(2, '0')}`
-        allMonths.push(monthKey)
-      }
+    // 動態生成最近13個月
+    const now = new Date()
+    const currentYear = now.getFullYear()
+    const currentMonth = now.getMonth() + 1 // getMonth() 返回 0-11，所以加 1
+
+    const months = []
+    for (let i = 12; i >= 0; i--) {
+      const targetDate = new Date(currentYear, currentMonth - 1 - i, 1)
+      const year = targetDate.getFullYear()
+      const month = targetDate.getMonth() + 1
+      const monthKey = `${year}-${String(month).padStart(2, '0')}`
+      months.push(monthKey)
     }
-    // 取最新13個月（從最新往前推）
-    const months = allMonths.slice(-13)
 
     // 使用 Google Sheets 訂單資料
     const orderSheetUrl = 'https://docs.google.com/spreadsheets/d/1EWPECWQp_Ehz43Lfks_I8lcvEig8gV9DjyjEIzC5EO4/export?format=csv&gid=0'
