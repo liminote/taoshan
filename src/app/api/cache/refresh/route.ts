@@ -87,17 +87,23 @@ export async function GET() {
 
 // 計算月銷售統計
 async function calculateMonthlySales(orderCsv: string, productCsv: string) {
-  // 複製原本 monthly-sales API 的邏輯
-  const allMonths = []
-  for (let year = 2023; year <= 2025; year++) {
-    const startMonth = year === 2023 ? 9 : 1
-    const endMonth = year === 2025 ? 9 : 12
-    for (let month = startMonth; month <= endMonth; month++) {
-      const monthKey = `${year}-${String(month).padStart(2, '0')}`
-      allMonths.push(monthKey)
-    }
+  // 動態生成從當月回推13個月的月份列表
+  const now = new Date()
+  const currentYear = now.getFullYear()
+  const currentMonth = now.getMonth() + 1 // getMonth() 返回 0-11，需要 +1
+
+  const recentMonths: string[] = []
+
+  // 從當月開始，往前推13個月
+  for (let i = 0; i < 13; i++) {
+    const targetDate = new Date(currentYear, currentMonth - 1 - i, 1)
+    const year = targetDate.getFullYear()
+    const month = targetDate.getMonth() + 1
+    const monthKey = `${year}-${String(month).padStart(2, '0')}`
+    recentMonths.unshift(monthKey) // 加到陣列開頭，保持時間順序
   }
-  const recentMonths = allMonths.slice(-13)
+
+  console.log('📅 動態生成的月份範圍:', recentMonths[0], '至', recentMonths[recentMonths.length - 1])
 
   // 解析訂單資料
   const orderLines = orderCsv.split('\n').filter(line => line.trim())
@@ -208,16 +214,21 @@ async function calculateMonthlySales(orderCsv: string, productCsv: string) {
 
 // 計算折扣趨勢
 async function calculateDiscountTrends(orderCsv: string) {
-  const allMonths = []
-  for (let year = 2023; year <= 2025; year++) {
-    const startMonth = year === 2023 ? 9 : 1
-    const endMonth = year === 2025 ? 9 : 12
-    for (let month = startMonth; month <= endMonth; month++) {
-      const monthKey = `${year}-${String(month).padStart(2, '0')}`
-      allMonths.push(monthKey)
-    }
+  // 動態生成從當月回推13個月的月份列表
+  const now = new Date()
+  const currentYear = now.getFullYear()
+  const currentMonth = now.getMonth() + 1 // getMonth() 返回 0-11，需要 +1
+
+  const recentMonths: string[] = []
+
+  // 從當月開始，往前推13個月
+  for (let i = 0; i < 13; i++) {
+    const targetDate = new Date(currentYear, currentMonth - 1 - i, 1)
+    const year = targetDate.getFullYear()
+    const month = targetDate.getMonth() + 1
+    const monthKey = `${year}-${String(month).padStart(2, '0')}`
+    recentMonths.unshift(monthKey) // 加到陣列開頭，保持時間順序
   }
-  const recentMonths = allMonths.slice(-13)
 
   const orderLines = orderCsv.split('\n').filter(line => line.trim())
   const orderHeaders = orderLines[0].split(',').map(h => h.replace(/"/g, '').trim())
@@ -269,16 +280,21 @@ async function precalculateMonthlyData(_productCsv: string, _masterCsv: string) 
   const orderResponse = await fetch(orderSheetUrl)
   const orderCsv = await orderResponse.text()
 
-  const allMonths = []
-  for (let year = 2023; year <= 2025; year++) {
-    const startMonth = year === 2023 ? 9 : 1  
-    const endMonth = year === 2025 ? 9 : 12
-    for (let month = startMonth; month <= endMonth; month++) {
-      const monthKey = `${year}-${String(month).padStart(2, '0')}`
-      allMonths.push(monthKey)
-    }
+  // 動態生成從當月回推13個月的月份列表
+  const now = new Date()
+  const currentYear = now.getFullYear()
+  const currentMonth = now.getMonth() + 1 // getMonth() 返回 0-11，需要 +1
+
+  const recentMonths: string[] = []
+
+  // 從當月開始，往前推13個月
+  for (let i = 0; i < 13; i++) {
+    const targetDate = new Date(currentYear, currentMonth - 1 - i, 1)
+    const year = targetDate.getFullYear()
+    const month = targetDate.getMonth() + 1
+    const monthKey = `${year}-${String(month).padStart(2, '0')}`
+    recentMonths.unshift(monthKey) // 加到陣列開頭，保持時間順序
   }
-  const recentMonths = allMonths.slice(-13)
 
   // 為每個月份計算並快取資料
   for (const month of recentMonths) {
