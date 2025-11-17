@@ -1,5 +1,6 @@
 import { NextResponse, NextRequest } from 'next/server'
 import { reportCache, CACHE_KEYS } from '@/lib/cache'
+import { parseCsv } from '@/lib/csv'
 
 export async function GET(request: NextRequest) {
   try {
@@ -37,8 +38,14 @@ export async function GET(request: NextRequest) {
     const productCsv = await productResponse.text()
     
     // 解析商品銷售 CSV 資料
-    const productLines = productCsv.split('\n').filter(line => line.trim())
-    const productHeaders = productLines[0].split(',').map(h => h.replace(/"/g, '').trim())
+    const productRows = parseCsv(productCsv)
+    if (productRows.length === 0) {
+      console.error('商品銷售 CSV 無有效資料')
+      return NextResponse.json({ error: '查詢失敗' }, { status: 500 })
+    }
+
+    const productHeaders = productRows[0].map(h => h.trim())
+    const productLines = productRows.slice(1)
     
     console.log('📊 商品銷售表格欄位:', productHeaders)
     
@@ -48,8 +55,8 @@ export async function GET(request: NextRequest) {
       headerIndexMap[header] = index
     })
     
-    const products = productLines.slice(1).map((line, lineIndex) => {
-      const values = line.split(',').map(v => v.replace(/"/g, '').trim())
+    const products = productLines.map((line, lineIndex) => {
+      const values = line.map(v => v.trim())
       
       // 動態建立產品對象，包含所有欄位
       const product: any = {}

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { reportCache, CACHE_KEYS } from '@/lib/cache'
+import { parseCsv } from '@/lib/csv'
 
 export async function GET() {
   try {
@@ -53,16 +54,22 @@ export async function GET() {
     const productCsv = await productResponse.text()
 
     // 解析訂單 CSV 資料
-    const orderLines = orderCsv.split('\n').filter(line => line.trim())
-    const orderHeaders = orderLines[0].split(',').map(h => h.replace(/"/g, '').trim())
+    const orderRows = parseCsv(orderCsv)
+    if (orderRows.length === 0) {
+      console.error('月報訂單 CSV 無有效資料')
+      return NextResponse.json({ error: '查詢失敗' }, { status: 500 })
+    }
+
+    const orderHeaders = orderRows[0].map(h => h.trim())
+    const orderLines = orderRows.slice(1)
     
     // 找到需要的欄位索引
     const checkoutTimeIndex = orderHeaders.findIndex(h => h.includes('結帳時間'))
     const checkoutAmountIndex = orderHeaders.findIndex(h => h.includes('結帳金額'))
     const discountIndex = orderHeaders.findIndex(h => h.includes('折扣金額'))
     
-    const orderData = orderLines.slice(1).map(line => {
-      const values = line.split(',').map(v => v.replace(/"/g, '').trim())
+    const orderData = orderLines.map(line => {
+      const values = line.map(v => v.trim())
       return {
         checkout_time: values[checkoutTimeIndex],
         invoice_amount: parseFloat(values[checkoutAmountIndex]) || 0,
@@ -71,11 +78,17 @@ export async function GET() {
     }).filter(record => record.checkout_time && record.checkout_time !== '')
 
     // 解析商品 CSV 資料
-    const productLines = productCsv.split('\n').filter(line => line.trim())
-    const productHeaders = productLines[0].split(',').map(h => h.replace(/"/g, '').trim())
+    const productRows = parseCsv(productCsv)
+    if (productRows.length === 0) {
+      console.error('月報商品 CSV 無有效資料')
+      return NextResponse.json({ error: '查詢失敗' }, { status: 500 })
+    }
+
+    const productHeaders = productRows[0].map(h => h.trim())
+    const productLines = productRows.slice(1)
     
-    const productData = productLines.slice(1).map(line => {
-      const values = line.split(',').map(v => v.replace(/"/g, '').trim())
+    const productData = productLines.map(line => {
+      const values = line.map(v => v.trim())
       const record: Record<string, string> = {}
       productHeaders.forEach((header, index) => {
         record[header] = values[index] || ''

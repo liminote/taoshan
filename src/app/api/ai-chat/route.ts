@@ -97,6 +97,146 @@ interface ChatRequest {
   category?: string
 }
 
+type ValidationStatus = 'passed' | 'failed'
+
+interface ValidationMetadata {
+  validationStatus: ValidationStatus
+  validationWarnings?: string[]
+  validatedAt?: string
+  error?: string
+}
+
+interface CategoryDataResponse extends Record<string, unknown> {
+  dataSource: string
+  aiSummary: string
+  error: string | null
+  summary?: unknown
+  validationWarnings?: string[]
+  validationStatus?: ValidationStatus
+}
+
+interface RankingTotals {
+  totalQuantity?: number
+  totalAmount?: number
+  totalProducts?: number
+}
+
+interface RankingItem {
+  name?: string
+  quantity?: number
+  amount?: number
+  category?: string
+}
+
+interface ProductRankings {
+  totals?: RankingTotals
+  quantityRanking?: RankingItem[]
+  amountRanking?: RankingItem[]
+}
+
+interface ProductRecord extends Record<string, string | number | null | undefined> {
+  category?: string
+}
+
+interface SalesRecord extends Record<string, string | number | null | undefined> {
+  month?: string
+  invoice_amount?: number
+  day_name?: string
+  checkout_hour?: number
+  product_name?: string
+}
+
+interface FullSalesData {
+  summary?: {
+    totalRecords?: number
+    totalAmount?: number
+    uniqueProducts?: number
+    dateRange?: {
+      earliest?: string | null
+      latest?: string | null
+    }
+  }
+  salesData?: SalesRecord[]
+  masterData?: ProductRecord[]
+}
+
+interface HistoricalProduct {
+  name?: string
+  count?: number
+  revenue?: number
+}
+
+interface TrendPoint {
+  date?: string
+}
+
+interface ComprehensiveProductData {
+  period?: {
+    startDate?: string
+    endDate?: string
+  }
+  summary?: {
+    totalOrders?: number
+    totalProducts?: number
+    totalRevenue?: number
+    averageOrderValue?: number
+  }
+  analysis?: {
+    topProducts?: HistoricalProduct[]
+    trendData?: TrendPoint[]
+  }
+}
+
+interface MonthlySalesRecord {
+  monthDisplay?: string
+  amount?: number
+  orderCount?: number
+  avgOrderValue?: number
+}
+
+interface DistributionRecord {
+  method?: string
+  type?: string
+  count?: number
+  percentage?: number
+  amount?: number
+}
+
+interface OrderRecord extends Record<string, string | number | null | undefined> {
+  checkoutTime?: string
+  invoiceAmount?: number
+  discountAmount?: number
+  orderSource?: string
+  orderType?: string
+  tableNumber?: string
+  status?: string
+  year?: number
+  month?: string
+  hour?: number
+  dayName?: string
+  timePeriod?: string
+}
+
+interface FullOrdersData {
+  orders?: OrderRecord[]
+  ordersData?: OrderRecord[]
+  summary?: {
+    totalOrders?: number
+    totalRecords?: number
+    totalAmount?: number
+    averageOrderValue?: number
+    totalDiscount?: number
+    uniqueCustomers?: number
+    paymentMethodStats?: Record<string, number>
+    orderTypeStats?: Record<string, number>
+    dateRange?: {
+      earliest?: string
+      latest?: string
+    } | null
+  }
+}
+
+
 export async function POST(request: NextRequest) {
   try {
     const { message, conversationHistory = [], category, model = 'groq' }: ChatRequest & { model?: string } = await request.json()
@@ -153,97 +293,105 @@ export async function POST(request: NextRequest) {
 }
 
 // 數據驗證函數
-async function validateDataIntegrity(data: any, category: string): Promise<any> {
+async function validateDataIntegrity<T extends Record<string, unknown>>(data: T, category: string): Promise<T & ValidationMetadata> {
   try {
+    const workingData = data as T & {
+      summary?: Record<string, number | undefined>
+      validationWarnings?: string[]
+      categoryDistribution?: Array<Record<string, string | number>>
+      salesData?: SalesRecord[]
+      ordersData?: Array<Record<string, number | string | undefined>>
+    }
+
     // 基本數據結構檢查
-    if (!data || typeof data !== 'object') {
+    if (!workingData || typeof workingData !== 'object') {
       throw new Error('數據格式錯誤：數據不是有效對象')
     }
 
     // 檢查摘要數據的合理性
-    if (data.summary) {
-      const { totalAmount, totalRecords, uniqueProducts } = data.summary
+    if (workingData.summary) {
+      const { totalAmount, totalRecords, uniqueProducts } = workingData.summary
       
-      // 檢查負數或異常值
       if (totalAmount !== undefined && totalAmount < 0) {
         console.warn('⚠️ 檢測到負數總金額，可能是數據同步問題')
-        data.validationWarnings = data.validationWarnings || []
-        data.validationWarnings.push('總金額為負數，請檢查數據來源')
+        workingData.validationWarnings = workingData.validationWarnings || []
+        workingData.validationWarnings.push('總金額為負數，請檢查數據來源')
       }
       
-      // 檢查記錄數是否合理
       if (totalRecords !== undefined && totalRecords === 0) {
         throw new Error('數據錯誤：沒有找到任何記錄')
       }
       
-      // 檢查商品數量是否合理
-      if (uniqueProducts !== undefined && uniqueProducts > totalRecords) {
+      if (uniqueProducts !== undefined && totalRecords !== undefined && uniqueProducts > totalRecords) {
         console.warn('⚠️ 獨特商品數量超過總記錄數，可能存在數據重複')
-        data.validationWarnings = data.validationWarnings || []
-        data.validationWarnings.push('商品數量異常，可能存在重複記錄')
+        workingData.validationWarnings = workingData.validationWarnings || []
+        workingData.validationWarnings.push('商品數量異常，可能存在重複記錄')
       }
     }
 
-    // 根據分類進行特定驗證
     switch (category) {
-      case 'product':
-        if (data.salesData && Array.isArray(data.salesData)) {
-          // 檢查銷售數據完整性
-          const invalidRecords = data.salesData.filter(item => 
-            !item.product_name || 
-            item.invoice_amount === undefined || 
-            isNaN(item.invoice_amount)
+      case 'product': {
+        const salesData = workingData.salesData
+        if (Array.isArray(salesData)) {
+          const invalidRecords = salesData.filter(item => 
+            !item.product_name ||
+            item.invoice_amount === undefined ||
+            Number.isNaN(item.invoice_amount as number)
           ).length
           
-          if (invalidRecords > data.salesData.length * 0.1) { // 超過10%無效記錄
-            data.validationWarnings = data.validationWarnings || []
-            data.validationWarnings.push(`發現 ${invalidRecords} 筆無效銷售記錄`)
+          if (invalidRecords > salesData.length * 0.1) {
+            workingData.validationWarnings = workingData.validationWarnings || []
+            workingData.validationWarnings.push(`發現 ${invalidRecords} 筆無效銷售記錄`)
           }
         }
         break
+      }
         
-      case 'order':
-        if (data.ordersData && Array.isArray(data.ordersData)) {
-          // 檢查訂單數據完整性
-          const invalidOrders = data.ordersData.filter(order => 
-            !order.invoice_number || 
-            order.invoice_amount === undefined || 
-            isNaN(order.invoice_amount)
+      case 'order': {
+        const ordersData = workingData.ordersData
+        if (Array.isArray(ordersData)) {
+          const invalidOrders = ordersData.filter(order => 
+            !order.invoice_number ||
+            order.invoice_amount === undefined ||
+            Number.isNaN(order.invoice_amount as number)
           ).length
           
           if (invalidOrders > 0) {
-            data.validationWarnings = data.validationWarnings || []
-            data.validationWarnings.push(`發現 ${invalidOrders} 筆無效訂單記錄`)
+            workingData.validationWarnings = workingData.validationWarnings || []
+            workingData.validationWarnings.push(`發現 ${invalidOrders} 筆無效訂單記錄`)
           }
         }
         break
+      }
         
-      case 'category':
-        if (data.categoryDistribution && Array.isArray(data.categoryDistribution)) {
-          // 檢查分類數據是否有缺失
-          const totalPercentage = data.categoryDistribution.reduce(
-            (sum, cat) => sum + (parseFloat(cat.percentage) || 0), 0
+      case 'category': {
+        const categoryDistribution = workingData.categoryDistribution
+        if (Array.isArray(categoryDistribution)) {
+          const totalPercentage = categoryDistribution.reduce(
+            (sum, cat) => sum + (parseFloat(String(cat.percentage)) || 0),
+            0
           )
           
-          if (Math.abs(totalPercentage - 100) > 5) { // 允許5%誤差
-            data.validationWarnings = data.validationWarnings || []
-            data.validationWarnings.push(`分類占比總和為 ${totalPercentage.toFixed(1)}%，可能存在數據缺失`)
+          if (Math.abs(totalPercentage - 100) > 5) {
+            workingData.validationWarnings = workingData.validationWarnings || []
+            workingData.validationWarnings.push(`分類占比總和為 ${totalPercentage.toFixed(1)}%，可能存在數據缺失`)
           }
         }
         break
+      }
     }
 
-    // 添加驗證時間戳
-    data.validatedAt = new Date().toISOString()
-    data.validationStatus = 'passed'
-    
-    return data
+    return {
+      ...workingData,
+      validationStatus: 'passed',
+      validatedAt: new Date().toISOString()
+    }
     
   } catch (error) {
     console.error('數據驗證失敗:', error)
     return {
       ...data,
-      error: error.message,
+      error: error instanceof Error ? error.message : '未知錯誤',
       validationStatus: 'failed',
       validatedAt: new Date().toISOString()
     }
@@ -273,7 +421,7 @@ async function fetchCategoryData(category: string) {
   }
 
   console.log(`🔄 快取未命中，重新獲取數據 (${category})`)
-  const data: any = { dataSource: '', aiSummary: '', error: null }
+  const data: CategoryDataResponse = { dataSource: '', aiSummary: '', error: null }
 
   try {
     switch (category) {
@@ -491,7 +639,9 @@ async function fetchCategoryData(category: string) {
 }
 
 // 格式化商品數據為AI可讀格式
-function formatProductData(rankings: any, products: any[]): string {
+function formatProductData(rankingsData: unknown, productsData: unknown[]): string {
+  const rankings = (rankingsData as ProductRankings) || {}
+  const products = (productsData as ProductRecord[]) || []
   let summary = `🏪 商品銷售分析數據\n\n`
   
   if (rankings?.totals) {
@@ -503,7 +653,7 @@ function formatProductData(rankings: any, products: any[]): string {
   
   if (rankings?.quantityRanking?.length > 0) {
     summary += `🥇 銷量排名前10：\n`
-    rankings.quantityRanking.slice(0, 10).forEach((item: any, index: number) => {
+    rankings.quantityRanking.slice(0, 10).forEach((item: RankingItem, index: number) => {
       summary += `${index + 1}. ${item.name} - 銷量: ${item.quantity} 件, 金額: NT$ ${item.amount?.toLocaleString()}, 分類: ${item.category}\n`
     })
     summary += `\n`
@@ -511,7 +661,7 @@ function formatProductData(rankings: any, products: any[]): string {
   
   if (rankings?.amountRanking?.length > 0) {
     summary += `💰 銷額排名前10：\n`
-    rankings.amountRanking.slice(0, 10).forEach((item: any, index: number) => {
+    rankings.amountRanking.slice(0, 10).forEach((item: RankingItem, index: number) => {
       summary += `${index + 1}. ${item.name} - 金額: NT$ ${item.amount?.toLocaleString()}, 銷量: ${item.quantity} 件, 分類: ${item.category}\n`
     })
     summary += `\n`
@@ -527,7 +677,8 @@ function formatProductData(rankings: any, products: any[]): string {
 }
 
 // 格式化完整銷售數據為AI可讀格式
-function formatFullSalesData(fullSalesData: any): string {
+function formatFullSalesData(fullSalesDataInput: unknown): string {
+  const fullSalesData = (fullSalesDataInput as FullSalesData) || {}
   let summary = `🏪 完整商品銷售分析數據\n\n`
 
   if (fullSalesData?.summary) {
@@ -545,16 +696,16 @@ function formatFullSalesData(fullSalesData: any): string {
 
   // 分析完整銷售數據
   if (fullSalesData?.salesData?.length > 0) {
-    const sales = fullSalesData.salesData
+    const sales: SalesRecord[] = fullSalesData.salesData || []
 
     // 月份銷售統計
-    const monthStats = sales.reduce((acc: Record<string, {count: number, amount: number}>, sale: any) => {
-      const month = sale.month || '未知月份'
+    const monthStats = sales.reduce<Record<string, {count: number, amount: number}>>((acc, sale) => {
+      const month = (sale.month as string) || '未知月份'
       if (!acc[month]) {
         acc[month] = { count: 0, amount: 0 }
       }
       acc[month].count += 1
-      acc[month].amount += sale.invoice_amount || 0
+      acc[month].amount += Number(sale.invoice_amount) || 0
       return acc
     }, {})
 
@@ -567,8 +718,8 @@ function formatFullSalesData(fullSalesData: any): string {
     summary += `\n`
 
     // 週別分析
-    const weekdayStats = sales.reduce((acc: Record<string, number>, sale: any) => {
-      const day = sale.day_name || '未知'
+    const weekdayStats = sales.reduce<Record<string, number>>((acc, sale) => {
+      const day = (sale.day_name as string) || '未知'
       acc[day] = (acc[day] || 0) + 1
       return acc
     }, {})
@@ -584,9 +735,9 @@ function formatFullSalesData(fullSalesData: any): string {
     summary += `\n`
 
     // 時段分析（基於結帳小時）
-    const hourStats = sales.reduce((acc: Record<string, number>, sale: any) => {
+    const hourStats = sales.reduce<Record<string, number>>((acc, sale) => {
       if (sale.checkout_hour !== undefined) {
-        const hour = sale.checkout_hour
+        const hour = Number(sale.checkout_hour)
         let period = '其他時段'
         if (hour >= 6 && hour < 11) period = '早餐時段(6-11)'
         else if (hour >= 11 && hour < 14) period = '午餐時段(11-14)'
@@ -608,13 +759,13 @@ function formatFullSalesData(fullSalesData: any): string {
     summary += `\n`
 
     // 熱門商品分析（前10名）
-    const productStats = sales.reduce((acc: Record<string, {count: number, amount: number}>, sale: any) => {
-      const product = sale.product_name || '未知商品'
+    const productStats = sales.reduce<Record<string, {count: number, amount: number}>>((acc, sale) => {
+      const product = (sale.product_name as string) || '未知商品'
       if (!acc[product]) {
         acc[product] = { count: 0, amount: 0 }
       }
       acc[product].count += 1
-      acc[product].amount += sale.invoice_amount || 0
+      acc[product].amount += Number(sale.invoice_amount) || 0
       return acc
     }, {})
 
@@ -631,7 +782,7 @@ function formatFullSalesData(fullSalesData: any): string {
 
   // 商品主檔分析
   if (fullSalesData?.masterData?.length > 0) {
-    const categories = [...new Set(fullSalesData.masterData.map((p: any) => p['大分類']))].filter(Boolean)
+    const categories = [...new Set((fullSalesData.masterData as ProductRecord[]).map((p) => p['大分類'] as string | undefined))].filter(Boolean) as string[]
     summary += `\n🏷️ 可用商品分類：${categories.join(', ')}\n`
     summary += `📦 商品主檔總數：${fullSalesData.masterData.length} 項\n`
   }
@@ -647,7 +798,14 @@ function formatFullSalesData(fullSalesData: any): string {
 }
 
 // 格式化包含歷史數據的商品信息
-function formatProductDataWithHistory(rankings: any, products: any[], comprehensiveData: any): string {
+function formatProductDataWithHistory(
+  rankingsData: unknown,
+  productsData: unknown[],
+  comprehensiveDataInput: unknown
+): string {
+  const rankings = (rankingsData as ProductRankings) || {}
+  const products = (productsData as ProductRecord[]) || []
+  const comprehensiveData = (comprehensiveDataInput as ComprehensiveProductData) || {}
   let summary = `🏪 商品銷售分析數據（包含完整歷史）\n\n`
   
   // 整體統計
@@ -670,7 +828,7 @@ function formatProductDataWithHistory(rankings: any, products: any[], comprehens
   // 歷史熱門商品
   if (comprehensiveData?.analysis?.topProducts?.length > 0) {
     summary += `🏆 歷史銷售TOP10商品（依營收排序）：\n`
-    comprehensiveData.analysis.topProducts.forEach((item: any, index: number) => {
+    comprehensiveData.analysis.topProducts.forEach((item: HistoricalProduct, index: number) => {
       summary += `${index + 1}. ${item.name} - 銷售次數: ${item.count} 次, 總營收: NT$ ${item.revenue?.toLocaleString()}\n`
     })
     summary += `\n`
@@ -679,7 +837,7 @@ function formatProductDataWithHistory(rankings: any, products: any[], comprehens
   // 當前排名
   if (rankings?.quantityRanking?.length > 0) {
     summary += `🥇 當前月份銷量排名前5：\n`
-    rankings.quantityRanking.slice(0, 5).forEach((item: any, index: number) => {
+    rankings.quantityRanking.slice(0, 5).forEach((item: RankingItem, index: number) => {
       summary += `${index + 1}. ${item.name} - 銷量: ${item.quantity} 件, 金額: NT$ ${item.amount?.toLocaleString()}\n`
     })
     summary += `\n`
@@ -709,20 +867,27 @@ function formatProductDataWithHistory(rankings: any, products: any[], comprehens
 }
 
 // 格式化訂單數據為AI可讀格式（舊版本，保留兼容性）
-function formatOrderData(monthlySales: any[], paymentData: any[], orderTypeData: any[]): string {
+function formatOrderData(
+  monthlySalesData: unknown[],
+  paymentDataInput: unknown[],
+  orderTypeDataInput: unknown[]
+): string {
+  const monthlySales = (monthlySalesData as MonthlySalesRecord[]) || []
+  const paymentData = (paymentDataInput as DistributionRecord[]) || []
+  const orderTypeData = (orderTypeDataInput as DistributionRecord[]) || []
   let summary = `🛒 訂單銷售分析數據\n\n`
   
   if (monthlySales?.length > 0) {
     summary += `📈 近期月銷售趨勢：\n`
-    monthlySales.slice(-6).forEach((month: any) => {
-      summary += `- ${month.monthDisplay}: NT$ ${month.amount?.toLocaleString()}, 訂單數: ${month.orderCount}, 平均單價: NT$ ${Math.round(month.avgOrderValue)}\n`
+    monthlySales.slice(-6).forEach((month) => {
+      summary += `- ${month.monthDisplay}: NT$ ${month.amount?.toLocaleString()}, 訂單數: ${month.orderCount}, 平均單價: NT$ ${Math.round(month.avgOrderValue || 0)}\n`
     })
     summary += `\n`
   }
   
   if (paymentData?.length > 0) {
     summary += `💳 支付方式分佈：\n`
-    paymentData.forEach((payment: any) => {
+    paymentData.forEach((payment) => {
       summary += `- ${payment.method}: ${payment.count} 筆 (${payment.percentage}%), 金額: NT$ ${payment.amount?.toLocaleString()}\n`
     })
     summary += `\n`
@@ -730,7 +895,7 @@ function formatOrderData(monthlySales: any[], paymentData: any[], orderTypeData:
   
   if (orderTypeData?.length > 0) {
     summary += `🏪 訂單類型分佈：\n`
-    orderTypeData.forEach((orderType: any) => {
+    orderTypeData.forEach((orderType) => {
       summary += `- ${orderType.type}: ${orderType.count} 筆 (${orderType.percentage}%), 金額: NT$ ${orderType.amount?.toLocaleString()}\n`
     })
   }
@@ -739,64 +904,60 @@ function formatOrderData(monthlySales: any[], paymentData: any[], orderTypeData:
 }
 
 // 格式化完整訂單數據為AI可讀格式
-function formatFullOrdersData(fullOrdersData: any): string {
+function formatFullOrdersData(fullOrdersDataInput: unknown): string {
+  const fullOrdersData = (fullOrdersDataInput as FullOrdersData) || {}
   let summary = `🛒 完整訂單分析數據\n\n`
 
-  if (fullOrdersData?.summary) {
-    const s = fullOrdersData.summary
+  const summaryData = fullOrdersData.summary
+  if (summaryData) {
+    const totalRecords = summaryData.totalRecords ?? summaryData.totalOrders ?? 0
     summary += `📊 整體訂單統計：\n`
-    summary += `- 總訂單數：${s.totalRecords?.toLocaleString()} 筆\n`
-    summary += `- 總交易金額：NT$ ${s.totalAmount?.toLocaleString()}\n`
-    summary += `- 平均訂單價值：NT$ ${s.averageOrderValue?.toLocaleString()}\n`
-    summary += `- 獨特顧客數：${s.uniqueCustomers?.toLocaleString()} 人\n`
+    summary += `- 總訂單數：${totalRecords?.toLocaleString()} 筆\n`
+    summary += `- 總交易金額：NT$ ${summaryData.totalAmount?.toLocaleString()}\n`
+    summary += `- 平均訂單價值：NT$ ${summaryData.averageOrderValue?.toLocaleString()}\n`
+    summary += `- 獨特顧客數：${summaryData.uniqueCustomers?.toLocaleString()} 人\n`
     
-    if (s.dateRange) {
-      summary += `- 資料時間範圍：${s.dateRange.earliest} ~ ${s.dateRange.latest}\n`
+    if (summaryData.dateRange) {
+      summary += `- 資料時間範圍：${summaryData.dateRange.earliest} ~ ${summaryData.dateRange.latest}\n`
     }
     summary += `\n`
 
-    // 支付方式統計
-    if (s.paymentMethodStats) {
+    if (summaryData.paymentMethodStats && totalRecords) {
       summary += `💳 支付方式分佈：\n`
-      Object.entries(s.paymentMethodStats).forEach(([method, count]) => {
-        const percentage = ((count as number) / s.totalRecords * 100).toFixed(1)
+      Object.entries(summaryData.paymentMethodStats).forEach(([method, count]) => {
+        const percentage = ((count ?? 0) / totalRecords * 100).toFixed(1)
         summary += `- ${method}: ${count} 筆 (${percentage}%)\n`
       })
       summary += `\n`
     }
 
-    // 訂單類型統計
-    if (s.orderTypeStats) {
+    if (summaryData.orderTypeStats && totalRecords) {
       summary += `🏪 訂單類型分佈：\n`
-      Object.entries(s.orderTypeStats).forEach(([type, count]) => {
-        const percentage = ((count as number) / s.totalRecords * 100).toFixed(1)
+      Object.entries(summaryData.orderTypeStats).forEach(([type, count]) => {
+        const percentage = ((count ?? 0) / totalRecords * 100).toFixed(1)
         summary += `- ${type}: ${count} 筆 (${percentage}%)\n`
       })
       summary += `\n`
     }
   }
 
-  // 分析完整訂單數據的時間分佈
-  if (fullOrdersData?.ordersData?.length > 0) {
-    const orders = fullOrdersData.ordersData
-
-    // 時段分析
-    const timePeriodStats = orders.reduce((acc: Record<string, number>, order: any) => {
-      const period = order.time_period || '未知時段'
+  const orders: OrderRecord[] = fullOrdersData.ordersData || fullOrdersData.orders || []
+  if (orders.length > 0) {
+    const timePeriodStats = orders.reduce<Record<string, number>>((acc, order) => {
+      const period = (order.timePeriod || order.time_period as string) || '未知時段'
       acc[period] = (acc[period] || 0) + 1
       return acc
     }, {})
 
     summary += `⏰ 時段分析：\n`
     Object.entries(timePeriodStats).forEach(([period, count]) => {
-      const percentage = ((count as number) / orders.length * 100).toFixed(1)
+      const percentage = ((count ?? 0) / orders.length * 100).toFixed(1)
       summary += `- ${period}: ${count} 筆 (${percentage}%)\n`
     })
     summary += `\n`
 
-    // 週別分析
-    const weekdayStats = orders.reduce((acc: Record<string, number>, order: any) => {
-      const day = order.day_name || '未知'
+    const weekdayStats = orders.reduce<Record<string, number>>((acc, order) => {
+      const day = (order.dayName || order.day_name as string) || '未知'
       acc[day] = (acc[day] || 0) + 1
       return acc
     }, {})
@@ -811,9 +972,8 @@ function formatFullOrdersData(fullOrdersData: any): string {
     })
     summary += `\n`
 
-    // 月份分析
-    const monthStats = orders.reduce((acc: Record<string, number>, order: any) => {
-      const month = order.month || '未知月份'
+    const monthStats = orders.reduce<Record<string, number>>((acc, order) => {
+      const month = (order.month as string) || '未知月份'
       acc[month] = (acc[month] || 0) + 1
       return acc
     }, {})
@@ -822,7 +982,7 @@ function formatFullOrdersData(fullOrdersData: any): string {
     Object.entries(monthStats)
       .sort(([a], [b]) => a.localeCompare(b))
       .forEach(([month, count]) => {
-        const percentage = ((count as number) / orders.length * 100).toFixed(1)
+        const percentage = ((count ?? 0) / orders.length * 100).toFixed(1)
         summary += `- ${month}: ${count} 筆 (${percentage}%)\n`
       })
   }

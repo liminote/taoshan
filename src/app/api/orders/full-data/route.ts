@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { reportCache, CACHE_KEYS } from '@/lib/cache'
+import { parseCsv } from '@/lib/csv'
 
 export async function GET() {
   try {
@@ -30,8 +31,14 @@ export async function GET() {
     const orderCsv = await orderResponse.text()
     
     // 解析訂單 CSV 資料
-    const orderLines = orderCsv.split('\n').filter(line => line.trim())
-    const orderHeaders = orderLines[0].split(',').map(h => h.replace(/"/g, '').trim())
+    const orderRows = parseCsv(orderCsv)
+    if (orderRows.length === 0) {
+      console.error('訂單 CSV 無有效資料')
+      return NextResponse.json({ error: '查詢失敗' }, { status: 500 })
+    }
+
+    const orderHeaders = orderRows[0].map(h => h.trim())
+    const orderLines = orderRows.slice(1)
     
     console.log('📊 訂單表格欄位:', orderHeaders)
     
@@ -45,11 +52,11 @@ export async function GET() {
     const tableNumberIndex = orderHeaders.findIndex(h => h.includes('桌號'))
     const statusIndex = orderHeaders.findIndex(h => h.includes('目前概況'))
     
-    const orders = orderLines.slice(1).map(line => {
-      const values = line.split(',').map(v => v.replace(/"/g, '').trim())
+    const orders = orderLines.map(line => {
+      const values = line.map(v => v.trim())
       
       const checkoutTime = values[checkoutTimeIndex] || ''
-      const invoiceAmount = parseFloat(values[checkoutAmountIndex]) || 0
+      const invoiceAmount = parseFloat(values[checkoutAmountIndex] || '0') || 0
       
       // 解析結帳時間
       let dateObj = null

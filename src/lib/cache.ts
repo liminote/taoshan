@@ -30,7 +30,7 @@ class ReportCache {
   }
 
   // 從檔案載入快取
-  private loadFromFile<T>(key: string): T | null {
+  private loadFromFile<T>(key: string): CacheItem<T> | null {
     if (typeof window !== 'undefined') return null
     
     try {
@@ -46,7 +46,7 @@ class ReportCache {
         
         if (cacheAge < thirtyMinutes) {
           this.cache.set(key, item)
-          return item.data
+          return item
         } else {
           // 清除過期的檔案快取
           fs.unlinkSync(filePath)
@@ -102,7 +102,8 @@ class ReportCache {
     }
     
     // 嘗試從檔案載入
-    return this.loadFromFile<T>(key)
+    const fileItem = this.loadFromFile<T>(key)
+    return fileItem ? fileItem.data : null
   }
 
   // 檢查是否有快取
@@ -148,7 +149,7 @@ class ReportCache {
   // 取得快取時間戳
   getTimestamp(key: string): number | null {
     const item = this.cache.get(key) || this.loadFromFile(key)
-    return item ? (item as any).timestamp : null
+    return item ? (item as CacheItem<unknown>).timestamp : null
   }
 
   // 取得所有快取資訊

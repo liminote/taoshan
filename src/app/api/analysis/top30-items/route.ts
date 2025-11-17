@@ -129,8 +129,8 @@ export async function GET() {
     
     // 第二步：使用現有的客戶排行榜API來獲取正確的客戶標籤
     console.log('🏷️ 獲取客戶標籤資訊...')
-    let newCustomers: Array<{ key: string, data: typeof customerTotals[''] }> = []
-    let returningCustomers: Array<{ key: string, data: typeof customerTotals[''] }> = []
+    const newCustomers: Array<{ key: string, data: typeof customerTotals[''] }> = []
+    const returningCustomers: Array<{ key: string, data: typeof customerTotals[''] }> = []
     
     try {
       // 嘗試從客戶排行榜API獲取標籤
