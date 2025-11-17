@@ -2,23 +2,58 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 ## Getting Started
 
-First, run the development server:
+### Environment Variables
+
+Create `.env.local` with the following variables:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+# Supabase
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+
+# Google AI (for meeting record auto-summarization)
+GOOGLE_AI_API_KEY=your-gemini-api-key
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Run Development Server
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+pnpm install
+pnpm dev
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Open [http://localhost:3000](http://localhost:3000) with your browser.
+
+### Database Schema
+
+The `meeting_records` table requires the following columns (see `database-schema.sql`):
+
+```sql
+CREATE TABLE meeting_records (
+  id BIGSERIAL PRIMARY KEY,
+  meeting_date DATE NOT NULL,
+  content TEXT NOT NULL,
+  summary TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE,
+  completed BOOLEAN DEFAULT false,
+  completed_at TIMESTAMP WITH TIME ZONE,
+  archived BOOLEAN DEFAULT false,
+  tags TEXT[]
+);
+```
+
+If your table already exists, run these `ALTER` statements in Supabase SQL Editor:
+
+```sql
+ALTER TABLE meeting_records ADD COLUMN IF NOT EXISTS summary TEXT;
+ALTER TABLE meeting_records ADD COLUMN IF NOT EXISTS created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW();
+ALTER TABLE meeting_records ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE;
+ALTER TABLE meeting_records ADD COLUMN IF NOT EXISTS completed BOOLEAN DEFAULT false;
+ALTER TABLE meeting_records ADD COLUMN IF NOT EXISTS completed_at TIMESTAMP WITH TIME ZONE;
+ALTER TABLE meeting_records ADD COLUMN IF NOT EXISTS archived BOOLEAN DEFAULT false;
+ALTER TABLE meeting_records ADD COLUMN IF NOT EXISTS tags TEXT[];
+```
 
 ## Learn More
 

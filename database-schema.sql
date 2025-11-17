@@ -72,9 +72,24 @@ CREATE TABLE product_sales (
   created_at TIMESTAMP DEFAULT NOW()
 );
 
+-- 會議記錄表
+CREATE TABLE meeting_records (
+  id BIGSERIAL PRIMARY KEY,
+  meeting_date DATE NOT NULL,
+  content TEXT NOT NULL,
+  summary TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE,
+  completed BOOLEAN DEFAULT false,
+  completed_at TIMESTAMP WITH TIME ZONE,
+  archived BOOLEAN DEFAULT false,
+  tags TEXT[]
+);
+
 -- 建立索引以提升查詢效能
 CREATE INDEX idx_orders_checkout_time ON orders(checkout_time);
 CREATE INDEX idx_orders_invoice_number ON orders(invoice_number);
 CREATE INDEX idx_product_sales_checkout_time ON product_sales(checkout_time);
 CREATE INDEX idx_product_sales_product_name ON product_sales(product_original_name);
 CREATE INDEX idx_products_original_name ON products(original_name);
+CREATE INDEX idx_meeting_records_meeting_date ON meeting_records(meeting_date);
