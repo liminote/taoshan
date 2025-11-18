@@ -23,12 +23,17 @@ export default function MeetingRecordsPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [selected, setSelected] = useState<MeetingRecord | null>(null)
   const [editingSummary, setEditingSummary] = useState('')
+  const [editingDate, setEditingDate] = useState('')
+  const [editingContent, setEditingContent] = useState('')
   const [editingTags, setEditingTags] = useState('')
   const [showCreateForm, setShowCreateForm] = useState(false)
-  const [newRecord, setNewRecord] = useState({ meeting_date: '', content: '', tags: '' })
+  const getTodayString = () => new Date().toISOString().split('T')[0]
+  const [newRecord, setNewRecord] = useState({ meeting_date: getTodayString(), content: '', tags: '' })
   const [allTags, setAllTags] = useState<string[]>([])
   const [tagSuggestions, setTagSuggestions] = useState<string[]>([])
   const [isCreating, setIsCreating] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
 
   const fetchRecords = async (searchQ?: string, searchTag?: string) => {
     try {
@@ -66,22 +71,36 @@ export default function MeetingRecordsPage() {
   const openDetail = (rec: MeetingRecord) => {
     setSelected(rec)
     setEditingSummary(rec.summary || '')
+    const dateSource = rec.meeting_date || (rec.created_at ? rec.created_at.split('T')[0] : '')
+    setEditingDate(dateSource)
+    setEditingContent(rec.content)
     setEditingTags((rec.tags || []).join(', '))
   }
 
   const closeDetail = () => {
     setSelected(null)
     setEditingSummary('')
+    setEditingDate('')
+    setEditingContent('')
     setEditingTags('')
   }
 
   const saveDetail = async () => {
     if (!selected) return
+    if (!editingDate || !editingContent.trim()) {
+      alert('請填寫會議日期與內容')
+      return
+    }
     try {
-      const body = {
+      setIsSaving(true)
+      const body: any = {
         id: selected.id,
-        summary: editingSummary,
+        meeting_date: editingDate,
+        content: editingContent,
         tags: editingTags.split(',').map(s => s.trim()).filter(Boolean)
+      }
+      if (editingSummary.trim()) {
+        body.summary = editingSummary.trim()
       }
       const res = await fetch('/api/meeting-records', {
         method: 'PUT',
@@ -95,22 +114,26 @@ export default function MeetingRecordsPage() {
     } catch (err) {
       console.error('save error', err)
       alert('儲存失敗')
+    } finally {
+      setIsSaving(false)
     }
   }
 
-  const markComplete = async (rec: MeetingRecord) => {
+  const deleteRecord = async () => {
+    if (!selected) return
+    if (!confirm('確定要刪除這則會議記錄嗎？')) return
     try {
-      const res = await fetch('/api/meeting-records', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: rec.id, completed: true, archived: true })
-      })
+      setIsDeleting(true)
+      const res = await fetch(`/api/meeting-records?id=${selected.id}`, { method: 'DELETE' })
       const data = await res.json()
-      if (!res.ok) throw new Error(data?.error || '標記失敗')
+      if (!res.ok) throw new Error(data?.error || '刪除失敗')
       await fetchRecords(q, tagFilter)
+      closeDetail()
     } catch (err) {
-      console.error('mark complete error', err)
-      alert('標記完成失敗')
+      console.error('delete error', err)
+      alert('刪除失敗')
+    } finally {
+      setIsDeleting(false)
     }
   }
 
@@ -132,7 +155,7 @@ export default function MeetingRecordsPage() {
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data?.error || '建立失敗')
-      setNewRecord({ meeting_date: '', content: '', tags: '' })
+      setNewRecord({ meeting_date: getTodayString(), content: '', tags: '' })
       setShowCreateForm(false)
       await fetchRecords(q, tagFilter)
     } catch (err) {
@@ -200,7 +223,14 @@ export default function MeetingRecordsPage() {
             </button>
           </form>
           <button 
-            onClick={() => setShowCreateForm(true)} 
+            onClick={() => {
+              setNewRecord(prev => ({
+                meeting_date: prev.meeting_date || getTodayString(),
+                content: prev.content,
+                tags: prev.tags
+              }))
+              setShowCreateForm(true)
+            }} 
             className="px-4 py-2 bg-green-500 text-white rounded-lg text-sm hover:bg-green-600"
           >
             + 新增記錄
@@ -282,14 +312,16 @@ export default function MeetingRecordsPage() {
               {records.map(rec => (
                 <div 
                   key={rec.id} 
-                  className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 flex justify-between items-start cursor-pointer transition"
+                  className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition"
                   onClick={() => openDetail(rec)}
                 >
-                  <div className="flex-1">
+                  <div>
                     <div className="text-sm text-gray-500 font-medium">{formatDate(rec.meeting_date || rec.created_at)}</div>
                     <div className="mt-2">
                       {rec.summary ? (
-                        <div className="text-sm text-gray-700 whitespace-pre-line line-clamp-2">{rec.summary}</div>
+                        <div className="text-sm text-gray-700 whitespace-pre-line line-clamp-3">
+                          {rec.summary}
+                        </div>
                       ) : (
                         <div className="text-sm text-gray-600 line-clamp-2">{rec.content}</div>
                       )}
@@ -303,18 +335,6 @@ export default function MeetingRecordsPage() {
                         ))}
                       </div>
                     )}
-                  </div>
-
-                  <div className="ml-4 flex-shrink-0">
-                    <button 
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        markComplete(rec)
-                      }} 
-                      className="px-3 py-1 bg-green-500 text-white rounded text-sm hover:bg-green-600"
-                    >
-                      完成
-                    </button>
                   </div>
                 </div>
               ))}
@@ -336,14 +356,27 @@ export default function MeetingRecordsPage() {
 
               <div className="space-y-4">
                 <div>
-                  <h3 className="text-sm font-medium text-gray-700 mb-2">完整內容</h3>
-                  <div className="p-3 bg-gray-50 rounded-lg whitespace-pre-wrap text-sm text-gray-800 max-h-40 overflow-y-auto">
-                    {selected.content}
-                  </div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">會議日期</label>
+                  <input 
+                    type="date"
+                    value={editingDate}
+                    onChange={e => setEditingDate(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                  />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">三點式摘要（可編輯）</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">完整內容</label>
+                  <textarea
+                    value={editingContent}
+                    onChange={e => setEditingContent(e.target.value)}
+                    rows={6}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">重點摘要（可編輯）</label>
                   <textarea 
                     value={editingSummary} 
                     onChange={e => setEditingSummary(e.target.value)} 
@@ -379,16 +412,26 @@ export default function MeetingRecordsPage() {
 
               <div className="mt-6 flex justify-end gap-2">
                 <button 
+                  onClick={deleteRecord}
+                  disabled={isDeleting}
+                  className="px-4 py-2 border border-red-200 text-red-600 rounded-lg hover:bg-red-50 disabled:opacity-50"
+                >
+                  {isDeleting ? '刪除中...' : '刪除'}
+                </button>
+                <button 
                   onClick={closeDetail} 
                   className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
                 >
                   取消
                 </button>
                 <button 
-                  onClick={saveDetail} 
-                  className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+                  onClick={saveDetail}
+                  disabled={isSaving} 
+                  className={`px-4 py-2 text-white rounded-lg transition-colors ${
+                    isSaving ? 'bg-blue-300 cursor-not-allowed' : 'bg-blue-500 hover:bg-blue-600'
+                  }`}
                 >
-                  儲存
+                  {isSaving ? '儲存中...' : '儲存'}
                 </button>
               </div>
             </div>

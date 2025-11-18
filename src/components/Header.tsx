@@ -17,6 +17,15 @@ export default function Header() {
       )
     },
     {
+      name: '會議記錄',
+      href: '/meeting-records',
+      icon: (
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10m-9 4h5m4 7H8a3 3 0 01-3-3V7a3 3 0 013-3h8a3 3 0 013 3v12a3 3 0 01-3 3z" />
+        </svg>
+      )
+    },
+    {
       name: '商品主檔管理',
       href: '/products-master-sheets',
       icon: (
