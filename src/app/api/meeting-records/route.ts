@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
 import { GoogleGenerativeAI } from '@google/generative-ai'
+import { cache } from '@/lib/cache'
 
 let supabaseClient: ReturnType<typeof createClient> | null = null
 function getSupabaseClient() {
@@ -33,7 +34,7 @@ async function generateThreeBulletSummary(content: string): Promise<string | nul
     if (!process.env.GOOGLE_AI_API_KEY) return null
 
     const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' })
-    const prompt = `請將以下會議內容摘要成三點重點（每點一短句），條列顯示，重點包含決議/負責人/期限（如有）：\n\n${content}`
+    const prompt = `請閱讀以下會議內容，整理成約 2-3 句的「重點摘要」，用自然段落描述會議核心討論、結論或決策方向；聚焦於具體行動或策略，而非重複會議標題或日期，也不要列出純粹的數字或待辦清單：\n\n${content}`
 
     const result = await model.generateContent({
       contents: [
@@ -55,6 +56,257 @@ async function generateThreeBulletSummary(content: string): Promise<string | nul
   } catch (err) {
     console.error('generateThreeBulletSummary error:', err)
     return null
+  }
+}
+
+function toISODateString(date: Date) {
+  return date.toISOString().split('T')[0]
+}
+
+function normalizeSentence(sentence: string): string {
+  return sentence
+    .replace(/^[-=＊*＿#]+$/g, '')
+    .replace(/^(\d+(?:\.\d+)*[\.．、:]?\s*)/, '')
+    .replace(/^[\-\*•]+\s*/, '')
+    .trim()
+}
+
+function generateFallbackSummary(content: string): string | null {
+  const segments = content
+    .split(/\r?\n/)
+    .map(line => line.trim())
+    .filter(Boolean)
+    .flatMap(line =>
+      line
+        .split(/[。！？]/)
+        .map(seg => seg.trim())
+        .filter(Boolean)
+    )
+
+  if (segments.length === 0) return null
+  const unique = Array.from(new Set(segments))
+  const normalized = unique
+    .map(normalizeSentence)
+    .filter(Boolean)
+
+  if (normalized.length === 0) return null
+
+  return normalized
+    .slice(0, 3)
+    .join('，')
+}
+
+function extractSummaryFromContent(content: string): string | null {
+  if (!content) return null
+  const normalized = content.replace(/\r/g, '')
+  const patterns = [
+    /第一項[:：]?\s*會議摘要[\s\n]*([\s\S]*?)(?:\n[-=]{3,}|\n\s*第二項|\n\s*第三項|$)/im,
+    /會議摘要[\s\n]*([\s\S]*?)(?:\n[-=]{3,}|\n\s*第二項|\n\s*第三項|$)/im
+  ]
+
+  for (const regex of patterns) {
+    const match = normalized.match(regex)
+    if (match && match[1]) {
+      const text = match[1].trim()
+      if (text) return text
+    }
+  }
+
+  return null
+}
+
+interface ParsedTodo {
+  content: string
+  assignee: string
+  dueDate: string
+}
+
+const IMPORTANT_ITEMS_CACHE_KEYS = [
+  'important-items-pending-50',
+  'important-items-all-50',
+  'important-items-pending-100',
+  'important-items-all-100'
+]
+
+function clearImportantItemsCache() {
+  IMPORTANT_ITEMS_CACHE_KEYS.forEach(key => cache.delete(key))
+}
+
+function parseDeadlineText(text: string | undefined, meetingDate: string): string {
+  const meeting = meetingDate ? new Date(meetingDate) : new Date()
+  const fallback = toISODateString(meeting)
+  if (!text) return fallback
+
+  const normalized = text.replace(/\s+/g, ' ').trim()
+  const fullMatch = normalized.match(/(\d{4})[\/\-\.年](\d{1,2})[\/\-\.月](\d{1,2})/)
+  if (fullMatch) {
+    const [, yearStr, monthStr, dayStr] = fullMatch
+    const date = new Date(Date.UTC(Number(yearStr), Number(monthStr) - 1, Number(dayStr)))
+    return toISODateString(date)
+  }
+
+  const monthDayMatch = normalized.match(/(\d{1,2})(?:[\/\-\.月])(\d{1,2})(?:日)?/)
+  if (monthDayMatch) {
+    let year = meeting.getFullYear()
+    const month = Number(monthDayMatch[1])
+    const day = Number(monthDayMatch[2])
+    if (!Number.isNaN(meeting.getTime())) {
+      const meetingMonth = meeting.getMonth() + 1
+      if (month < meetingMonth - 1) {
+        year += 1
+      }
+    }
+    const date = new Date(Date.UTC(year, month - 1, day))
+    return toISODateString(date)
+  }
+
+  return fallback
+}
+
+function parseTodoLine(line: string, meetingDate: string): ParsedTodo | null {
+  const trimmed = line.trim()
+  if (!trimmed) return null
+
+  if (
+    trimmed.includes('內容') &&
+    trimmed.includes('負責') &&
+    trimmed.includes('預計完成')
+  ) {
+    return null
+  }
+
+  const tableTodo = parseTableTodoLine(trimmed, meetingDate)
+  if (tableTodo) return tableTodo
+
+  const indicatorMatch = trimmed.match(/^(\d+[\.\)．、]?|[-*•▪])\s*/)
+  if (!indicatorMatch) return null
+
+  let working = trimmed.slice(indicatorMatch[0].length).trim()
+  if (!working) return null
+
+  let description = working
+  let metadata = ''
+
+  const periodIndex = working.indexOf('。')
+  if (periodIndex !== -1) {
+    description = working.slice(0, periodIndex).trim()
+    metadata = working.slice(periodIndex + 1).trim()
+  }
+
+  if (!metadata) {
+    const dashSplit = working.split(/\s+-\s+/)
+    if (dashSplit.length > 1) {
+      description = dashSplit[0].trim()
+      metadata = dashSplit.slice(1).join(' ').trim()
+    }
+  }
+
+  if (!metadata) {
+    const colonIndex = working.indexOf('：')
+    if (colonIndex !== -1) {
+      description = working.slice(0, colonIndex).trim()
+      metadata = working.slice(colonIndex + 1).trim()
+    }
+  }
+
+  if (!metadata) {
+    metadata = working.replace(description, '').trim()
+  }
+
+  metadata = metadata.replace(/^[\-。、，,\s]+/, '').replace(/[。]+$/, '').trim()
+  if (!description || !metadata) return null
+
+  const tokens = metadata.split(/\s+/).filter(Boolean)
+  if (tokens.length === 0) return null
+
+  const assignee = tokens.shift()!
+  if (!assignee) return null
+
+  const deadlineText = tokens.join(' ')
+  const dueDate = parseDeadlineText(deadlineText, meetingDate)
+
+  return {
+    content: description,
+    assignee,
+    dueDate
+  }
+}
+
+function parseTableTodoLine(line: string, meetingDate: string): ParsedTodo | null {
+  const cleaned = line.replace(/\u00A0/g, ' ').trim()
+  if (!cleaned) return null
+
+  const parts = cleaned.split(/\s*[|｜]\s*/).map(part => part.trim()).filter(Boolean)
+  if (parts.length < 3) return null
+
+  const [content, assigneeRaw, dueRaw] = parts
+  if (!content || !assigneeRaw || !dueRaw) return null
+
+  const assignee = assigneeRaw.split(/[、,，\/&]/)[0].trim() || assigneeRaw
+  const dueDate = dueRaw.trim() || meetingDate
+
+  if (!content.trim() || !assignee.trim()) return null
+
+  return {
+    content: content.trim(),
+    assignee,
+    dueDate
+  }
+}
+
+function extractTodosFromContent(content: string, meetingDate: string): ParsedTodo[] {
+  const lines = content.split(/\r?\n/).map(line => line.trim()).filter(Boolean)
+  const todos: ParsedTodo[] = []
+  const todoSectionKeywords = ['代辦', '待辦', '行動項目', '行動清單', 'action']
+  let inTodoSection = false
+  let todoSectionFound = false
+
+  lines.forEach(line => {
+    const normalizedCompact = line.replace(/\s+/g, '').toLowerCase()
+    if (todoSectionKeywords.some(keyword => normalizedCompact.includes(keyword.toLowerCase()))) {
+      inTodoSection = true
+      todoSectionFound = true
+      return
+    }
+
+  if (inTodoSection && /^第[一二三四五六七八九十]/.test(line)) {
+    inTodoSection = false
+    return
+  }
+
+    if (!inTodoSection) return
+
+    const todo = parseTodoLine(line, meetingDate)
+    if (todo) todos.push(todo)
+  })
+
+  if (!todoSectionFound) {
+    console.log('[meeting-records] 未找到代辦事項段落，略過同步')
+    return []
+  }
+
+  return todos
+}
+
+async function syncTodosToImportantItems(
+  supabase: ReturnType<typeof createClient>,
+  todos: ParsedTodo[]
+) {
+  if (!todos.length) return
+
+  const payload = todos.slice(0, 20).map(todo => ({
+    date: todo.dueDate,
+    content: todo.content,
+    assignee: todo.assignee,
+    completed: false
+  }))
+
+  const { error } = await supabase.from('important_items').insert(payload)
+  if (error) {
+    console.error('同步會議代辦事項失敗:', error)
+  } else {
+    clearImportantItemsCache()
+    console.log(`已同步 ${payload.length} 筆會議代辦至重要事項`)
   }
 }
 
@@ -120,10 +372,19 @@ export async function POST(request: NextRequest) {
 
     if (Array.isArray(tags)) payload.tags = tags
 
-    // 若有 OpenAI API key，嘗試自動產生三點式摘要（混合模式：可被 client 提供的 summary 覆寫）
-    const autoSummary = await generateThreeBulletSummary(content)
-    if (autoSummary) payload.summary = autoSummary
-    if (typeof body.summary === 'string') payload.summary = body.summary
+    let computedSummary: string | null = null
+    if (typeof body.summary === 'string' && body.summary.trim()) {
+      computedSummary = body.summary.trim()
+    } else {
+      computedSummary = extractSummaryFromContent(content)
+      if (!computedSummary) {
+        computedSummary = await generateThreeBulletSummary(content)
+      }
+      if (!computedSummary) {
+        computedSummary = generateFallbackSummary(content)
+      }
+    }
+    if (computedSummary) payload.summary = computedSummary
 
     const { data, error } = await supabase
       .from('meeting_records')
@@ -135,7 +396,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: '新增會議記錄失敗' }, { status: 500 })
     }
 
-    return NextResponse.json(data[0])
+    const createdRecord = data[0]
+    if (createdRecord) {
+      const todos = extractTodosFromContent(content, meeting_date)
+      if (todos.length) {
+        await syncTodosToImportantItems(supabase, todos)
+      }
+    }
+
+    return NextResponse.json(createdRecord)
   } catch (error) {
     console.error('新增會議記錄失敗:', error)
     return NextResponse.json({ error: '新增會議記錄失敗' }, { status: 500 })
@@ -165,12 +434,24 @@ export async function PUT(request: NextRequest) {
 
     // 如果 content 有更新且 client 沒有提供 summary，嘗試自動產生新的三點式摘要
     if (typeof content !== 'undefined' && typeof body.summary !== 'string') {
-      const newSummary = await generateThreeBulletSummary(String(content))
+      const contentString = String(content)
+      let newSummary = extractSummaryFromContent(contentString)
+      if (!newSummary) {
+        newSummary = await generateThreeBulletSummary(contentString)
+      }
+      if (!newSummary) {
+        newSummary = generateFallbackSummary(contentString)
+      }
       if (newSummary) updatePayload.summary = newSummary
     }
 
     // 若 client 提供 summary，則以 client 為準
-    if (typeof body.summary === 'string') updatePayload.summary = body.summary
+    if (typeof body.summary === 'string') {
+      const trimmed = body.summary.trim()
+      if (trimmed) {
+        updatePayload.summary = trimmed
+      }
+    }
 
     const { data, error } = await supabase
       .from('meeting_records')
