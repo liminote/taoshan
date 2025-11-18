@@ -2,9 +2,30 @@ import { createClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
 import { GoogleGenerativeAI } from '@google/generative-ai'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
-const supabase = createClient(supabaseUrl, supabaseKey)
+let supabaseClient: ReturnType<typeof createClient> | null = null
+function getSupabaseClient() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  const supabaseKey = serviceRoleKey || anonKey
+
+  if (!supabaseUrl || !supabaseKey) {
+    throw new Error('Supabase environment variables are not configured')
+  }
+
+  if (!serviceRoleKey) {
+    console.warn('[meeting-records] SUPABASE_SERVICE_ROLE_KEY not set, falling back to anon key. Writes may be limited by RLS.')
+  }
+
+  if (!supabaseClient) {
+    supabaseClient = createClient(supabaseUrl, supabaseKey, {
+      auth: { persistSession: false, autoRefreshToken: false }
+    })
+  }
+
+  return supabaseClient
+}
+
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY || '')
 
 async function generateThreeBulletSummary(content: string): Promise<string | null> {
@@ -39,6 +60,7 @@ async function generateThreeBulletSummary(content: string): Promise<string | nul
 
 export async function GET(request: NextRequest) {
   try {
+    const supabase = getSupabaseClient()
     const { searchParams } = new URL(request.url)
     const q = searchParams.get('q')
     const tag = searchParams.get('tag')
@@ -77,6 +99,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    const supabase = getSupabaseClient()
     const body = await request.json()
     const { meeting_date, content, tags } = body
 
@@ -121,6 +144,7 @@ export async function POST(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
+    const supabase = getSupabaseClient()
     const body = await request.json()
 
     const { id, meeting_date, content, tags, completed, archived } = body
@@ -168,6 +192,7 @@ export async function PUT(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
+    const supabase = getSupabaseClient()
     const { searchParams } = new URL(request.url)
     const id = searchParams.get('id')
 
