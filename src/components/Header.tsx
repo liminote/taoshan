@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation'
 
 export default function Header() {
   const pathname = usePathname()
-  
+
   const navigation = [
     {
       name: '報表管理',
@@ -35,6 +35,15 @@ export default function Header() {
       )
     },
     {
+      name: '客人需求確認',
+      href: '/guest-confirmation',
+      icon: (
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+        </svg>
+      )
+    },
+    {
       name: 'AI生成貼文',
       href: 'https://script.google.com/macros/s/AKfycbw4e7g2xf7tAkYhd7Lp8jIOswrG5mwTfnO-JiEkJkqbW3zXrKwihQZAz0y2ar2kqihu/exec',
       external: true,
@@ -54,8 +63,8 @@ export default function Header() {
         <div className="flex items-center justify-between h-16">
           {/* 左側標題 */}
           <div className="flex items-center space-x-4">
-            <Link 
-              href="/" 
+            <Link
+              href="/"
               className="flex items-center space-x-3 hover:opacity-80 transition-opacity"
             >
               <div className="w-8 h-8 bg-melon rounded-lg flex items-center justify-center">
@@ -74,7 +83,7 @@ export default function Header() {
             {navigation.map((item) => {
               const isActive = !item.external && pathname.startsWith(item.href)
               const isExternal = item.external
-              
+
               if (isExternal) {
                 return (
                   <a
@@ -92,16 +101,15 @@ export default function Header() {
                   </a>
                 )
               }
-              
+
               return (
                 <Link
                   key={item.name}
                   href={item.href}
-                  className={`inline-flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-                    isActive
+                  className={`inline-flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${isActive
                       ? 'bg-emerald-600 text-white shadow-sm'
                       : 'text-gray-600 hover:text-emerald-600 hover:bg-emerald-50'
-                  }`}
+                    }`}
                 >
                   {item.icon}
                   <span>{item.name}</span>
@@ -130,7 +138,7 @@ export default function Header() {
           {navigation.map((item) => {
             const isActive = !item.external && pathname.startsWith(item.href)
             const isExternal = item.external
-            
+
             if (isExternal) {
               return (
                 <a
@@ -148,16 +156,15 @@ export default function Header() {
                 </a>
               )
             }
-            
+
             return (
               <Link
                 key={item.name}
                 href={item.href}
-                className={`flex items-center space-x-3 px-3 py-2 rounded-md text-sm font-medium ${
-                  isActive
+                className={`flex items-center space-x-3 px-3 py-2 rounded-md text-sm font-medium ${isActive
                     ? 'bg-emerald-600 text-white'
                     : 'text-gray-600 hover:text-emerald-600 hover:bg-emerald-50'
-                }`}
+                  }`}
               >
                 {item.icon}
                 <span>{item.name}</span>
