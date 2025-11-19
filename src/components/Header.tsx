@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { useState } from 'react'
 
 export default function Header() {
   const pathname = usePathname()
@@ -55,6 +56,8 @@ export default function Header() {
     }
   ]
 
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+
   // 首頁也顯示 header
 
   return (
@@ -107,8 +110,8 @@ export default function Header() {
                   key={item.name}
                   href={item.href}
                   className={`inline-flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${isActive
-                      ? 'bg-emerald-600 text-white shadow-sm'
-                      : 'text-gray-600 hover:text-emerald-600 hover:bg-emerald-50'
+                    ? 'bg-emerald-600 text-white shadow-sm'
+                    : 'text-gray-600 hover:text-emerald-600 hover:bg-emerald-50'
                     }`}
                 >
                   {item.icon}
@@ -122,57 +125,68 @@ export default function Header() {
           <div className="md:hidden">
             <button
               type="button"
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               className="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500"
             >
-              <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
+              {isMobileMenuOpen ? (
+                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              ) : (
+                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+              )}
             </button>
           </div>
         </div>
       </div>
 
-      {/* 行動版選單（可以之後展開） */}
-      <div className="md:hidden">
-        <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-          {navigation.map((item) => {
-            const isActive = !item.external && pathname.startsWith(item.href)
-            const isExternal = item.external
+      {/* 行動版選單 */}
+      {isMobileMenuOpen && (
+        <div className="md:hidden border-t border-gray-100">
+          <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-white shadow-lg">
+            {navigation.map((item) => {
+              const isActive = !item.external && pathname.startsWith(item.href)
+              const isExternal = item.external
 
-            if (isExternal) {
+              if (isExternal) {
+                return (
+                  <a
+                    key={item.name}
+                    href={item.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="flex items-center space-x-3 px-3 py-3 rounded-md text-base font-medium text-gray-600 hover:text-emerald-600 hover:bg-emerald-50"
+                  >
+                    {item.icon}
+                    <span>{item.name}</span>
+                    <svg className="w-3 h-3 ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                    </svg>
+                  </a>
+                )
+              }
+
               return (
-                <a
+                <Link
                   key={item.name}
                   href={item.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center space-x-3 px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:text-emerald-600 hover:bg-emerald-50"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className={`flex items-center space-x-3 px-3 py-3 rounded-md text-base font-medium ${isActive
+                    ? 'bg-emerald-600 text-white'
+                    : 'text-gray-600 hover:text-emerald-600 hover:bg-emerald-50'
+                    }`}
                 >
                   {item.icon}
                   <span>{item.name}</span>
-                  <svg className="w-3 h-3 ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                  </svg>
-                </a>
+                </Link>
               )
-            }
-
-            return (
-              <Link
-                key={item.name}
-                href={item.href}
-                className={`flex items-center space-x-3 px-3 py-2 rounded-md text-sm font-medium ${isActive
-                    ? 'bg-emerald-600 text-white'
-                    : 'text-gray-600 hover:text-emerald-600 hover:bg-emerald-50'
-                  }`}
-              >
-                {item.icon}
-                <span>{item.name}</span>
-              </Link>
-            )
-          })}
+            })}
+          </div>
         </div>
-      </div>
+      )}
     </header>
   )
 }

@@ -170,10 +170,10 @@ export default function ConfirmationForm() {
     return (
         <div className="max-w-md mx-auto bg-white min-h-screen pb-20">
             <div className="sticky top-0 z-10 bg-white border-b px-4 py-3 flex justify-between items-center shadow-sm">
-                <h1 className="text-lg font-bold">客人需求確認</h1>
+                <h1 className="text-lg font-bold text-gray-800">客人需求確認</h1>
                 <button
                     onClick={() => router.push('/guest-confirmation/history')}
-                    className="text-sm text-blue-600 font-medium"
+                    className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors"
                 >
                     歷史紀錄
                 </button>
@@ -230,8 +230,8 @@ export default function ConfirmationForm() {
                                     key={type}
                                     onClick={() => setDiningType(type)}
                                     className={`p-3 rounded-lg border text-sm font-medium transition-colors ${diningType === type
-                                            ? 'bg-blue-50 border-blue-500 text-blue-700'
-                                            : 'bg-white border-gray-200 text-gray-600'
+                                        ? 'bg-blue-50 border-blue-500 text-blue-700'
+                                        : 'bg-white border-gray-200 text-gray-600'
                                         }`}
                                 >
                                     {type}
@@ -257,8 +257,8 @@ export default function ConfirmationForm() {
                                     key={purpose}
                                     onClick={() => setDiningPurpose(purpose)}
                                     className={`p-3 rounded-lg border text-sm font-medium transition-colors ${diningPurpose === purpose
-                                            ? 'bg-blue-50 border-blue-500 text-blue-700'
-                                            : 'bg-white border-gray-200 text-gray-600'
+                                        ? 'bg-blue-50 border-blue-500 text-blue-700'
+                                        : 'bg-white border-gray-200 text-gray-600'
                                         }`}
                                 >
                                     {purpose}
@@ -292,8 +292,8 @@ export default function ConfirmationForm() {
                                     <label
                                         key={opt}
                                         className={`flex items-center p-2 rounded border cursor-pointer ${guest.requirements.includes(opt)
-                                                ? 'bg-white border-blue-500 ring-1 ring-blue-500'
-                                                : 'bg-white border-gray-200'
+                                            ? 'bg-white border-blue-500 ring-1 ring-blue-500'
+                                            : 'bg-white border-gray-200'
                                             }`}
                                     >
                                         <input
