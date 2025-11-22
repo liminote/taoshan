@@ -34,6 +34,49 @@ export default function MeetingRecordsPage() {
   const [isCreating, setIsCreating] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [showUploadModal, setShowUploadModal] = useState(false)
+  const [videoList, setVideoList] = useState<any[]>([])
+  const [isLoadingVideos, setIsLoadingVideos] = useState(false)
+  const [isProcessingVideo, setIsProcessingVideo] = useState(false)
+
+  const fetchVideoList = async () => {
+    try {
+      setIsLoadingVideos(true)
+      const res = await fetch('/api/meeting-records/list-videos')
+      const data = await res.json()
+      if (data.error) throw new Error(data.error)
+      setVideoList(data.files || [])
+    } catch (err) {
+      console.error('fetch videos error', err)
+      alert('無法讀取影片列表，請確認後端設定')
+    } finally {
+      setIsLoadingVideos(false)
+    }
+  }
+
+  const handleVideoSelect = async (fileId: string, fileName: string) => {
+    if (!confirm(`確定要處理影片「${fileName}」嗎？這可能需要幾分鐘的時間。`)) return
+
+    try {
+      setIsProcessingVideo(true)
+      const res = await fetch('/api/meeting-records/process-video', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fileId, fileName })
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || '處理失敗')
+
+      alert('會議記錄已生成！')
+      setShowUploadModal(false)
+      await fetchRecords()
+    } catch (err: any) {
+      console.error('process video error', err)
+      alert(`處理失敗: ${err.message}`)
+    } finally {
+      setIsProcessingVideo(false)
+    }
+  }
 
   const fetchRecords = async (searchQ?: string, searchTag?: string) => {
     try {
@@ -45,7 +88,7 @@ export default function MeetingRecordsPage() {
       const data = await res.json()
       const recs = Array.isArray(data) ? data : []
       setRecords(recs)
-      
+
       // 聚合所有 tags 供自動完成
       const tags = new Set<string>()
       recs.forEach((r: MeetingRecord) => {
@@ -206,23 +249,23 @@ export default function MeetingRecordsPage() {
         {/* 搜尋 & 建立按鈕 */}
         <div className="mb-6 flex gap-2">
           <form onSubmit={onSearch} className="flex-1 flex gap-2">
-            <input 
-              value={q} 
-              onChange={e => setQ(e.target.value)} 
-              placeholder="關鍵字搜尋..." 
+            <input
+              value={q}
+              onChange={e => setQ(e.target.value)}
+              placeholder="關鍵字搜尋..."
               className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-sm"
             />
-            <input 
-              value={tagFilter} 
-              onChange={e => setTagFilter(e.target.value)} 
-              placeholder="Tag 過濾" 
+            <input
+              value={tagFilter}
+              onChange={e => setTagFilter(e.target.value)}
+              placeholder="Tag 過濾"
               className="w-40 px-4 py-2 border border-gray-300 rounded-lg text-sm"
             />
             <button type="submit" className="px-4 py-2 bg-blue-500 text-white rounded-lg text-sm hover:bg-blue-600">
               搜尋
             </button>
           </form>
-          <button 
+          <button
             onClick={() => {
               setNewRecord(prev => ({
                 meeting_date: prev.meeting_date || getTodayString(),
@@ -230,12 +273,75 @@ export default function MeetingRecordsPage() {
                 tags: prev.tags
               }))
               setShowCreateForm(true)
-            }} 
+            }}
             className="px-4 py-2 bg-green-500 text-white rounded-lg text-sm hover:bg-green-600"
           >
             + 新增記錄
           </button>
+          <button
+            onClick={() => {
+              setShowUploadModal(true)
+              fetchVideoList()
+            }}
+            className="px-4 py-2 bg-indigo-500 text-white rounded-lg text-sm hover:bg-indigo-600"
+          >
+            音檔上傳
+          </button>
         </div>
+
+        {/* 音檔上傳 Modal */}
+        {showUploadModal && (
+          <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50">
+            <div className="bg-white max-w-2xl w-full rounded-2xl p-6 shadow-lg max-h-[80vh] flex flex-col">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-semibold">選擇會議影片 (Meet Recordings)</h2>
+                <button onClick={() => setShowUploadModal(false)} className="text-gray-500 text-lg">✕</button>
+              </div>
+
+              <div className="flex-1 overflow-y-auto min-h-[300px]">
+                {isLoadingVideos ? (
+                  <div className="text-center py-12 text-gray-500">載入影片列表中...</div>
+                ) : isProcessingVideo ? (
+                  <div className="text-center py-12 text-gray-500 flex flex-col items-center gap-4">
+                    <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-500"></div>
+                    <p>正在處理影片並生成會議記錄...</p>
+                    <p className="text-sm text-gray-400">這可能需要幾分鐘，請勿關閉視窗</p>
+                  </div>
+                ) : videoList.length === 0 ? (
+                  <div className="text-center py-12 text-gray-500">
+                    找不到影片，請確認 Google Drive 的 "Meet Recordings" 資料夾中有 MP4 檔案。
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {videoList.map((file) => (
+                      <button
+                        key={file.id}
+                        onClick={() => handleVideoSelect(file.id, file.name)}
+                        className="w-full text-left p-4 border border-gray-200 rounded-lg hover:bg-indigo-50 transition flex justify-between items-center group"
+                      >
+                        <div>
+                          <div className="font-medium text-gray-900 group-hover:text-indigo-700">{file.name}</div>
+                          <div className="text-xs text-gray-500 mt-1">{new Date(file.createdTime).toLocaleString()}</div>
+                        </div>
+                        <div className="text-indigo-500 opacity-0 group-hover:opacity-100 transition">選擇 →</div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="mt-6 flex justify-end">
+                <button
+                  onClick={() => setShowUploadModal(false)}
+                  disabled={isProcessingVideo}
+                  className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                >
+                  取消
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* 建立表單 Modal */}
         {showCreateForm && (
@@ -249,19 +355,19 @@ export default function MeetingRecordsPage() {
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">會議日期</label>
-                  <input 
+                  <input
                     type="date"
-                    value={newRecord.meeting_date} 
-                    onChange={e => setNewRecord({ ...newRecord, meeting_date: e.target.value })} 
+                    value={newRecord.meeting_date}
+                    onChange={e => setNewRecord({ ...newRecord, meeting_date: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg"
                   />
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">會議內容</label>
-                  <textarea 
-                    value={newRecord.content} 
-                    onChange={e => setNewRecord({ ...newRecord, content: e.target.value })} 
+                  <textarea
+                    value={newRecord.content}
+                    onChange={e => setNewRecord({ ...newRecord, content: e.target.value })}
                     rows={6}
                     placeholder="輸入會議內容..."
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg"
@@ -270,9 +376,9 @@ export default function MeetingRecordsPage() {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">標籤（用逗號分隔）</label>
-                  <input 
-                    value={newRecord.tags} 
-                    onChange={e => setNewRecord({ ...newRecord, tags: e.target.value })} 
+                  <input
+                    value={newRecord.tags}
+                    onChange={e => setNewRecord({ ...newRecord, tags: e.target.value })}
                     placeholder="例：產品, 重要"
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg"
                   />
@@ -281,13 +387,13 @@ export default function MeetingRecordsPage() {
               </div>
 
               <div className="mt-6 flex justify-end gap-2">
-                <button 
-                  onClick={() => setShowCreateForm(false)} 
+                <button
+                  onClick={() => setShowCreateForm(false)}
                   className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
                 >
                   取消
                 </button>
-                <button 
+                <button
                   onClick={createNewRecord}
                   disabled={isCreating}
                   className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:opacity-50"
@@ -310,8 +416,8 @@ export default function MeetingRecordsPage() {
           ) : (
             <div className="space-y-3">
               {records.map(rec => (
-                <div 
-                  key={rec.id} 
+                <div
+                  key={rec.id}
                   className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition"
                   onClick={() => openDetail(rec)}
                 >
@@ -357,7 +463,7 @@ export default function MeetingRecordsPage() {
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">會議日期</label>
-                  <input 
+                  <input
                     type="date"
                     value={editingDate}
                     onChange={e => setEditingDate(e.target.value)}
@@ -377,19 +483,19 @@ export default function MeetingRecordsPage() {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">重點摘要（可編輯）</label>
-                  <textarea 
-                    value={editingSummary} 
-                    onChange={e => setEditingSummary(e.target.value)} 
-                    rows={4} 
+                  <textarea
+                    value={editingSummary}
+                    onChange={e => setEditingSummary(e.target.value)}
+                    rows={4}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
                   />
                 </div>
 
                 <div className="relative">
                   <label className="block text-sm font-medium text-gray-700 mb-2">標籤（用逗號分隔）</label>
-                  <input 
-                    value={editingTags} 
-                    onChange={e => handleTagInputChange(e.target.value)} 
+                  <input
+                    value={editingTags}
+                    onChange={e => handleTagInputChange(e.target.value)}
                     placeholder="例：產品, 重要"
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
                   />
@@ -411,25 +517,24 @@ export default function MeetingRecordsPage() {
               </div>
 
               <div className="mt-6 flex justify-end gap-2">
-                <button 
+                <button
                   onClick={deleteRecord}
                   disabled={isDeleting}
                   className="px-4 py-2 border border-red-200 text-red-600 rounded-lg hover:bg-red-50 disabled:opacity-50"
                 >
                   {isDeleting ? '刪除中...' : '刪除'}
                 </button>
-                <button 
-                  onClick={closeDetail} 
+                <button
+                  onClick={closeDetail}
                   className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
                 >
                   取消
                 </button>
-                <button 
+                <button
                   onClick={saveDetail}
-                  disabled={isSaving} 
-                  className={`px-4 py-2 text-white rounded-lg transition-colors ${
-                    isSaving ? 'bg-blue-300 cursor-not-allowed' : 'bg-blue-500 hover:bg-blue-600'
-                  }`}
+                  disabled={isSaving}
+                  className={`px-4 py-2 text-white rounded-lg transition-colors ${isSaving ? 'bg-blue-300 cursor-not-allowed' : 'bg-blue-500 hover:bg-blue-600'
+                    }`}
                 >
                   {isSaving ? '儲存中...' : '儲存'}
                 </button>
