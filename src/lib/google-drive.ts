@@ -25,6 +25,17 @@ export async function getGoogleDriveClient() {
     }
 }
 
+export function getServiceAccountEmail(): string {
+    try {
+        const credentials = JSON.parse(
+            process.env.GOOGLE_SHEETS_CREDENTIALS || '{}'
+        )
+        return credentials.client_email || '未知'
+    } catch (e) {
+        return '未知'
+    }
+}
+
 export async function findFolderId(folderName: string): Promise<string | null> {
     const drive = await getGoogleDriveClient()
     const res = await drive.files.list({
