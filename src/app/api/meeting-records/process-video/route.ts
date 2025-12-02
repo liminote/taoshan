@@ -86,19 +86,25 @@ export async function POST(request: NextRequest) {
         // 4. Generate Content
         const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' })
         const prompt = `
-      請分析這個會議影片/音檔。
+      請分析這個會議影片/音檔，並產出 JSON 格式的會議記錄。
+      
+      【重要規則】
+      1. 人名修正：若聽到 "Louis" 請修正為 "Luis"，若聽到 "Alen" 請修正為 "Allen"。
+      2. 風格要求：如實陳述，不要加油添醋，不要廢話，不要使用過度修飾的形容詞（如「旨在將此次的挫敗轉化為...」這類話術）。
+      3. 格式要求：請嚴格遵守以下 JSON 結構。
+
       請輸出一個 JSON 物件，包含以下欄位：
-      1. meeting_date: 會議日期 (YYYY-MM-DD)，如果無法從影片判斷，請回傳 null。
-      2. content: 詳細的會議記錄內容 (繁體中文)。
-      3. summary: 2-3 句的重點摘要 (繁體中文)。
-      4. tags: 相關標籤陣列 (例如 ["產品", "行銷"])。
-      5. action_items: 代辦事項陣列，每個項目包含:
+      1. meeting_date: 會議日期 (YYYY-MM-DD)，若無法判斷請回傳 null。
+      2. summary: 第一大項：會議摘要。約 100-200 字，描述討論事項，不需列出數字與待辦。
+      3. content: 第二大項：會議內容。以條列式整理討論內容 (繁體中文)。請將多點內容合併為一個長字串，用換行符號分隔。
+      4. tags: 相關標籤陣列。
+      5. action_items: 第三大項：待辦事項陣列。每個項目包含：
          - content: 事項內容
          - assignee: 負責人 (若無則為 null)
          - dueDate: 預計完成日 (YYYY-MM-DD，若無則為 null)
-
-      請確保回傳的是純 JSON 格式，不要有 markdown code block。
-    `
+         
+      注意：JSON 的 content 欄位請直接回傳整理好的條列式文字，不要回傳 JSON array。
+      `
 
         const result = await model.generateContent([
             { fileData: { mimeType: file.mimeType, fileUri: file.uri } },
