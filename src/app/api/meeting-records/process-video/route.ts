@@ -148,13 +148,13 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ success: true, record: insertedRecord })
 
     } catch (error: any) {
-        console.error('Process video error:', error)
+        console.error('Processing error:', error)
         // Cleanup temp file on error
         if (tempFilePath && fs.existsSync(tempFilePath)) {
             fs.unlinkSync(tempFilePath)
         }
         return NextResponse.json(
-            { error: error.message || '處理影片失敗' },
+            { error: `Video processing failed: ${error.message}` },
             { status: 500 }
         )
     }
