@@ -6,6 +6,8 @@ import { downloadFileToTmp } from '@/lib/google-drive'
 import fs from 'fs'
 import { cache } from '@/lib/cache'
 
+export const maxDuration = 60; // Allow up to 60 seconds for processing (if plan allows)
+
 // Initialize Supabase
 function getSupabaseClient() {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
