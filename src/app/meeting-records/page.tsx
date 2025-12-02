@@ -38,6 +38,7 @@ export default function MeetingRecordsPage() {
   const [videoList, setVideoList] = useState<any[]>([])
   const [isLoadingVideos, setIsLoadingVideos] = useState(false)
   const [isProcessingVideo, setIsProcessingVideo] = useState(false)
+  const [isEditing, setIsEditing] = useState(false)
 
   const [emptyMessage, setEmptyMessage] = useState('')
 
@@ -127,6 +128,7 @@ export default function MeetingRecordsPage() {
     setEditingDate(dateSource)
     setEditingContent(rec.content)
     setEditingTags((rec.tags || []).join(', '))
+    setIsEditing(false)
   }
 
   const closeDetail = () => {
@@ -549,89 +551,143 @@ export default function MeetingRecordsPage() {
               <div className="flex justify-between items-start mb-4">
                 <div>
                   <div className="text-sm text-gray-500">{formatDate(selected.meeting_date || selected.created_at)}</div>
-                  <h2 className="text-xl font-semibold mt-1">會議詳情</h2>
+                  <h2 className="text-xl font-semibold mt-1">
+                    {isEditing ? '編輯會議記錄' : '會議詳情'}
+                  </h2>
                 </div>
                 <button onClick={closeDetail} className="text-gray-400 text-2xl hover:text-gray-600">✕</button>
               </div>
 
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">會議日期</label>
-                  <input
-                    type="date"
-                    value={editingDate}
-                    onChange={e => setEditingDate(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                  />
-                </div>
+              {isEditing ? (
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">會議日期</label>
+                    <input
+                      type="date"
+                      value={editingDate}
+                      onChange={e => setEditingDate(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                    />
+                  </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">完整內容</label>
-                  <textarea
-                    value={editingContent}
-                    onChange={e => setEditingContent(e.target.value)}
-                    rows={6}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                  />
-                </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">完整內容</label>
+                    <textarea
+                      value={editingContent}
+                      onChange={e => setEditingContent(e.target.value)}
+                      rows={10}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm font-mono"
+                    />
+                  </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">重點摘要（可編輯）</label>
-                  <textarea
-                    value={editingSummary}
-                    onChange={e => setEditingSummary(e.target.value)}
-                    rows={4}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                  />
-                </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">重點摘要</label>
+                    <textarea
+                      value={editingSummary}
+                      onChange={e => setEditingSummary(e.target.value)}
+                      rows={4}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                    />
+                  </div>
 
-                <div className="relative">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">標籤（用逗號分隔）</label>
-                  <input
-                    value={editingTags}
-                    onChange={e => handleTagInputChange(e.target.value)}
-                    placeholder="例：產品, 重要"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                  />
-                  {tagSuggestions.length > 0 && (
-                    <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg z-10">
-                      {tagSuggestions.map(tag => (
-                        <button
-                          key={tag}
-                          type="button"
-                          onClick={() => insertSuggestion(tag)}
-                          className="block w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                        >
-                          {tag}
-                        </button>
-                      ))}
+                  <div className="relative">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">標籤（用逗號分隔）</label>
+                    <input
+                      value={editingTags}
+                      onChange={e => handleTagInputChange(e.target.value)}
+                      placeholder="例：產品, 重要"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                    />
+                    {tagSuggestions.length > 0 && (
+                      <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg z-10">
+                        {tagSuggestions.map(tag => (
+                          <button
+                            key={tag}
+                            type="button"
+                            onClick={() => insertSuggestion(tag)}
+                            className="block w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          >
+                            {tag}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  {selected.summary && (
+                    <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-100">
+                      <h3 className="text-sm font-medium text-yellow-800 mb-2">重點摘要</h3>
+                      <div className="text-sm text-yellow-900 whitespace-pre-line leading-relaxed">
+                        {selected.summary}
+                      </div>
+                    </div>
+                  )}
+
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-700 mb-2">完整內容</h3>
+                    <div className="text-sm text-gray-600 whitespace-pre-line leading-relaxed bg-gray-50 p-4 rounded-lg border border-gray-100">
+                      {selected.content}
+                    </div>
+                  </div>
+
+                  {selected.tags && selected.tags.length > 0 && (
+                    <div>
+                      <h3 className="text-sm font-medium text-gray-700 mb-2">標籤</h3>
+                      <div className="flex flex-wrap gap-2">
+                        {selected.tags.map(tag => (
+                          <span key={tag} className="inline-block px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full">
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
                     </div>
                   )}
                 </div>
-              </div>
+              )}
 
-              <div className="mt-6 flex justify-end gap-2">
-                <button
-                  onClick={deleteRecord}
-                  disabled={isDeleting}
-                  className="px-4 py-2 border border-red-200 text-red-600 rounded-lg hover:bg-red-50 disabled:opacity-50"
-                >
-                  {isDeleting ? '刪除中...' : '刪除'}
-                </button>
-                <button
-                  onClick={closeDetail}
-                  className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
-                >
-                  取消
-                </button>
-                <button
-                  onClick={saveDetail}
-                  disabled={isSaving}
-                  className={`px-4 py-2 text-white rounded-lg transition-colors ${isSaving ? 'bg-blue-300 cursor-not-allowed' : 'bg-blue-500 hover:bg-blue-600'
-                    }`}
-                >
-                  {isSaving ? '儲存中...' : '儲存'}
-                </button>
+              <div className="mt-6 flex justify-end gap-2 pt-4 border-t">
+                {isEditing ? (
+                  <>
+                    <button
+                      onClick={() => setIsEditing(false)}
+                      className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+                    >
+                      取消編輯
+                    </button>
+                    <button
+                      onClick={saveDetail}
+                      disabled={isSaving}
+                      className={`px-4 py-2 text-white rounded-lg transition-colors ${isSaving ? 'bg-blue-300 cursor-not-allowed' : 'bg-blue-500 hover:bg-blue-600'
+                        }`}
+                    >
+                      {isSaving ? '儲存中...' : '儲存變更'}
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button
+                      onClick={deleteRecord}
+                      disabled={isDeleting}
+                      className="px-4 py-2 border border-red-200 text-red-600 rounded-lg hover:bg-red-50 disabled:opacity-50 mr-auto"
+                    >
+                      {isDeleting ? '刪除中...' : '刪除記錄'}
+                    </button>
+                    <button
+                      onClick={closeDetail}
+                      className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+                    >
+                      關閉
+                    </button>
+                    <button
+                      onClick={() => setIsEditing(true)}
+                      className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+                    >
+                      編輯
+                    </button>
+                  </>
+                )}
               </div>
             </div>
           </div>
