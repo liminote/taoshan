@@ -24,7 +24,7 @@ export default function Home() {
   })
   const [availableTags, setAvailableTags] = useState(['Allen', 'Luis', '香師傅', 'Vanny', '馬姐'])
   const [newTag, setNewTag] = useState('')
-  const [notification, setNotification] = useState<{type: 'success' | 'error', message: string} | null>(null)
+  const [notification, setNotification] = useState<{ type: 'success' | 'error', message: string } | null>(null)
   const [editingItem, setEditingItem] = useState<ImportantItem | null>(null)
   const [editForm, setEditForm] = useState({ content: '', date: '', assignee: '' })
   const [isSavingEdit, setIsSavingEdit] = useState(false)
@@ -41,7 +41,7 @@ export default function Home() {
     return mapping[trimmed] || trimmed
   }
 
-  const boardAssignees = ['Allen', 'Luis', 'Vanny', '香師傅']
+  const boardAssignees = ['Allen', 'Luis', '馬姐', '香師傅']
   const boardSections = [...boardAssignees, '其他']
   const groupedItems = useMemo(() => {
     const map: Record<string, ImportantItem[]> = {}
@@ -66,24 +66,24 @@ export default function Home() {
   const fetchPendingItems = async (forceRefresh = false) => {
     try {
       setIsLoading(true)
-      
+
       // 使用優化後的API參數
       const queryParams = new URLSearchParams({
         pending: 'true',
         limit: '50'
       })
-      
+
       if (forceRefresh) {
         queryParams.set('refresh', 'true')
       }
-      
+
       const response = await fetch(`/api/important-items?${queryParams}`)
       const result = await response.json()
-      
+
       if (result.success) {
         // API已經過濾和排序，直接使用結果
         setPendingItems(result.data)
-        
+
         // 顯示快取狀態
         if (result.cached) {
           console.log('✅ 使用快取數據，快取時間:', new Date(result.cacheTimestamp).toLocaleTimeString())
@@ -111,7 +111,7 @@ export default function Home() {
           data: { id }
         })
       })
-      
+
       if (response.ok) {
         showNotification('success', '事項狀態已更新')
         fetchPendingItems(true) // 強制刷新以獲取最新數據
@@ -124,12 +124,12 @@ export default function Home() {
 
   const handleAddItem = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     if (!formData.content.trim() || !formData.assignee.trim() || !formData.date.trim()) {
       alert('請填寫完整資訊（包含預計完成時間）')
       return
     }
-    
+
     try {
       const response = await fetch('/api/important-items', {
         method: 'POST',
@@ -141,7 +141,7 @@ export default function Home() {
           data: formData
         })
       })
-      
+
       if (response.ok) {
         showNotification('success', '重要事項已成功新增')
         setFormData({
@@ -254,14 +254,13 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-6xl mx-auto">
-        
+
         {/* 通知訊息 */}
         {notification && (
-          <div className={`fixed top-4 right-4 z-50 px-4 py-3 rounded-lg shadow-lg transition-all duration-300 ${
-            notification.type === 'success' 
-              ? 'bg-green-500 text-white' 
+          <div className={`fixed top-4 right-4 z-50 px-4 py-3 rounded-lg shadow-lg transition-all duration-300 ${notification.type === 'success'
+              ? 'bg-green-500 text-white'
               : 'bg-red-500 text-white'
-          }`}>
+            }`}>
             <div className="flex items-center space-x-2">
               {notification.type === 'success' ? (
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -276,7 +275,7 @@ export default function Home() {
             </div>
           </div>
         )}
-        
+
         {/* 重要事項清單 */}
         <div className="bg-white rounded-2xl shadow-lg border border-gray-200">
           <div className="p-6 border-b border-gray-200/50">
@@ -289,30 +288,30 @@ export default function Home() {
                 </div>
                 <h2 className="text-xl font-semibold text-gray-900">近期重要事項</h2>
                 <span className="text-sm text-gray-500">({pendingItems.length} 項待處理)</span>
-                
+
                 {/* 刷新按鈕 */}
-                <button 
+                <button
                   onClick={() => fetchPendingItems(true)}
                   disabled={isLoading}
                   className="ml-2 p-1.5 text-gray-400 hover:text-gray-600 disabled:text-gray-300 transition-colors"
                   title="刷新數據"
                 >
-                  <svg 
+                  <svg
                     className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`}
-                    fill="none" 
-                    stroke="currentColor" 
+                    fill="none"
+                    stroke="currentColor"
                     viewBox="0 0 24 24"
                   >
-                    <path 
-                      strokeLinecap="round" 
-                      strokeLinejoin="round" 
-                      strokeWidth={2} 
-                      d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" 
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
                     />
                   </svg>
                 </button>
               </div>
-              <button 
+              <button
                 onClick={() => setShowAddForm(!showAddForm)}
                 className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 hover:shadow-lg transition-all duration-300 hover:scale-105 flex items-center space-x-2"
               >
@@ -332,7 +331,7 @@ export default function Home() {
                     <input
                       type="text"
                       value={formData.date}
-                      onChange={(e) => setFormData({...formData, date: e.target.value})}
+                      onChange={(e) => setFormData({ ...formData, date: e.target.value })}
                       placeholder="例如：下週起、11/30 前"
                       className="w-full p-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-gray-900"
                       required
@@ -343,7 +342,7 @@ export default function Home() {
                     <input
                       type="text"
                       value={formData.content}
-                      onChange={(e) => setFormData({...formData, content: e.target.value})}
+                      onChange={(e) => setFormData({ ...formData, content: e.target.value })}
                       placeholder="請輸入重要事項內容..."
                       className="w-full p-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-gray-900 placeholder-gray-500"
                       required
@@ -358,12 +357,11 @@ export default function Home() {
                           <div key={tag} className="flex items-center space-x-1">
                             <button
                               type="button"
-                              onClick={() => setFormData({...formData, assignee: tag})}
-                              className={`px-3 py-1 rounded-full text-sm font-medium transition-all ${
-                                formData.assignee === tag 
-                                  ? 'bg-melon text-white' 
+                              onClick={() => setFormData({ ...formData, assignee: tag })}
+                              className={`px-3 py-1 rounded-full text-sm font-medium transition-all ${formData.assignee === tag
+                                  ? 'bg-melon text-white'
                                   : 'bg-white border border-gray-300 hover:bg-gray-50 text-gray-700'
-                              }`}
+                                }`}
                             >
                               {tag}
                             </button>
@@ -378,7 +376,7 @@ export default function Home() {
                           </div>
                         ))}
                       </div>
-                      
+
                       {/* 新增標籤區域 */}
                       <div className="flex space-x-2">
                         <input
@@ -397,7 +395,7 @@ export default function Home() {
                           +
                         </button>
                       </div>
-                      
+
                       {/* 已選擇顯示 */}
                       {formData.assignee && (
                         <div className="text-sm text-gray-600">
@@ -447,20 +445,20 @@ export default function Home() {
                 ))}
               </div>
             ) : (
-              <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 xl:grid-cols-4">
+              <div className="flex flex-col space-y-6">
                 {boardSections.map(section => {
                   const items = groupedItems[section] || []
                   return (
-                    <div key={section} className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm flex flex-col min-h-[320px]">
-                      <div className="flex items-center justify-between">
+                    <div key={section} className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
+                      <div className="flex items-center justify-between mb-4 border-b border-gray-100 pb-2">
                         <div className="flex items-center space-x-2">
                           <h3 className="text-lg font-semibold text-gray-900">{section}</h3>
                           <span className="text-sm text-gray-500">({items.length} 項)</span>
                         </div>
                       </div>
-                      <div className="mt-4 flex-1 flex flex-col space-y-3">
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         {items.length === 0 ? (
-                          <div className="border border-dashed border-gray-300 rounded-lg px-4 py-6 text-center text-sm text-gray-400">
+                          <div className="col-span-full border border-dashed border-gray-300 rounded-lg px-4 py-6 text-center text-sm text-gray-400">
                             尚無待辦事項
                           </div>
                         ) : (
@@ -470,8 +468,8 @@ export default function Home() {
                               className="relative flex flex-col bg-white border border-gray-200 rounded-xl shadow-sm p-4 cursor-pointer hover:border-blue-300 transition-colors"
                               onClick={() => openEditModal(item)}
                             >
-                              <p className="text-gray-900 font-medium whitespace-pre-line pr-10">{item.content.replace(/^\*/,'').trim()}</p>
-                              <span className={`mt-3 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getAssigneeColor(item.assignee)}`}>
+                              <p className="text-gray-900 font-medium whitespace-pre-line pr-10">{item.content.replace(/^\*/, '').trim()}</p>
+                              <span className={`mt-3 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getAssigneeColor(item.assignee)} w-fit`}>
                                 {item.assignee}
                               </span>
                               <div className="mt-4 text-sm text-gray-600 space-y-1">
@@ -502,7 +500,7 @@ export default function Home() {
 
             {/* 歷史記錄連結 */}
             <div className="mt-8 pt-4 border-t border-gray-200/50">
-              <Link 
+              <Link
                 href="/history"
                 className="inline-flex items-center space-x-2 text-primary hover:text-primary-700 transition-colors"
               >
