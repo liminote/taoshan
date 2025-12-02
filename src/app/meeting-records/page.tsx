@@ -39,13 +39,22 @@ export default function MeetingRecordsPage() {
   const [isLoadingVideos, setIsLoadingVideos] = useState(false)
   const [isProcessingVideo, setIsProcessingVideo] = useState(false)
 
+  const [emptyMessage, setEmptyMessage] = useState('')
+
   const fetchVideoList = async () => {
     try {
       setIsLoadingVideos(true)
+      setEmptyMessage('')
       const res = await fetch('/api/meeting-records/list-videos')
       const data = await res.json()
       if (data.error) throw new Error(data.error)
-      setVideoList(data.files || [])
+
+      const files = data.files || []
+      setVideoList(files)
+
+      if (files.length === 0 && data.message) {
+        setEmptyMessage(data.message)
+      }
     } catch (err) {
       console.error('fetch videos error', err)
       alert('無法讀取影片列表，請確認後端設定')
@@ -308,8 +317,8 @@ export default function MeetingRecordsPage() {
                     <p className="text-sm text-gray-400">這可能需要幾分鐘，請勿關閉視窗</p>
                   </div>
                 ) : videoList.length === 0 ? (
-                  <div className="text-center py-12 text-gray-500">
-                    找不到影片，請確認 Google Drive 的 "Meet Recordings" 資料夾中有 MP4 檔案。
+                  <div className="text-center py-12 text-gray-500 px-8 whitespace-pre-wrap">
+                    {emptyMessage || '找不到影片，請確認 Google Drive 的 "Meet Recordings" 資料夾中有 MP4 檔案。'}
                   </div>
                 ) : (
                   <div className="space-y-2">

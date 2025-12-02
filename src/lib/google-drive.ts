@@ -54,7 +54,19 @@ export async function listVideosInFolder(folderId: string) {
     // Search for MP4 files in the folder
     const res = await drive.files.list({
         q: `'${folderId}' in parents and mimeType='video/mp4' and trashed=false`,
-        fields: 'files(id, name, createdTime, size)',
+        fields: 'files(id, name, createdTime, size, mimeType)',
+        orderBy: 'createdTime desc',
+        pageSize: 20,
+    })
+
+    return res.data.files || []
+}
+
+export async function listFilesInFolder(folderId: string) {
+    const drive = await getGoogleDriveClient()
+    const res = await drive.files.list({
+        q: `'${folderId}' in parents and trashed=false`,
+        fields: 'files(id, name, createdTime, size, mimeType)',
         orderBy: 'createdTime desc',
         pageSize: 20,
     })
