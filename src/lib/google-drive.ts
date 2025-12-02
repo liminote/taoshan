@@ -51,11 +51,11 @@ export async function findFolderId(folderName: string): Promise<string | null> {
     return null
 }
 
-export async function listVideosInFolder(folderId: string) {
+export async function listMediaInFolder(folderId: string) {
     const drive = await getGoogleDriveClient()
-    // Search for MP4 files in the folder
+    // Search for MP4 video and common audio files
     const res = await drive.files.list({
-        q: `'${folderId}' in parents and mimeType='video/mp4' and trashed=false`,
+        q: `'${folderId}' in parents and (mimeType='video/mp4' or mimeType contains 'audio/') and trashed=false`,
         fields: 'files(id, name, createdTime, size, mimeType)',
         orderBy: 'createdTime desc',
         pageSize: 20,

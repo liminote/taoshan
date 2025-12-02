@@ -1,6 +1,6 @@
 
 import { NextRequest, NextResponse } from 'next/server'
-import { findFolderId, listVideosInFolder, listFilesInFolder, getServiceAccountEmail } from '@/lib/google-drive'
+import { findFolderId, listMediaInFolder, listFilesInFolder, getServiceAccountEmail } from '@/lib/google-drive'
 
 export async function GET(request: NextRequest) {
     try {
@@ -18,8 +18,8 @@ export async function GET(request: NextRequest) {
             )
         }
 
-        // 2. List videos
-        const files = await listVideosInFolder(folderId)
+        // 2. List videos and audio
+        const files = await listMediaInFolder(folderId)
 
         if (files.length === 0) {
             // Debug: check if there are ANY files

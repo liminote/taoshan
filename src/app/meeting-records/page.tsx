@@ -322,19 +322,39 @@ export default function MeetingRecordsPage() {
                   </div>
                 ) : (
                   <div className="space-y-2">
-                    {videoList.map((file) => (
-                      <button
-                        key={file.id}
-                        onClick={() => handleVideoSelect(file.id, file.name)}
-                        className="w-full text-left p-4 border border-gray-200 rounded-lg hover:bg-indigo-50 transition flex justify-between items-center group"
-                      >
-                        <div>
-                          <div className="font-medium text-gray-900 group-hover:text-indigo-700">{file.name}</div>
-                          <div className="text-xs text-gray-500 mt-1">{new Date(file.createdTime).toLocaleString()}</div>
-                        </div>
-                        <div className="text-indigo-500 opacity-0 group-hover:opacity-100 transition">選擇 →</div>
-                      </button>
-                    ))}
+                    <div className="bg-yellow-50 p-3 rounded-lg text-sm text-yellow-800 mb-4">
+                      <p>⚠️ 注意：免費版伺服器有 10 秒執行限制。</p>
+                      <p>若影片過大（建議小於 50MB），處理將會失敗。建議使用純音檔或較短的影片。</p>
+                    </div>
+                    {videoList.map((file) => {
+                      const sizeMb = file.size ? (parseInt(file.size) / 1024 / 1024).toFixed(1) : '?'
+                      const isLarge = file.size && parseInt(file.size) > 50 * 1024 * 1024
+
+                      return (
+                        <button
+                          key={file.id}
+                          onClick={() => handleVideoSelect(file.id, file.name)}
+                          className={`w-full text-left p-4 border rounded-lg transition flex justify-between items-center group ${isLarge ? 'border-red-200 bg-red-50 hover:bg-red-100' : 'border-gray-200 hover:bg-indigo-50'
+                            }`}
+                        >
+                          <div>
+                            <div className={`font-medium ${isLarge ? 'text-red-700' : 'text-gray-900 group-hover:text-indigo-700'}`}>
+                              {file.name}
+                            </div>
+                            <div className="text-xs text-gray-500 mt-1 flex gap-2">
+                              <span>{new Date(file.createdTime).toLocaleString()}</span>
+                              <span className={`font-mono ${isLarge ? 'text-red-600 font-bold' : ''}`}>
+                                {sizeMb} MB
+                              </span>
+                              {file.mimeType && <span className="text-gray-400">({file.mimeType.split('/')[1]})</span>}
+                            </div>
+                          </div>
+                          <div className={`${isLarge ? 'text-red-500' : 'text-indigo-500'} opacity-0 group-hover:opacity-100 transition`}>
+                            {isLarge ? '嘗試處理 →' : '選擇 →'}
+                          </div>
+                        </button>
+                      )
+                    })}
                   </div>
                 )}
               </div>
