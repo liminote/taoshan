@@ -21,9 +21,9 @@ export async function getGoogleDriveClient() {
 
         const drive = google.drive({ version: 'v3', auth })
         return drive
-    } catch (error) {
+    } catch (error: any) {
         console.error('Google Drive 認證失敗:', error)
-        throw new Error('Google Drive API 初始化失敗')
+        throw new Error(`Google Drive API 初始化失敗: ${error.message}`)
     }
 }
 
