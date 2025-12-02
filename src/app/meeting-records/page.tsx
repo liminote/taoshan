@@ -55,9 +55,9 @@ export default function MeetingRecordsPage() {
       if (files.length === 0 && data.message) {
         setEmptyMessage(data.message)
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('fetch videos error', err)
-      alert('無法讀取影片列表，請確認後端設定')
+      alert(`讀取失敗: ${err.message}\n\n請截圖此畫面傳給工程師。`)
     } finally {
       setIsLoadingVideos(false)
     }

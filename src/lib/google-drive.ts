@@ -8,9 +8,11 @@ const SCOPES = ['https://www.googleapis.com/auth/drive.readonly']
 
 export async function getGoogleDriveClient() {
     try {
-        const credentials = JSON.parse(
-            process.env.GOOGLE_SHEETS_CREDENTIALS || '{}'
-        )
+        const credsStr = process.env.GOOGLE_SHEETS_CREDENTIALS
+        if (!credsStr) {
+            throw new Error('找不到 GOOGLE_SHEETS_CREDENTIALS 環境變數')
+        }
+        const credentials = JSON.parse(credsStr)
 
         const auth = new google.auth.GoogleAuth({
             credentials,
