@@ -75,24 +75,24 @@ interface CustomerAnalysisData {
 export default function ReportsContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  
+
   // Tab state with URL sync
   const [activeTab, setActiveTab] = useState<'trends' | 'monthly' | 'customer-analysis' | 'ai-chat'>(() => {
     const tab = searchParams.get('tab')
     return (tab === 'monthly' || tab === 'trends' || tab === 'customer-analysis' || tab === 'ai-chat') ? tab : 'trends'
   })
-  
+
   // Common loading states
   const [loading, setLoading] = useState(true)
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [isManualRefreshing, setIsManualRefreshing] = useState(false)
   const [lastRefreshTime, setLastRefreshTime] = useState<Date | null>(null)
-  const [, setCacheStatus] = useState<{cached: boolean; items: unknown[]} | null>(null)
-  
+  const [, setCacheStatus] = useState<{ cached: boolean; items: unknown[] } | null>(null)
+
   // Trends tab data (all time data - no filtering)
   const [salesData, setSalesData] = useState<MonthlySalesData[]>([])
   const [discountData, setDiscountData] = useState<DiscountData[]>([])
-  
+
   // Monthly tab data (filtered by selected month)
   const [selectedMonth, setSelectedMonth] = useState<string>(() => {
     const currentDate = new Date()
@@ -103,7 +103,7 @@ export default function ReportsContent() {
   const [paymentData, setPaymentData] = useState<PaymentData[]>([])
   const [orderTypeData, setOrderTypeData] = useState<OrderTypeData[]>([])
   const [rankingData, setRankingData] = useState<RankingData | null>(null)
-  
+
   // Customer analysis data (filtered by selected month for customer analysis tab)
   const [customerAnalysisMonth, setCustomerAnalysisMonth] = useState<string>(() => {
     const now = new Date()
@@ -123,15 +123,26 @@ export default function ReportsContent() {
   const [cachedData, setCachedData] = useState<{
     salesData?: MonthlySalesData[]
     discountData?: DiscountData[]
+    monthlyData?: Record<string, {
+      categoryData: CategoryData[]
+      smallCategoryData: CategoryData[]
+      paymentData: PaymentData[]
+      orderTypeData: OrderTypeData[]
+      rankingData: RankingData | null
+    }>
+    customerAnalysisData?: Record<string, {
+      spendingRanking: CustomerAnalysisData[]
+      frequencyRanking: CustomerAnalysisData[]
+    }>
     timestamp?: Date
   }>({})
-  
+
   // AI Chat state
   const [chatInput, setChatInput] = useState('')
   const [loadingChat, setLoadingChat] = useState(false)
   const [selectedCategory, setSelectedCategory] = useState<string>('')
   const [selectedModel, setSelectedModel] = useState<string>('groq')
-  const [availableModels, setAvailableModels] = useState<{id: string, name: string, provider: string}[]>([])
+  const [availableModels, setAvailableModels] = useState<{ id: string, name: string, provider: string }[]>([])
   const [answer, setAnswer] = useState<string>('')
 
   // 設計系統 10 色配色盤
@@ -157,7 +168,7 @@ export default function ReportsContent() {
   const fetchTrendsData = useCallback(async (forceRefresh = false) => {
     const now = new Date()
     const cacheExpireTime = 5 * 60 * 1000 // 5分鐘緩存
-    
+
     // 檢查是否有有效的緩存資料
     if (!forceRefresh && cachedData.timestamp && (now.getTime() - cachedData.timestamp.getTime() < cacheExpireTime)) {
       setSalesData(cachedData.salesData || [])
@@ -230,10 +241,10 @@ export default function ReportsContent() {
   // AI Chat functions
   const sendChatMessage = useCallback(async (message: string) => {
     if (!message.trim() || loadingChat) return
-    
+
     setAnswer('')
     setLoadingChat(true)
-    
+
     try {
       // 使用生產API端點，基於現有內部數據
       const response = await fetch('/api/ai-chat', {
@@ -281,7 +292,18 @@ export default function ReportsContent() {
   }, [handleSendMessage])
 
   // Fetch monthly category data (used for 當月數字 tab)
-  const fetchMonthlyCategoryData = useCallback(async (month: string) => {
+  const fetchMonthlyCategoryData = useCallback(async (month: string, forceRefresh = false) => {
+    // Check cache first
+    if (!forceRefresh && cachedData.monthlyData && cachedData.monthlyData[month]) {
+      const cached = cachedData.monthlyData[month]
+      setMonthlyCategoryData(cached.categoryData)
+      setMonthlySmallCategoryData(cached.smallCategoryData)
+      setPaymentData(cached.paymentData)
+      setOrderTypeData(cached.orderTypeData)
+      setRankingData(cached.rankingData)
+      return
+    }
+
     try {
       const [categoryResponse, smallCategoryResponse, paymentResponse, orderTypeResponse, rankingResponse] = await Promise.all([
         fetch(`/api/reports/category-distribution?month=${month}`),
@@ -291,40 +313,58 @@ export default function ReportsContent() {
         fetch(`/api/reports/rankings?month=${month}`)
       ])
 
+      let newCategoryData: CategoryData[] = []
+      let newSmallCategoryData: CategoryData[] = []
+      let newPaymentData: PaymentData[] = []
+      let newOrderTypeData: OrderTypeData[] = []
+      let newRankingData: RankingData | null = null
+
       if (categoryResponse.ok) {
         const categoryResult = await categoryResponse.json()
-        setMonthlyCategoryData(categoryResult.data || categoryResult)
-      } else {
-        setMonthlyCategoryData([])
+        newCategoryData = categoryResult.data || categoryResult
       }
 
       if (smallCategoryResponse.ok) {
         const smallCategoryResult = await smallCategoryResponse.json()
-        setMonthlySmallCategoryData(smallCategoryResult.data || smallCategoryResult)
-      } else {
-        setMonthlySmallCategoryData([])
+        newSmallCategoryData = smallCategoryResult.data || smallCategoryResult
       }
 
       if (paymentResponse.ok) {
         const paymentResult = await paymentResponse.json()
-        setPaymentData(paymentResult.data || paymentResult)
-      } else {
-        setPaymentData([])
+        newPaymentData = paymentResult.data || paymentResult
       }
 
       if (orderTypeResponse.ok) {
         const orderTypeResult = await orderTypeResponse.json()
-        setOrderTypeData(orderTypeResult.data || orderTypeResult)
-      } else {
-        setOrderTypeData([])
+        newOrderTypeData = orderTypeResult.data || orderTypeResult
       }
 
       if (rankingResponse.ok) {
         const rankingResult = await rankingResponse.json()
-        setRankingData(rankingResult.data || null)
-      } else {
-        setRankingData(null)
+        newRankingData = rankingResult.data || null
       }
+
+      setMonthlyCategoryData(newCategoryData)
+      setMonthlySmallCategoryData(newSmallCategoryData)
+      setPaymentData(newPaymentData)
+      setOrderTypeData(newOrderTypeData)
+      setRankingData(newRankingData)
+
+      // Update cache
+      setCachedData(prev => ({
+        ...prev,
+        monthlyData: {
+          ...prev.monthlyData,
+          [month]: {
+            categoryData: newCategoryData,
+            smallCategoryData: newSmallCategoryData,
+            paymentData: newPaymentData,
+            orderTypeData: newOrderTypeData,
+            rankingData: newRankingData
+          }
+        }
+      }))
+
     } catch (error) {
       console.error('獲取月份分類資料失敗:', error)
       setMonthlyCategoryData([])
@@ -333,7 +373,7 @@ export default function ReportsContent() {
       setOrderTypeData([])
       setRankingData(null)
     }
-  }, [])
+  }, [cachedData.monthlyData])
 
   // Initial data fetch and setup
   useEffect(() => {
@@ -374,32 +414,55 @@ export default function ReportsContent() {
   }
 
   // Fetch customer analysis data (used for 顧客分析 tab)
-  const fetchCustomerAnalysisData = useCallback(async (month: string) => {
+  const fetchCustomerAnalysisData = useCallback(async (month: string, forceRefresh = false) => {
+    // Check cache first
+    if (!forceRefresh && cachedData.customerAnalysisData && cachedData.customerAnalysisData[month]) {
+      const cached = cachedData.customerAnalysisData[month]
+      setCustomerSpendingRanking(cached.spendingRanking)
+      setCustomerFrequencyRanking(cached.frequencyRanking)
+      return
+    }
+
     try {
       const [spendingResponse, frequencyResponse] = await Promise.all([
         fetch(`/api/reports/customer-spending-ranking?month=${month}`),
         fetch(`/api/reports/customer-frequency-ranking?month=${month}`)
       ])
 
+      let newSpendingRanking: CustomerAnalysisData[] = []
+      let newFrequencyRanking: CustomerAnalysisData[] = []
+
       if (spendingResponse.ok) {
         const spendingResult = await spendingResponse.json()
-        setCustomerSpendingRanking(spendingResult.data || spendingResult)
-      } else {
-        setCustomerSpendingRanking([])
+        newSpendingRanking = spendingResult.data || spendingResult
       }
 
       if (frequencyResponse.ok) {
         const frequencyResult = await frequencyResponse.json()
-        setCustomerFrequencyRanking(frequencyResult.data || frequencyResult)
-      } else {
-        setCustomerFrequencyRanking([])
+        newFrequencyRanking = frequencyResult.data || frequencyResult
       }
+
+      setCustomerSpendingRanking(newSpendingRanking)
+      setCustomerFrequencyRanking(newFrequencyRanking)
+
+      // Update cache
+      setCachedData(prev => ({
+        ...prev,
+        customerAnalysisData: {
+          ...prev.customerAnalysisData,
+          [month]: {
+            spendingRanking: newSpendingRanking,
+            frequencyRanking: newFrequencyRanking
+          }
+        }
+      }))
+
     } catch (error) {
       console.error('獲取顧客分析資料失敗:', error)
       setCustomerSpendingRanking([])
       setCustomerFrequencyRanking([])
     }
-  }, [])
+  }, [cachedData.customerAnalysisData])
 
   // Fetch customer analysis data when selected month changes
   useEffect(() => {
@@ -414,7 +477,7 @@ export default function ReportsContent() {
     try {
       const response = await fetch('/api/cache/refresh', { method: 'POST' })
       const result = await response.json()
-      
+
       if (result.success) {
         // 清除本地狀態，強制重新載入
         setSalesData([])
@@ -427,16 +490,16 @@ export default function ReportsContent() {
         setCustomerSpendingRanking([])
         setCustomerFrequencyRanking([])
         setCachedData({})
-        
+
         // 重新載入當前標籤頁的資料
         if (activeTab === 'trends') {
           await fetchTrendsData(true)
         } else if (activeTab === 'monthly') {
-          await fetchMonthlyCategoryData(selectedMonth)
+          await fetchMonthlyCategoryData(selectedMonth, true)
         } else if (activeTab === 'customer-analysis') {
-          await fetchCustomerAnalysisData(customerAnalysisMonth)
+          await fetchCustomerAnalysisData(customerAnalysisMonth, true)
         }
-        
+
         setLastRefreshTime(new Date())
         alert('✅ 資料已更新！所有報表資料已刷新為最新版本。')
       } else {
@@ -455,9 +518,9 @@ export default function ReportsContent() {
     if (activeTab === 'trends') {
       fetchTrendsData(true)
     } else if (activeTab === 'monthly') {
-      fetchMonthlyCategoryData(selectedMonth)
+      fetchMonthlyCategoryData(selectedMonth, true)
     } else if (activeTab === 'customer-analysis') {
-      fetchCustomerAnalysisData(customerAnalysisMonth)
+      fetchCustomerAnalysisData(customerAnalysisMonth, true)
     }
   }
 
@@ -482,7 +545,7 @@ export default function ReportsContent() {
     // 取最新13個月並反轉順序（最新在左邊）
     const chartData = data.slice(-13).reverse()
     const maxValue = Math.max(...chartData.map(item => (item as unknown as Record<string, number>)[dataKey]))
-    
+
     return (
       <div className="w-full">
         <svg width="100%" height={height + 80} className="drop-shadow-sm" viewBox={`0 0 1700 ${height + 80}`}>
@@ -492,13 +555,13 @@ export default function ReportsContent() {
             const getTickInterval = (max: number) => {
               // 目標是產生約 4-6 個刻度
               const roughInterval = max / 5
-              
+
               // 找到適當的 10 的次方作為基數
               const magnitude = Math.pow(10, Math.floor(Math.log10(roughInterval)))
-              
+
               // 將粗略間隔標準化為 1, 2, 5 的倍數
               const normalized = roughInterval / magnitude
-              
+
               let niceInterval
               if (normalized <= 1) {
                 niceInterval = magnitude
@@ -509,19 +572,19 @@ export default function ReportsContent() {
               } else {
                 niceInterval = 10 * magnitude
               }
-              
+
               return niceInterval
             }
-            
+
             const tickInterval = getTickInterval(maxValue)
             const tickCount = Math.ceil(maxValue / tickInterval)
             const actualMax = tickCount * tickInterval
-            
+
             const ticks = []
             for (let i = 0; i <= tickCount; i++) {
               ticks.push(i * tickInterval)
             }
-            
+
             return ticks.map((tickValue, index) => {
               const y = height - (tickValue / actualMax) * height + 20
               return (
@@ -534,20 +597,20 @@ export default function ReportsContent() {
               )
             })
           })()}
-          
+
           {/* Bars */}
           {(() => {
             // 重新計算 actualMax 用於柱子高度
             const getTickInterval = (max: number) => {
               // 目標是產生約 4-6 個刻度
               const roughInterval = max / 5
-              
+
               // 找到適當的 10 的次方作為基數
               const magnitude = Math.pow(10, Math.floor(Math.log10(roughInterval)))
-              
+
               // 將粗略間隔標準化為 1, 2, 5 的倍數
               const normalized = roughInterval / magnitude
-              
+
               let niceInterval
               if (normalized <= 1) {
                 niceInterval = magnitude
@@ -558,21 +621,21 @@ export default function ReportsContent() {
               } else {
                 niceInterval = 10 * magnitude
               }
-              
+
               return niceInterval
             }
-            
+
             const tickInterval = getTickInterval(maxValue)
             const tickCount = Math.ceil(maxValue / tickInterval)
             const actualMax = tickCount * tickInterval
-            
+
             return chartData.map((item, index) => {
               const barHeight = ((item as unknown as Record<string, number>)[dataKey] / actualMax) * height
               const barWidth = 80 // 固定柱子寬度
               const spacing = 40 // 固定間距
               const x = 120 + index * (barWidth + spacing)
               const y = height - barHeight + 20
-              
+
               return (
                 <g key={index}>
                   {/* Bar */}
@@ -584,7 +647,7 @@ export default function ReportsContent() {
                     fill={color}
                     className="hover:opacity-80 transition-opacity"
                   />
-                  
+
                   {/* Value on top of bar */}
                   <text
                     x={x + barWidth / 2}
@@ -594,7 +657,7 @@ export default function ReportsContent() {
                   >
                     {Math.floor((item as unknown as Record<string, number>)[dataKey]).toLocaleString()}
                   </text>
-                  
+
                   {/* Month label */}
                   <text
                     x={x + barWidth / 2}
@@ -620,9 +683,9 @@ export default function ReportsContent() {
     const radius = size / 2 - 10
     const centerX = size / 2
     const centerY = size / 2
-    
+
     let currentAngle = 0
-    
+
     return (
       <svg width={size} height={size} className="drop-shadow-sm">
         {data.map((item, index) => {
@@ -630,23 +693,23 @@ export default function ReportsContent() {
           const angle = (percentage / 100) * 360
           const startAngle = currentAngle
           const endAngle = currentAngle + angle
-          
+
           const x1 = centerX + radius * Math.cos((startAngle - 90) * Math.PI / 180)
           const y1 = centerY + radius * Math.sin((startAngle - 90) * Math.PI / 180)
           const x2 = centerX + radius * Math.cos((endAngle - 90) * Math.PI / 180)
           const y2 = centerY + radius * Math.sin((endAngle - 90) * Math.PI / 180)
-          
+
           const largeArcFlag = angle > 180 ? 1 : 0
-          
+
           const pathData = [
             `M ${centerX} ${centerY}`,
             `L ${x1} ${y1}`,
             `A ${radius} ${radius} 0 ${largeArcFlag} 1 ${x2} ${y2}`,
             'Z'
           ].join(' ')
-          
+
           currentAngle += angle
-          
+
           return (
             <path
               key={item.method}
@@ -669,9 +732,9 @@ export default function ReportsContent() {
     const radius = size / 2 - 10
     const centerX = size / 2
     const centerY = size / 2
-    
+
     let currentAngle = 0
-    
+
     return (
       <svg width={size} height={size} className="drop-shadow-sm">
         {data.map((item, index) => {
@@ -679,23 +742,23 @@ export default function ReportsContent() {
           const angle = (percentage / 100) * 360
           const startAngle = currentAngle
           const endAngle = currentAngle + angle
-          
+
           const x1 = centerX + radius * Math.cos((startAngle - 90) * Math.PI / 180)
           const y1 = centerY + radius * Math.sin((startAngle - 90) * Math.PI / 180)
           const x2 = centerX + radius * Math.cos((endAngle - 90) * Math.PI / 180)
           const y2 = centerY + radius * Math.sin((endAngle - 90) * Math.PI / 180)
-          
+
           const largeArcFlag = angle > 180 ? 1 : 0
-          
+
           const pathData = [
             `M ${centerX} ${centerY}`,
             `L ${x1} ${y1}`,
             `A ${radius} ${radius} 0 ${largeArcFlag} 1 ${x2} ${y2}`,
             'Z'
           ].join(' ')
-          
+
           currentAngle += angle
-          
+
           return (
             <path
               key={item.type}
@@ -722,7 +785,7 @@ export default function ReportsContent() {
       const others = chartData.slice(8)
       const othersAmount = others.reduce((sum, item) => sum + item.amount, 0)
       const othersPercentage = others.reduce((sum, item) => sum + item.percentage, 0)
-      
+
       chartData = [
         ...top8,
         {
@@ -736,9 +799,9 @@ export default function ReportsContent() {
     const radius = size / 2 - 10
     const centerX = size / 2
     const centerY = size / 2
-    
+
     let currentAngle = 0
-    
+
     return (
       <svg width={size} height={size} className="drop-shadow-sm">
         {chartData.map((item, index) => {
@@ -746,23 +809,23 @@ export default function ReportsContent() {
           const angle = (percentage / 100) * 360
           const startAngle = currentAngle
           const endAngle = currentAngle + angle
-          
+
           const x1 = centerX + radius * Math.cos((startAngle - 90) * Math.PI / 180)
           const y1 = centerY + radius * Math.sin((startAngle - 90) * Math.PI / 180)
           const x2 = centerX + radius * Math.cos((endAngle - 90) * Math.PI / 180)
           const y2 = centerY + radius * Math.sin((endAngle - 90) * Math.PI / 180)
-          
+
           const largeArcFlag = angle > 180 ? 1 : 0
-          
+
           const pathData = [
             `M ${centerX} ${centerY}`,
             `L ${x1} ${y1}`,
             `A ${radius} ${radius} 0 ${largeArcFlag} 1 ${x2} ${y2}`,
             'Z'
           ].join(' ')
-          
+
           currentAngle += angle
-          
+
           return (
             <path
               key={item.category}
@@ -801,8 +864,8 @@ export default function ReportsContent() {
       <div className="max-w-6xl mx-auto">
         {/* 標題區域 */}
         <div className="mb-8">
-          <Link 
-            href="/" 
+          <Link
+            href="/"
             className="inline-flex items-center text-gray-600 hover:text-emerald-600 transition-colors mb-6 group"
           >
             <svg className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -810,7 +873,7 @@ export default function ReportsContent() {
             </svg>
             返回首頁
           </Link>
-          
+
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <div className="w-12 h-12 bg-purple-400 rounded-2xl flex items-center justify-center shadow-lg">
@@ -825,33 +888,33 @@ export default function ReportsContent() {
                 <p className="text-gray-600 mt-1">數據分析與報表檢視</p>
               </div>
             </div>
-            
+
             <div className="flex space-x-3">
               <button
                 onClick={handleRefresh}
                 disabled={isRefreshing}
                 className="inline-flex items-center px-4 py-2 bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
               >
-                <svg 
-                  className={`w-4 h-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} 
-                  fill="none" 
-                  stroke="currentColor" 
+                <svg
+                  className={`w-4 h-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`}
+                  fill="none"
+                  stroke="currentColor"
                   viewBox="0 0 24 24"
                 >
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                 </svg>
                 {isRefreshing ? '重新載入...' : '重新載入'}
               </button>
-              
+
               <button
                 onClick={handleManualRefresh}
                 disabled={isManualRefreshing}
                 className="inline-flex items-center px-4 py-2 bg-purple-500 text-white rounded-xl shadow-sm hover:shadow-md transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
               >
-                <svg 
-                  className={`w-4 h-4 mr-2 ${isManualRefreshing ? 'animate-spin' : ''}`} 
-                  fill="none" 
-                  stroke="currentColor" 
+                <svg
+                  className={`w-4 h-4 mr-2 ${isManualRefreshing ? 'animate-spin' : ''}`}
+                  fill="none"
+                  stroke="currentColor"
                   viewBox="0 0 24 24"
                 >
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4-4m0 0L8 8m4-4v12" />
@@ -871,11 +934,10 @@ export default function ReportsContent() {
                   setActiveTab('trends')
                   router.push('/reports?tab=trends', { scroll: false })
                 }}
-                className={`px-6 py-3 rounded-lg font-medium transition-all ${
-                  activeTab === 'trends'
-                    ? 'bg-secondary text-gray-800 shadow-sm'
-                    : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50'
-                }`}
+                className={`px-6 py-3 rounded-lg font-medium transition-all ${activeTab === 'trends'
+                  ? 'bg-secondary text-gray-800 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50'
+                  }`}
               >
                 趨勢觀測
               </button>
@@ -884,11 +946,10 @@ export default function ReportsContent() {
                   setActiveTab('monthly')
                   router.push('/reports?tab=monthly', { scroll: false })
                 }}
-                className={`px-6 py-3 rounded-lg font-medium transition-all ${
-                  activeTab === 'monthly'
-                    ? 'bg-secondary text-gray-800 shadow-sm'
-                    : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50'
-                }`}
+                className={`px-6 py-3 rounded-lg font-medium transition-all ${activeTab === 'monthly'
+                  ? 'bg-secondary text-gray-800 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50'
+                  }`}
               >
                 當月數字
               </button>
@@ -897,11 +958,10 @@ export default function ReportsContent() {
                   setActiveTab('customer-analysis')
                   router.push('/reports?tab=customer-analysis', { scroll: false })
                 }}
-                className={`px-6 py-3 rounded-lg font-medium transition-all ${
-                  activeTab === 'customer-analysis'
-                    ? 'bg-secondary text-gray-800 shadow-sm'
-                    : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50'
-                }`}
+                className={`px-6 py-3 rounded-lg font-medium transition-all ${activeTab === 'customer-analysis'
+                  ? 'bg-secondary text-gray-800 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50'
+                  }`}
               >
                 顧客分析
               </button>
@@ -912,11 +972,10 @@ export default function ReportsContent() {
                   setActiveTab('ai-chat')
                   router.push('/reports?tab=ai-chat', { scroll: false })
                 }}
-                className={`px-6 py-3 rounded-lg font-medium transition-all flex items-center space-x-2 ${
-                  activeTab === 'ai-chat'
-                    ? 'text-gray-800 shadow-sm'
-                    : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50'
-                }`}
+                className={`px-6 py-3 rounded-lg font-medium transition-all flex items-center space-x-2 ${activeTab === 'ai-chat'
+                  ? 'text-gray-800 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50'
+                  }`}
                 style={activeTab === 'ai-chat' ? { backgroundColor: '#98F5E1' } : {}}
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1011,13 +1070,12 @@ export default function ReportsContent() {
                   <p className="text-gray-600 mt-1">基於餐廳銷售數據的智能分析助手 • Powered by {availableModels.find(m => m.id === selectedModel)?.name || 'Gemini'}</p>
                 </div>
               </div>
-              
+
               {/* 步驟指示器 */}
               <div className="flex items-center justify-center space-x-4 mt-6">
                 <div className="flex items-center space-x-2">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                    selectedCategory ? 'bg-mint_green-500 text-white' : 'bg-mint_green-200 text-gray-800'
-                  }`}>
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${selectedCategory ? 'bg-mint_green-500 text-white' : 'bg-mint_green-200 text-gray-800'
+                    }`}>
                     1
                   </div>
                   <span className={`text-sm font-medium ${selectedCategory ? 'text-mint_green-600' : 'text-gray-500'}`}>
@@ -1026,9 +1084,8 @@ export default function ReportsContent() {
                 </div>
                 <div className="w-8 h-px bg-gray-300"></div>
                 <div className="flex items-center space-x-2">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                    selectedCategory && chatInput.trim() ? 'bg-mint_green-500 text-white' : 'bg-gray-200 text-gray-600'
-                  }`}>
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${selectedCategory && chatInput.trim() ? 'bg-mint_green-500 text-white' : 'bg-gray-200 text-gray-600'
+                    }`}>
                     2
                   </div>
                   <span className={`text-sm font-medium ${selectedCategory && chatInput.trim() ? 'text-mint_green-600' : 'text-gray-500'}`}>
@@ -1037,9 +1094,8 @@ export default function ReportsContent() {
                 </div>
                 <div className="w-8 h-px bg-gray-300"></div>
                 <div className="flex items-center space-x-2">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                    answer ? 'bg-mint_green-500 text-white' : 'bg-gray-200 text-gray-600'
-                  }`}>
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${answer ? 'bg-mint_green-500 text-white' : 'bg-gray-200 text-gray-600'
+                    }`}>
                     3
                   </div>
                   <span className={`text-sm font-medium ${answer ? 'text-mint_green-600' : 'text-gray-500'}`}>
@@ -1060,21 +1116,19 @@ export default function ReportsContent() {
                 </div>
                 <p className="text-sm text-gray-600 mb-4">請先選擇您想要查詢的問題類型，系統將根據您的選擇載入對應的數據源：</p>
               </div>
-              
+
               <div className="p-6">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <button
                     onClick={() => setSelectedCategory('product')}
-                    className={`p-4 rounded-xl border-2 transition-all text-left group ${
-                      selectedCategory === 'product'
-                        ? 'border-sky_blue bg-sky_blue-50 shadow-lg'
-                        : 'border-gray-200 bg-white hover:border-sky_blue-200 hover:shadow-md'
-                    }`}
+                    className={`p-4 rounded-xl border-2 transition-all text-left group ${selectedCategory === 'product'
+                      ? 'border-sky_blue bg-sky_blue-50 shadow-lg'
+                      : 'border-gray-200 bg-white hover:border-sky_blue-200 hover:shadow-md'
+                      }`}
                   >
                     <div className="flex items-center space-x-3 mb-3">
-                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                        selectedCategory === 'product' ? 'bg-sky_blue text-white' : 'bg-sky_blue-100 text-sky_blue-600'
-                      }`}>
+                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${selectedCategory === 'product' ? 'bg-sky_blue text-white' : 'bg-sky_blue-100 text-sky_blue-600'
+                        }`}>
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                         </svg>
@@ -1091,19 +1145,17 @@ export default function ReportsContent() {
                       適用問題：特定商品銷售表現、商品排名、銷量趨勢分析等
                     </div>
                   </button>
-                  
+
                   <button
                     onClick={() => setSelectedCategory('order')}
-                    className={`p-4 rounded-xl border-2 transition-all text-left group ${
-                      selectedCategory === 'order'
-                        ? 'border-periwinkle bg-periwinkle-50 shadow-lg'
-                        : 'border-gray-200 bg-white hover:border-periwinkle-200 hover:shadow-md'
-                    }`}
+                    className={`p-4 rounded-xl border-2 transition-all text-left group ${selectedCategory === 'order'
+                      ? 'border-periwinkle bg-periwinkle-50 shadow-lg'
+                      : 'border-gray-200 bg-white hover:border-periwinkle-200 hover:shadow-md'
+                      }`}
                   >
                     <div className="flex items-center space-x-3 mb-3">
-                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                        selectedCategory === 'order' ? 'bg-periwinkle text-white' : 'bg-periwinkle-100 text-periwinkle-600'
-                      }`}>
+                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${selectedCategory === 'order' ? 'bg-periwinkle text-white' : 'bg-periwinkle-100 text-periwinkle-600'
+                        }`}>
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                         </svg>
@@ -1120,19 +1172,17 @@ export default function ReportsContent() {
                       適用問題：訂單趨勢、支付方式分析、時段分析、客戶行為等
                     </div>
                   </button>
-                  
+
                   <button
                     onClick={() => setSelectedCategory('category')}
-                    className={`p-4 rounded-xl border-2 transition-all text-left group ${
-                      selectedCategory === 'category'
-                        ? 'border-mint_green bg-mint_green-50 shadow-lg'
-                        : 'border-gray-200 bg-white hover:border-mint_green-200 hover:shadow-md'
-                    }`}
+                    className={`p-4 rounded-xl border-2 transition-all text-left group ${selectedCategory === 'category'
+                      ? 'border-mint_green bg-mint_green-50 shadow-lg'
+                      : 'border-gray-200 bg-white hover:border-mint_green-200 hover:shadow-md'
+                      }`}
                   >
                     <div className="flex items-center space-x-3 mb-3">
-                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                        selectedCategory === 'category' ? 'bg-mint_green text-white' : 'bg-mint_green-100 text-mint_green-600'
-                      }`}>
+                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${selectedCategory === 'category' ? 'bg-mint_green text-white' : 'bg-mint_green-100 text-mint_green-600'
+                        }`}>
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
                         </svg>
@@ -1165,18 +1215,17 @@ export default function ReportsContent() {
                   </div>
                   <p className="text-sm text-gray-600">
                     已選擇：
-                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ml-2 ${
-                      selectedCategory === 'product' ? 'bg-sky_blue-100 text-sky_blue-800' :
+                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ml-2 ${selectedCategory === 'product' ? 'bg-sky_blue-100 text-sky_blue-800' :
                       selectedCategory === 'order' ? 'bg-periwinkle-100 text-periwinkle-800' :
-                      'bg-mint_green-100 text-mint_green-800'
-                    }`}>
+                        'bg-mint_green-100 text-mint_green-800'
+                      }`}>
                       {selectedCategory === 'product' ? 'A. 商品銷售問題' :
-                       selectedCategory === 'order' ? 'B. 訂單問題' :
-                       'C. 商品分類問題'}
+                        selectedCategory === 'order' ? 'B. 訂單問題' :
+                          'C. 商品分類問題'}
                     </span>
                   </p>
                 </div>
-                
+
                 <div className="p-6">
                   {/* AI模型選擇 */}
                   <div className="mb-4">
@@ -1199,7 +1248,7 @@ export default function ReportsContent() {
                       選擇不同AI模型可能有不同的回答風格和速度
                     </p>
                   </div>
-                  
+
                   <div className="flex items-end space-x-3">
                     <div className="flex-1">
                       <textarea
@@ -1207,18 +1256,18 @@ export default function ReportsContent() {
                         onChange={(e) => setChatInput(e.target.value)}
                         onKeyDown={handleKeyPress}
                         placeholder={
-                          selectedCategory === 'product' ? 
-                          '請輸入您想了解的商品銷售相關問題...' :
-                          selectedCategory === 'order' ?
-                          '請輸入您想了解的訂單相關問題...' :
-                          '請輸入您想了解的商品分類相關問題...'
+                          selectedCategory === 'product' ?
+                            '請輸入您想了解的商品銷售相關問題...' :
+                            selectedCategory === 'order' ?
+                              '請輸入您想了解的訂單相關問題...' :
+                              '請輸入您想了解的商品分類相關問題...'
                         }
                         className="w-full p-4 bg-gray-50 border border-gray-200 rounded-xl resize-none focus:outline-none focus:bg-white focus:ring-2 focus:ring-mint_green/50 focus:border-mint_green/50 transition-all text-gray-900 placeholder-gray-500"
                         rows={3}
                         disabled={loadingChat}
                       />
                     </div>
-                    <button 
+                    <button
                       onClick={handleSendMessage}
                       disabled={!chatInput.trim() || !selectedCategory || loadingChat}
                       className="px-6 py-4 bg-mint_green-600 text-white rounded-xl hover:bg-mint_green-700 transition-colors flex items-center space-x-2 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
@@ -1250,7 +1299,7 @@ export default function ReportsContent() {
                     <h3 className="text-lg font-semibold text-gray-800">AI 分析結果</h3>
                   </div>
                 </div>
-                
+
                 <div className="p-6">
                   {/* 載入狀態 */}
                   {loadingChat && (
@@ -1377,7 +1426,7 @@ export default function ReportsContent() {
                 <div className="flex-shrink-0">
                   {generatePieChart(monthlyCategoryData, 260)}
                 </div>
-                
+
                 <div className="flex-1 min-w-0">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {monthlyCategoryData.map((item, index) => (
@@ -1417,7 +1466,7 @@ export default function ReportsContent() {
                 <div className="flex-shrink-0">
                   {generatePieChart(monthlySmallCategoryData, 260)}
                 </div>
-                
+
                 <div className="flex-1 min-w-0">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {monthlySmallCategoryData.slice(0, 9).map((item, index) => (
@@ -1446,7 +1495,7 @@ export default function ReportsContent() {
                         <div className="flex-1 min-w-0">
                           <div className="font-medium text-gray-900 truncate">其他</div>
                           <div className="text-sm text-gray-600">
-                            {monthlySmallCategoryData.slice(8).reduce((sum, item) => sum + item.amount, 0).toLocaleString()} 
+                            {monthlySmallCategoryData.slice(8).reduce((sum, item) => sum + item.amount, 0).toLocaleString()}
                             ({Math.round(monthlySmallCategoryData.slice(8).reduce((sum, item) => sum + item.percentage, 0) * 10) / 10}%)
                           </div>
                         </div>
@@ -1474,7 +1523,7 @@ export default function ReportsContent() {
                   <div className="flex-shrink-0">
                     {generatePaymentPieChart(paymentData, 200)}
                   </div>
-                  
+
                   <div className="flex-1 min-w-0">
                     <div className="space-y-3">
                       {paymentData.map((item, index) => (
@@ -1514,7 +1563,7 @@ export default function ReportsContent() {
                   <div className="flex-shrink-0">
                     {generateOrderTypePieChart(orderTypeData, 200)}
                   </div>
-                  
+
                   <div className="flex-1 min-w-0">
                     <div className="space-y-3">
                       {orderTypeData.map((item, index) => (
@@ -1553,7 +1602,7 @@ export default function ReportsContent() {
                     </div>
                     <h2 className="text-xl font-bold text-gray-900">銷售總計</h2>
                   </div>
-                  
+
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div className="text-center p-4 bg-emerald-50 rounded-xl">
                       <div className="text-2xl font-bold text-emerald-600">{formatNumber(rankingData.totals.totalQuantity)}</div>
@@ -1572,7 +1621,7 @@ export default function ReportsContent() {
 
                 {/* 排名表格 */}
                 <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
-                  
+
                   {/* 銷量排名 */}
                   <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
                     <div className="px-6 py-4" style={{ backgroundColor: '#90DBF4' }}>
@@ -1593,8 +1642,8 @@ export default function ReportsContent() {
                             <tr key={index} className={`${index < 3 ? 'bg-emerald-50' : ''} hover:bg-gray-50 transition-colors`}>
                               <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
                                 {index < 3 ? (
-                                  <span className="inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold text-white" 
-                                        style={{ backgroundColor: index === 0 ? '#FFD700' : index === 1 ? '#C0C0C0' : '#CD7F32' }}>
+                                  <span className="inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold text-white"
+                                    style={{ backgroundColor: index === 0 ? '#FFD700' : index === 1 ? '#C0C0C0' : '#CD7F32' }}>
                                     {item.rank}
                                   </span>
                                 ) : (
@@ -1637,8 +1686,8 @@ export default function ReportsContent() {
                             <tr key={index} className={`${index < 3 ? 'bg-red-50' : ''} hover:bg-gray-50 transition-colors`}>
                               <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
                                 {index < 3 ? (
-                                  <span className="inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold text-white" 
-                                        style={{ backgroundColor: index === 0 ? '#FFD700' : index === 1 ? '#C0C0C0' : '#CD7F32' }}>
+                                  <span className="inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold text-white"
+                                    style={{ backgroundColor: index === 0 ? '#FFD700' : index === 1 ? '#C0C0C0' : '#CD7F32' }}>
                                     {item.rank}
                                   </span>
                                 ) : (
@@ -1686,8 +1735,8 @@ export default function ReportsContent() {
                             <tr key={index} className={`${index < 3 ? 'bg-teal-50' : ''} hover:bg-gray-50 transition-colors`}>
                               <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
                                 {index < 3 ? (
-                                  <span className="inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold text-white" 
-                                        style={{ backgroundColor: index === 0 ? '#FFD700' : index === 1 ? '#C0C0C0' : '#CD7F32' }}>
+                                  <span className="inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold text-white"
+                                    style={{ backgroundColor: index === 0 ? '#FFD700' : index === 1 ? '#C0C0C0' : '#CD7F32' }}>
                                     {item.rank}
                                   </span>
                                 ) : (
@@ -1751,7 +1800,7 @@ export default function ReportsContent() {
 
             {/* 顧客排名表格 */}
             <div className="space-y-8">
-              
+
               {/* 客戶消費金額 Top 30 */}
               <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
                 <div className="px-6 py-4" style={{ backgroundColor: '#90DBF4' }}>
@@ -1781,8 +1830,8 @@ export default function ReportsContent() {
                         <tr key={customer.customerPhone} className={`${index < 3 ? 'bg-emerald-50' : ''} hover:bg-gray-50 transition-colors`}>
                           <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
                             {index < 3 ? (
-                              <span className="inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold text-white" 
-                                    style={{ backgroundColor: index === 0 ? '#FFD700' : index === 1 ? '#C0C0C0' : '#CD7F32' }}>
+                              <span className="inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold text-white"
+                                style={{ backgroundColor: index === 0 ? '#FFD700' : index === 1 ? '#C0C0C0' : '#CD7F32' }}>
                                 {customer.rank}
                               </span>
                             ) : (
@@ -1802,12 +1851,11 @@ export default function ReportsContent() {
                           </td>
                           <td className="px-4 py-3 text-center">
                             {customer.isNewCustomer && (
-                              <span 
-                                className={`text-xs font-medium px-2 py-1 rounded-full ${
-                                  customer.hasReturnedAfterNew 
-                                    ? 'text-blue-700 bg-blue-100' 
-                                    : 'text-green-600 bg-green-100'
-                                }`}
+                              <span
+                                className={`text-xs font-medium px-2 py-1 rounded-full ${customer.hasReturnedAfterNew
+                                  ? 'text-blue-700 bg-blue-100'
+                                  : 'text-green-600 bg-green-100'
+                                  }`}
                                 title={customer.hasReturnedAfterNew ? "新客戶且已回訪" : "新客戶"}
                               >
                                 {customer.hasReturnedAfterNew ? '新回' : '新'}
@@ -1815,7 +1863,7 @@ export default function ReportsContent() {
                             )}
                           </td>
                           <td className="px-4 py-3 text-center">
-                            {!customer.isNewCustomer && customer.hasReturnedAfterOld && (
+                            {!customer.isNewCustomer && customer.hasReturnedAfterNew && (
                               <span
                                 className="text-xs font-medium px-2 py-1 rounded-full text-orange-700 bg-orange-100"
                                 title="舊客戶且有回訪"
@@ -1840,7 +1888,7 @@ export default function ReportsContent() {
                             {customer.cumulativePercentage ? `${customer.cumulativePercentage}%` : '--'}
                           </td>
                           <td className="px-4 py-3 text-center">
-                            <button 
+                            <button
                               className="text-emerald-600 hover:text-emerald-700 transition-colors hover:bg-transparent"
                               onClick={() => handleViewCustomerDetails(customer.customerPhone, customer.customerName)}
                               title="查看消費明細"
@@ -1891,8 +1939,8 @@ export default function ReportsContent() {
                         <tr key={customer.customerPhone} className={`${index < 3 ? 'bg-red-50' : ''} hover:bg-gray-50 transition-colors`}>
                           <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
                             {index < 3 ? (
-                              <span className="inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold text-white" 
-                                    style={{ backgroundColor: index === 0 ? '#FFD700' : index === 1 ? '#C0C0C0' : '#CD7F32' }}>
+                              <span className="inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold text-white"
+                                style={{ backgroundColor: index === 0 ? '#FFD700' : index === 1 ? '#C0C0C0' : '#CD7F32' }}>
                                 {customer.rank}
                               </span>
                             ) : (
@@ -1912,12 +1960,11 @@ export default function ReportsContent() {
                           </td>
                           <td className="px-4 py-3 text-center">
                             {customer.isNewCustomer && (
-                              <span 
-                                className={`text-xs font-medium px-2 py-1 rounded-full ${
-                                  customer.hasReturnedAfterNew 
-                                    ? 'text-blue-700 bg-blue-100' 
-                                    : 'text-green-600 bg-green-100'
-                                }`}
+                              <span
+                                className={`text-xs font-medium px-2 py-1 rounded-full ${customer.hasReturnedAfterNew
+                                  ? 'text-blue-700 bg-blue-100'
+                                  : 'text-green-600 bg-green-100'
+                                  }`}
                                 title={customer.hasReturnedAfterNew ? "新客戶且已回訪" : "新客戶"}
                               >
                                 {customer.hasReturnedAfterNew ? '新回' : '新'}
@@ -1925,7 +1972,7 @@ export default function ReportsContent() {
                             )}
                           </td>
                           <td className="px-4 py-3 text-center">
-                            {!customer.isNewCustomer && customer.hasReturnedAfterOld && (
+                            {!customer.isNewCustomer && customer.hasReturnedAfterNew && (
                               <span
                                 className="text-xs font-medium px-2 py-1 rounded-full text-orange-700 bg-orange-100"
                                 title="舊客戶且有回訪"
@@ -1950,7 +1997,7 @@ export default function ReportsContent() {
                             {customer.cumulativePercentage ? `${customer.cumulativePercentage}%` : '--'}
                           </td>
                           <td className="px-4 py-3 text-center">
-                            <button 
+                            <button
                               className="text-emerald-600 hover:text-emerald-700 transition-colors hover:bg-transparent"
                               onClick={() => handleViewCustomerDetails(customer.customerPhone, customer.customerName)}
                               title="查看消費明細"
@@ -1976,7 +2023,7 @@ export default function ReportsContent() {
           </div>
         )}
       </div>
-      
+
       {/* 客戶消費明細 Modal */}
       {showCustomerModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -1990,7 +2037,7 @@ export default function ReportsContent() {
                   {selectedCustomerName} ({selectedCustomerPhone}) • {customerAnalysisMonth}
                 </p>
               </div>
-              <button 
+              <button
                 onClick={() => setShowCustomerModal(false)}
                 className="text-gray-400 hover:text-gray-600 transition-colors"
               >
@@ -1999,7 +2046,7 @@ export default function ReportsContent() {
                 </svg>
               </button>
             </div>
-            
+
             <div className="p-6 overflow-y-auto max-h-[70vh]">
               {loadingCustomerDetails ? (
                 <div className="flex items-center justify-center py-12">
@@ -2044,7 +2091,7 @@ export default function ReportsContent() {
                             </div>
                           </div>
                         </div>
-                        
+
                         {/* 品項列表 */}
                         <div className="space-y-2">
                           {order.items.map((item: any, itemIndex: number) => (
