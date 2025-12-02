@@ -334,7 +334,11 @@ export default function MeetingRecordsPage() {
                           headers: { 'Content-Type': file.type }
                         })
 
-                        if (!resUpload.ok) throw new Error('Upload failed')
+                        if (!resUpload.ok) {
+                          const errorText = await resUpload.text()
+                          console.error('Supabase upload error:', errorText)
+                          throw new Error(`Upload failed: ${resUpload.status} ${resUpload.statusText}`)
+                        }
 
                         // 3. Process
                         const resProcess = await fetch('/api/meeting-records/process-video', {
