@@ -31,22 +31,40 @@ export async function POST(request: NextRequest) {
     let tempFilePath: string | null = null
 
     try {
-        const { fileId, fileName } = await request.json()
+        const { fileId, fileName, fileKey } = await request.json()
 
-        if (!fileId || !fileName) {
-            return NextResponse.json({ error: 'File ID and Name are required' }, { status: 400 })
+        if ((!fileId || !fileName) && !fileKey) {
+            return NextResponse.json({ error: 'File source is required' }, { status: 400 })
         }
 
-        // 1. Download video from Drive
-        console.log(`Downloading file ${fileName} (${fileId})...`)
-        tempFilePath = await downloadFileToTmp(fileId, fileName)
-        console.log(`Downloaded to ${tempFilePath}`)
+        const supabase = getSupabaseClient()
+
+        // 1. Download file (from Drive or Supabase)
+        if (fileKey) {
+            // Download from Supabase Storage
+            console.log(`Downloading file from Supabase: ${fileKey}...`)
+            const { data, error } = await supabase.storage
+                .from('temp-meeting-uploads')
+                .download(fileKey)
+
+            if (error) throw new Error(`Supabase download failed: ${error.message}`)
+
+            const buffer = Buffer.from(await data.arrayBuffer())
+            tempFilePath = `/tmp/${fileKey}`
+            fs.writeFileSync(tempFilePath, buffer)
+            console.log(`Downloaded to ${tempFilePath}`)
+        } else {
+            // Download from Drive
+            console.log(`Downloading file ${fileName} (${fileId})...`)
+            tempFilePath = await downloadFileToTmp(fileId, fileName)
+            console.log(`Downloaded to ${tempFilePath}`)
+        }
 
         // 2. Upload to Gemini
         console.log('Uploading to Gemini...')
         const uploadResult = await fileManager.uploadFile(tempFilePath, {
-            mimeType: 'video/mp4',
-            displayName: fileName,
+            mimeType: 'video/mp4', // Gemini handles audio with this mime type too usually, or we can detect
+            displayName: fileName || fileKey,
         })
         const fileUri = uploadResult.file.uri
         const name = uploadResult.file.name
@@ -95,7 +113,7 @@ export async function POST(request: NextRequest) {
         const data = JSON.parse(jsonStr)
 
         // 5. Insert into Database
-        const supabase = getSupabaseClient()
+        // supabase client is already initialized above
 
         const meetingDate = data.meeting_date || new Date().toISOString().split('T')[0]
 

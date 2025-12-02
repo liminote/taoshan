@@ -303,11 +303,72 @@ export default function MeetingRecordsPage() {
           <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50">
             <div className="bg-white max-w-2xl w-full rounded-2xl p-6 shadow-lg max-h-[80vh] flex flex-col">
               <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-semibold">選擇會議影片 (Meet Recordings)</h2>
+                <h2 className="text-xl font-semibold">上傳會議音檔/影片</h2>
                 <button onClick={() => setShowUploadModal(false)} className="text-gray-500 text-lg">✕</button>
               </div>
 
-              <div className="flex-1 overflow-y-auto min-h-[300px]">
+              <div className="mb-6 border-b pb-6">
+                <h3 className="text-sm font-medium text-gray-700 mb-3">方式一：從電腦上傳 (推薦，支援大檔案)</h3>
+                <div className="flex gap-3">
+                  <input
+                    type="file"
+                    accept="audio/*,video/*"
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0]
+                      if (!file) return
+
+                      try {
+                        setIsProcessingVideo(true)
+
+                        // 1. Get signed URL
+                        const resSign = await fetch('/api/upload/signed-url', {
+                          method: 'POST',
+                          body: JSON.stringify({ filename: file.name, contentType: file.type })
+                        })
+                        const { signedUrl, path, token } = await resSign.json()
+
+                        // 2. Upload to Supabase Storage
+                        const resUpload = await fetch(signedUrl, {
+                          method: 'PUT',
+                          body: file,
+                          headers: { 'Content-Type': file.type }
+                        })
+
+                        if (!resUpload.ok) throw new Error('Upload failed')
+
+                        // 3. Process
+                        const resProcess = await fetch('/api/meeting-records/process-video', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ fileKey: path, fileName: file.name })
+                        })
+
+                        const data = await resProcess.json()
+                        if (!resProcess.ok) throw new Error(data.error || 'Processing failed')
+
+                        alert('會議記錄已生成！')
+                        setShowUploadModal(false)
+                        await fetchRecords()
+
+                      } catch (err: any) {
+                        console.error(err)
+                        alert(`處理失敗: ${err.message}`)
+                      } finally {
+                        setIsProcessingVideo(false)
+                      }
+                    }}
+                    className="block w-full text-sm text-gray-500
+                      file:mr-4 file:py-2 file:px-4
+                      file:rounded-full file:border-0
+                      file:text-sm file:font-semibold
+                      file:bg-indigo-50 file:text-indigo-700
+                      hover:file:bg-indigo-100"
+                  />
+                </div>
+              </div>
+
+              <h3 className="text-sm font-medium text-gray-700 mb-3">方式二：從 Google Drive (Meet Recordings) 選擇</h3>
+              <div className="flex-1 overflow-y-auto min-h-[200px]">
                 {isLoadingVideos ? (
                   <div className="text-center py-12 text-gray-500">載入影片列表中...</div>
                 ) : isProcessingVideo ? (
