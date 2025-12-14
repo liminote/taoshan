@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
 
     console.log('⚠️ 無快取資料，執行即時計算，月份:', month)
 
-    // 使用 Google Sheets 資料來源
+    // 使用 Google Sheets 資料來源 (Force refresh)
     const productSheetUrl = 'https://docs.google.com/spreadsheets/d/1GeRbtCX_oHJBooYvZeRbREaSxJ4r8P8QoL-vHiSz2eo/export?format=csv&gid=0'
     const masterSheetUrl = 'https://docs.google.com/spreadsheets/d/18iWZVRT8LB7I_WBNXGPl3WI8S3zEVq5ANq5yTj8Nzd8/export?format=csv&gid=909084406'
 
