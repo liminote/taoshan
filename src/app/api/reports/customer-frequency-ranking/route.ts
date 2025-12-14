@@ -223,6 +223,7 @@ export async function GET(request: NextRequest) {
         hasAlcohol: boolean;
         alcoholProducts: Set<string>;
         isNewCustomer: boolean;
+        hasReturnedAfterNew: boolean; // 新增：新客回訪標記
         hasReturnedAfterOld: boolean; // 新增：舊客回訪標記
       }
     } = {}
