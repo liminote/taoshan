@@ -466,29 +466,17 @@ export async function GET(request: NextRequest) {
 
         const orderMonth = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
 
-        // Debug for specific customers
-        if (phone === '936818633' || phone === '935867990') {
-          if (orderMonth > month) {
-            console.log(`🎯 找到未來訂單: ${customer.name} (${phone}) - 日期: ${orderMonth} (比對 ${month})`)
-          }
-        }
-
         // 檢查是否為查詢月份之後的訂單
         return orderMonth > month
       })
 
       customer.hasReturnedAfterOld = futureOrders.length > 0
 
-      // Debug summary for specific customers
-      if (phone === '936818633' || phone === '935867990') {
-        console.log(`🕵️‍♂️ 客戶檢查: ${customer.name} (${phone})`)
-        console.log(`   - 查詢月份: ${month}`)
-        console.log(`   - 未來訂單數: ${futureOrders.length}`)
-        console.log(`   - 判斷結果 (舊回): ${customer.hasReturnedAfterOld}`)
-      }
-
-      if (customer.hasReturnedAfterOld) {
-        console.log(`🔄 舊客回訪: ${phone} (${customer.name}) 在 ${month} 後有 ${futureOrders.length} 筆訂單`)
+      // DEBUG: Append debug info to name for visual verification
+      if (phone === '960779556' || phone === '936818633' || phone === '935867990') {
+        const isNew = customer.isNewCustomer ? 'Y' : 'N'
+        const foCount = futureOrders.length
+        customer.name = `${customer.name} [New:${isNew}, FO:${foCount}]`
       }
     })
 
