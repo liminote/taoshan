@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
 
     // 使用 Google Sheets 訂單資料
     const orderSheetUrl = 'https://docs.google.com/spreadsheets/d/1EWPECWQp_Ehz43Lfks_I8lcvEig8gV9DjyjEIzC5EO4/export?format=csv&gid=0'
-    
+
     const orderResponse = await fetch(orderSheetUrl)
 
     if (!orderResponse.ok) {
@@ -37,13 +37,13 @@ export async function GET(request: NextRequest) {
     // 解析訂單 CSV 資料
     const orderLines = orderCsv.split('\n').filter(line => line.trim())
     const orderHeaders = orderLines[0].split(',').map(h => h.replace(/"/g, '').trim())
-    
+
     console.log('訂單表格欄位:', orderHeaders)
-    
+
     // 找到需要的欄位索引 - 嘗試各種可能的支付方式欄位名稱
-    const paymentMethodIndex = orderHeaders.findIndex(h => 
-      h.includes('支付方式') || 
-      h.includes('付款方式') || 
+    const paymentMethodIndex = orderHeaders.findIndex(h =>
+      h.includes('支付方式') ||
+      h.includes('付款方式') ||
       h.includes('付款類型') ||
       h.includes('Payment') ||
       h.includes('payment')
@@ -85,12 +85,12 @@ export async function GET(request: NextRequest) {
     // 篩選指定月份的訂單資料
     orderData = orderData.filter(record => {
       if (!record.checkoutTime) return false
-      
+
       const dateStr = record.checkoutTime.replace(/\//g, '-')
       const date = new Date(dateStr)
-      
+
       if (isNaN(date.getTime())) return false
-      
+
       const recordMonth = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
       return recordMonth === month
     })
@@ -99,15 +99,15 @@ export async function GET(request: NextRequest) {
 
     // 統計支付方式分佈
     const paymentStats = new Map()
-    
+
     orderData.forEach(record => {
       const method = record.paymentMethod || '未知'
       const amount = record.amount || 0
-      
+
       if (!paymentStats.has(method)) {
         paymentStats.set(method, { count: 0, amount: 0 })
       }
-      
+
       const existing = paymentStats.get(method)
       existing.count += 1
       existing.amount += amount
@@ -121,7 +121,7 @@ export async function GET(request: NextRequest) {
       .map(([method, stats]) => ({
         method: method,
         count: stats.count,
-        amount: Math.round(stats.amount * 100) / 100,
+        amount: Math.round(stats.amount),
         percentage: totalCount > 0 ? Math.round((stats.count / totalCount) * 1000) / 10 : 0
       }))
       .sort((a, b) => b.count - a.count)
@@ -143,7 +143,7 @@ export async function GET(request: NextRequest) {
 
   } catch (error) {
     console.error('支付方式統計失敗:', error)
-    return NextResponse.json({ 
+    return NextResponse.json({
       error: '支付方式統計失敗',
       details: error instanceof Error ? error.message : '未知錯誤'
     }, { status: 500 })

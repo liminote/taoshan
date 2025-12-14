@@ -18,7 +18,7 @@ export async function GET() {
 
     // 使用 Google Sheets 訂單資料
     const orderSheetUrl = 'https://docs.google.com/spreadsheets/d/1EWPECWQp_Ehz43Lfks_I8lcvEig8gV9DjyjEIzC5EO4/export?format=csv&gid=0'
-    
+
     const orderResponse = await fetch(orderSheetUrl)
 
     if (!orderResponse.ok) {
@@ -31,11 +31,11 @@ export async function GET() {
     // 解析訂單 CSV 資料
     const orderLines = orderCsv.split('\n').filter(line => line.trim())
     const orderHeaders = orderLines[0].split(',').map(h => h.replace(/"/g, '').trim())
-    
+
     // 找到需要的欄位索引
     const checkoutTimeIndex = orderHeaders.findIndex(h => h.includes('結帳時間'))
     const discountIndex = orderHeaders.findIndex(h => h.includes('折扣金額'))
-    
+
     const orderData = orderLines.slice(1).map(line => {
       const values = line.split(',').map(v => v.replace(/"/g, '').trim())
       return {
@@ -54,16 +54,16 @@ export async function GET() {
     if (orderData && orderData.length > 0) {
       console.log(`取得 ${orderData.length} 筆訂單折扣資料`)
       let processedCount = 0
-      
+
       orderData.forEach((record) => {
         if (record.checkout_time) {
           // 處理日期格式 YYYY-MM-DD HH:MM:SS 或 YYYY/MM/DD HH:MM:SS
           const dateStr = record.checkout_time.replace(/\//g, '-')
           const date = new Date(dateStr)
-          
+
           if (!isNaN(date.getTime())) {
             const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
-            
+
             if (monthlyStats.hasOwnProperty(monthKey)) {
               monthlyStats[monthKey] += record.discount_amount || 0
               processedCount++
@@ -71,7 +71,7 @@ export async function GET() {
           }
         }
       })
-      
+
       console.log(`處理了 ${processedCount} 筆有效折扣資料`)
     }
 
@@ -79,7 +79,7 @@ export async function GET() {
     const result = months.map(month => ({
       month: month,
       monthDisplay: month.replace('-', '年') + '月',
-      discountAmount: Math.round(monthlyStats[month] * 100) / 100
+      discountAmount: Math.round(monthlyStats[month])
     }))
 
     return NextResponse.json({

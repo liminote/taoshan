@@ -36,7 +36,7 @@ export async function GET(request: Request) {
       .not('checkout_time', 'is', null)
       .gte('checkout_time', dateFilter ? undefined : '1900-01-01')
       .lte('checkout_time', dateFilter ? undefined : '2100-12-31')
-    
+
     if (orderError) {
       console.error('查詢訂單統計失敗:', orderError)
       return NextResponse.json({ error: '查詢訂單統計失敗' }, { status: 500 })
@@ -64,7 +64,7 @@ export async function GET(request: Request) {
     const filteredOrders = orderStats?.filter(order => {
       if (!order.checkout_time) return false
       const orderDate = new Date(order.checkout_time)
-      
+
       if (month) {
         const orderMonth = `${orderDate.getFullYear()}-${String(orderDate.getMonth() + 1).padStart(2, '0')}`
         return orderMonth === month
@@ -79,7 +79,7 @@ export async function GET(request: Request) {
     const filteredProducts = productStats?.filter(product => {
       if (!product.checkout_time) return false
       const productDate = new Date(product.checkout_time)
-      
+
       if (month) {
         const productMonth = `${productDate.getFullYear()}-${String(productDate.getMonth() + 1).padStart(2, '0')}`
         return productMonth === month
@@ -112,7 +112,7 @@ export async function GET(request: Request) {
     }, {})
 
     // 7. 熱門商品 (前10名)
-    const productAnalysis = filteredProducts.reduce((acc: Record<string, {count: number, revenue: number}>, product) => {
+    const productAnalysis = filteredProducts.reduce((acc: Record<string, { count: number, revenue: number }>, product) => {
       const name = product.product_name || '未知商品'
       if (!acc[name]) {
         acc[name] = { count: 0, revenue: 0 }
@@ -128,17 +128,17 @@ export async function GET(request: Request) {
       .slice(0, 10)
 
     // 8. 日期趨勢分析
-    const dailyTrends = filteredProducts.reduce((acc: Record<string, {orders: number, revenue: number, products: number}>, product) => {
+    const dailyTrends = filteredProducts.reduce((acc: Record<string, { orders: number, revenue: number, products: number }>, product) => {
       if (!product.checkout_time) return acc
-      
+
       const date = new Date(product.checkout_time).toISOString().split('T')[0]
       if (!acc[date]) {
         acc[date] = { orders: 0, revenue: 0, products: 0 }
       }
-      
+
       acc[date].products += 1
       acc[date].revenue += product.invoice_amount || 0
-      
+
       return acc
     }, {})
 
@@ -159,8 +159,8 @@ export async function GET(request: Request) {
       summary: {
         totalOrders,
         totalProducts,
-        totalRevenue: Math.round(totalRevenue * 100) / 100,
-        averageOrderValue: Math.round(averageOrderValue * 100) / 100
+        totalRevenue: Math.round(totalRevenue),
+        averageOrderValue: Math.round(averageOrderValue)
       },
       analysis: {
         sourceAnalysis,

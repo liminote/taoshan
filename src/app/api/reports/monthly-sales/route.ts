@@ -39,7 +39,7 @@ export async function GET() {
     // 使用 Google Sheets 訂單資料
     const orderSheetUrl = 'https://docs.google.com/spreadsheets/d/1EWPECWQp_Ehz43Lfks_I8lcvEig8gV9DjyjEIzC5EO4/export?format=csv&gid=0'
     const productSheetUrl = 'https://docs.google.com/spreadsheets/d/1GeRbtCX_oHJBooYvZeRbREaSxJ4r8P8QoL-vHiSz2eo/export?format=csv&gid=0'
-    
+
     const [orderResponse, productResponse] = await Promise.all([
       fetch(orderSheetUrl),
       fetch(productSheetUrl)
@@ -62,12 +62,12 @@ export async function GET() {
 
     const orderHeaders = orderRows[0].map(h => h.trim())
     const orderLines = orderRows.slice(1)
-    
+
     // 找到需要的欄位索引
     const checkoutTimeIndex = orderHeaders.findIndex(h => h.includes('結帳時間'))
     const checkoutAmountIndex = orderHeaders.findIndex(h => h.includes('結帳金額'))
     const discountIndex = orderHeaders.findIndex(h => h.includes('折扣金額'))
-    
+
     const orderData = orderLines.map(line => {
       const values = line.map(v => v.trim())
       return {
@@ -86,7 +86,7 @@ export async function GET() {
 
     const productHeaders = productRows[0].map(h => h.trim())
     const productLines = productRows.slice(1)
-    
+
     const productData = productLines.map(line => {
       const values = line.map(v => v.trim())
       const record: Record<string, string> = {}
@@ -97,18 +97,20 @@ export async function GET() {
     }).filter(record => record['結帳時間'] && record['結帳時間'] !== '')
 
     // 初始化所有月份的統計數據
-    const monthlyStats: { [key: string]: { 
-      amount: number; 
-      orderCount: number; 
-      avgOrderValue: number;
-      productItems: Set<string>;
-      productItemCount: number;
-    } } = {}
+    const monthlyStats: {
+      [key: string]: {
+        amount: number;
+        orderCount: number;
+        avgOrderValue: number;
+        productItems: Set<string>;
+        productItemCount: number;
+      }
+    } = {}
 
     recentMonths.forEach(month => {
-      monthlyStats[month] = { 
-        amount: 0, 
-        orderCount: 0, 
+      monthlyStats[month] = {
+        amount: 0,
+        orderCount: 0,
         avgOrderValue: 0,
         productItems: new Set(),
         productItemCount: 0
@@ -120,20 +122,20 @@ export async function GET() {
       console.log(`取得 ${orderData.length} 筆訂單資料`)
       let processedCount = 0
       const sampleDates: string[] = []
-      
+
       orderData.forEach((record, index) => {
         if (record.checkout_time) {
           // 處理日期格式 YYYY-MM-DD HH:MM:SS 或 YYYY/MM/DD HH:MM:SS
           const dateStr = record.checkout_time.replace(/\//g, '-')
           const date = new Date(dateStr)
-          
+
           if (!isNaN(date.getTime())) {
             const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
-            
+
             if (index < 5) {
               sampleDates.push(`${record.checkout_time} -> ${monthKey}`)
             }
-            
+
             if (monthlyStats[monthKey]) {
               monthlyStats[monthKey].orderCount += 1
               monthlyStats[monthKey].amount += record.invoice_amount || 0
@@ -142,7 +144,7 @@ export async function GET() {
           }
         }
       })
-      
+
       console.log('樣本日期:', sampleDates)
       console.log(`處理了 ${processedCount} 筆有效資料`)
       console.log('目標月份範圍:', recentMonths)
@@ -151,18 +153,18 @@ export async function GET() {
     // 處理商品資料來計算商品品項數
     if (productData && productData.length > 0) {
       console.log(`取得 ${productData.length} 筆商品資料`)
-      
+
       productData.forEach((record) => {
         const checkoutTime = record['結帳時間']
         const productName = record['商品名稱'] || record['品項名稱'] || ''
-        
+
         if (checkoutTime && productName) {
           const dateStr = checkoutTime.replace(/\//g, '-')
           const date = new Date(dateStr)
-          
+
           if (!isNaN(date.getTime())) {
             const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
-            
+
             if (monthlyStats[monthKey]) {
               monthlyStats[monthKey].productItems.add(productName)
             }
@@ -174,7 +176,7 @@ export async function GET() {
     // 計算平均單價和商品品項數
     Object.keys(monthlyStats).forEach(month => {
       const stats = monthlyStats[month]
-      stats.avgOrderValue = stats.orderCount > 0 ? Math.round((stats.amount / stats.orderCount) * 100) / 100 : 0
+      stats.avgOrderValue = stats.orderCount > 0 ? Math.round(stats.amount / stats.orderCount) : 0
       stats.productItemCount = stats.productItems.size
     })
 
@@ -182,7 +184,7 @@ export async function GET() {
     const result = recentMonths.map(month => ({
       month: month,
       monthDisplay: month.replace('-', '年') + '月',
-      amount: Math.round(monthlyStats[month].amount * 100) / 100,
+      amount: Math.round(monthlyStats[month].amount),
       orderCount: monthlyStats[month].orderCount,
       avgOrderValue: monthlyStats[month].avgOrderValue,
       productItemCount: monthlyStats[month].productItemCount
@@ -190,7 +192,7 @@ export async function GET() {
 
     // 儲存到快取
     reportCache.set(CACHE_KEYS.MONTHLY_SALES, result)
-    
+
     return NextResponse.json({
       success: true,
       data: result,

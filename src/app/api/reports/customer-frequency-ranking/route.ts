@@ -15,24 +15,24 @@ async function getProductCategoryMap(): Promise<Map<string, { large: string, sma
 
   console.log('📋 載入商品分類映射...')
   const masterSheetUrl = 'https://docs.google.com/spreadsheets/d/18iWZVRT8LB7I_WBNXGPl3WI8S3zEVq5ANq5yTj8Nzd8/export?format=csv&gid=909084406'
-  
+
   try {
     const response = await fetch(masterSheetUrl)
     if (!response.ok) throw new Error('無法獲取商品主檔')
-    
+
     const csv = await response.text()
     const lines = csv.split('\n').filter(line => line.trim())
     const headers = lines[0].split(',').map(h => h.replace(/"/g, '').trim())
-    
+
     const oldNameIndex = headers.findIndex(h => h.includes('商品名稱') && !h.includes('新'))
     const newNameIndex = headers.findIndex(h => h.includes('新商品名稱'))
     const largeCategoryIndex = headers.findIndex(h => h === '大分類')
     const smallCategoryIndex = headers.findIndex(h => h === '小分類')
-    
+
     console.log(`📋 商品主檔欄位索引: 商品名稱=${oldNameIndex}, 新商品名稱=${newNameIndex}, 大分類=${largeCategoryIndex}, 小分類=${smallCategoryIndex}`)
-    
+
     const categoryMap = new Map<string, { large: string, small: string }>()
-    
+
     if ((oldNameIndex !== -1 || newNameIndex !== -1) && largeCategoryIndex !== -1 && smallCategoryIndex !== -1) {
       lines.slice(1).forEach((line, index) => {
         const values = line.split(',').map(v => v.replace(/"/g, '').trim())
@@ -40,7 +40,7 @@ async function getProductCategoryMap(): Promise<Map<string, { large: string, sma
         const newProductName = newNameIndex !== -1 ? values[newNameIndex] : ''
         const largeCategory = values[largeCategoryIndex]
         const smallCategory = values[smallCategoryIndex]
-        
+
         // 使用舊商品名稱和新商品名稱都建立映射
         if (oldProductName && largeCategory && smallCategory) {
           categoryMap.set(oldProductName, {
@@ -48,25 +48,25 @@ async function getProductCategoryMap(): Promise<Map<string, { large: string, sma
             small: smallCategory
           })
         }
-        
+
         if (newProductName && newProductName !== oldProductName && largeCategory && smallCategory) {
           categoryMap.set(newProductName, {
             large: largeCategory,
             small: smallCategory
           })
         }
-        
+
         // 記錄啤酒類商品用於調試
         if (smallCategory === '啤酒') {
           console.log(`🍺 發現啤酒商品 #${index}: 舊名="${oldProductName}", 新名="${newProductName}", 分類=${largeCategory}/${smallCategory}`)
         }
       })
     }
-    
+
     productCategoryCache = categoryMap
     categoryCacheTime = now
     console.log(`📋 載入 ${categoryMap.size} 個商品分類映射`)
-    
+
     // 調試：檢查特定酒類商品是否在映射中
     const debugProducts = ['Asahi生啤酒機', '神息 櫻木桶 威士忌', '雪梅 純米吟釀']
     debugProducts.forEach(product => {
@@ -77,7 +77,7 @@ async function getProductCategoryMap(): Promise<Map<string, { large: string, sma
         console.log(`❌ 調試 - 未找到商品映射: "${product}"`)
       }
     })
-    
+
     return categoryMap
   } catch (error) {
     console.error('載入商品分類映射失敗:', error)
@@ -88,34 +88,34 @@ async function getProductCategoryMap(): Promise<Map<string, { large: string, sma
 // 檢查商品是否為酒類
 function isAlcoholProduct(productName: string, categoryMap: Map<string, { large: string, small: string }>): boolean {
   console.log(`🔍 檢查商品是否為酒類: "${productName}"`)
-  
+
   // 直接匹配
   const exactMatch = categoryMap.get(productName)
   if (exactMatch) {
     const isAlcohol = exactMatch.large === '6酒水' && (
-      exactMatch.small === '東洋酒' || 
-      exactMatch.small === '西洋酒' || 
+      exactMatch.small === '東洋酒' ||
+      exactMatch.small === '西洋酒' ||
       exactMatch.small === '啤酒'
     )
     console.log(`✅ 直接匹配成功: ${productName} → 大分類:${exactMatch.large}, 小分類:${exactMatch.small}, 是酒類:${isAlcohol}`)
     return isAlcohol
   }
-  
+
   // 部分匹配（處理商品名稱略有差異的情況）
   for (const [masterProductName, category] of categoryMap.entries()) {
     const hasPartialMatch = productName.includes(masterProductName) || masterProductName.includes(productName)
     const isAlcoholCategory = category.large === '6酒水' && (
-      category.small === '東洋酒' || 
-      category.small === '西洋酒' || 
+      category.small === '東洋酒' ||
+      category.small === '西洋酒' ||
       category.small === '啤酒'
     )
-    
+
     if (hasPartialMatch && isAlcoholCategory) {
       console.log(`✅ 部分匹配成功: "${productName}" ↔ "${masterProductName}" → 大分類:${category.large}, 小分類:${category.small}`)
       return true
     }
   }
-  
+
   console.log(`❌ 無匹配: "${productName}" 不是酒類商品`)
   return false
 }
@@ -124,7 +124,7 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
     const month = searchParams.get('month')
-    
+
     if (!month) {
       return NextResponse.json({ error: '請提供月份參數' }, { status: 400 })
     }
@@ -152,31 +152,31 @@ export async function GET(request: NextRequest) {
     const orderSheetUrl = 'https://docs.google.com/spreadsheets/d/1EWPECWQp_Ehz43Lfks_I8lcvEig8gV9DjyjEIzC5EO4/export?format=csv&gid=0'
     const response = await fetch(orderSheetUrl)
     if (!response.ok) throw new Error('無法獲取訂單資料')
-    
+
     const orderCsv = await response.text()
     const orderLines = orderCsv.split('\n').filter(line => line.trim())
     const orderHeaders = orderLines[0].split(',').map(h => h.replace(/"/g, '').trim())
-    
+
     // 找到正確的欄位索引
     const checkoutTimeIndex = orderHeaders.findIndex(h => h.includes('結帳時間'))
     const checkoutAmountIndex = orderHeaders.findIndex(h => h.includes('結帳金額'))
     const customerNameIndex = orderHeaders.findIndex(h => h.includes('顧客姓名'))
     const customerPhoneIndex = orderHeaders.findIndex(h => h.includes('顧客電話'))
     const itemsIndex = orderHeaders.findIndex(h => h.includes('品項'))
-    
+
     if (checkoutTimeIndex === -1 || checkoutAmountIndex === -1 || customerNameIndex === -1 || customerPhoneIndex === -1) {
       throw new Error('找不到必要的欄位')
     }
-    
+
     // 正確的 CSV 解析函數，處理引號內的逗號
     function parseCSVLine(line: string): string[] {
       const result: string[] = []
       let current = ''
       let inQuotes = false
-      
+
       for (let i = 0; i < line.length; i++) {
         const char = line[i]
-        
+
         if (char === '"') {
           inQuotes = !inQuotes
         } else if (char === ',' && !inQuotes) {
@@ -186,7 +186,7 @@ export async function GET(request: NextRequest) {
           current += char
         }
       }
-      
+
       result.push(current.trim()) // 添加最後一個字段
       return result
     }
@@ -203,40 +203,42 @@ export async function GET(request: NextRequest) {
     })
 
     // 篩選有效的訂單資料
-    const validOrderData = orderData.filter(record => 
-      record.結帳時間 && 
-      record.結帳時間 !== '' && 
-      record.顧客電話 && 
+    const validOrderData = orderData.filter(record =>
+      record.結帳時間 &&
+      record.結帳時間 !== '' &&
+      record.顧客電話 &&
       record.顧客電話 !== '' &&
       record.顧客電話 !== '--' &&
       record.顧客電話.trim() !== ''
     )
 
     // 按電話號碼分組客戶數據
-    const customerStats: { [phone: string]: {
-      name: string;
-      phone: string;
-      orderCount: number;
-      totalAmount: number;
-      lastOrderTime: Date;
-      hasAlcohol: boolean;
-      alcoholProducts: Set<string>;
-      isNewCustomer: boolean;
-      hasReturnedAfterOld: boolean; // 新增：舊客回訪標記
-    } } = {}
+    const customerStats: {
+      [phone: string]: {
+        name: string;
+        phone: string;
+        orderCount: number;
+        totalAmount: number;
+        lastOrderTime: Date;
+        hasAlcohol: boolean;
+        alcoholProducts: Set<string>;
+        isNewCustomer: boolean;
+        hasReturnedAfterOld: boolean; // 新增：舊客回訪標記
+      }
+    } = {}
 
     // 篩選指定月份的訂單並統計
     validOrderData.forEach(record => {
       const dateStr = record.結帳時間.replace(/\//g, '-')
       const date = new Date(dateStr)
-      
+
       if (!isNaN(date.getTime())) {
         const orderMonth = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
-        
+
         // 只統計指定月份的數據
         if (orderMonth === month) {
           const phone = record.顧客電話
-          
+
           // 確保電話號碼有效（與過濾條件一致）
           if (phone && phone !== '' && phone !== '--' && phone.trim() !== '') {
             if (!customerStats[phone]) {
@@ -253,10 +255,10 @@ export async function GET(request: NextRequest) {
                 hasReturnedAfterOld: false // 預設為 false，稍後會重新計算
               }
             }
-            
+
             customerStats[phone].orderCount += 1
             customerStats[phone].totalAmount += record.結帳金額
-            
+
             // 檢查是否有酒類商品
             if (record.品項) {
               // 解析品項字串，提取商品名稱（去除價格部分）
@@ -265,7 +267,7 @@ export async function GET(request: NextRequest) {
                 const priceIndex = trimmed.lastIndexOf(' $')
                 return priceIndex !== -1 ? trimmed.substring(0, priceIndex).trim() : trimmed
               })
-              
+
               // 檢查每個品項是否為酒類 - 必須檢查所有品項，不要break
               console.log(`📝 檢查訂單品項 (${itemNames.length}個): ${itemNames.join(', ')}`)
               for (const itemName of itemNames) {
@@ -277,7 +279,7 @@ export async function GET(request: NextRequest) {
                 }
               }
             }
-            
+
             // 更新最新訂單時間和姓名
             if (date > customerStats[phone].lastOrderTime) {
               customerStats[phone].lastOrderTime = date
@@ -295,7 +297,7 @@ export async function GET(request: NextRequest) {
       .filter(record => {
         const dateStr = record.結帳時間.replace(/\//g, '-')
         const date = new Date(dateStr)
-        
+
         if (!isNaN(date.getTime())) {
           const orderMonth = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
           return orderMonth === month
@@ -322,7 +324,7 @@ export async function GET(request: NextRequest) {
       if (customerOrders.length > 0) {
         const earliestOrderDate = customerOrders[0]
         const earliestOrderMonth = `${earliestOrderDate.getFullYear()}-${String(earliestOrderDate.getMonth() + 1).padStart(2, '0')}`
-        
+
         // 如果最早訂單就在查詢月份，則為新客
         customerStats[phone].isNewCustomer = (earliestOrderMonth === month)
       }
@@ -335,7 +337,7 @@ export async function GET(request: NextRequest) {
     console.log(`📝 開始計算新客回訪判斷`)
     Object.keys(customerStats).forEach(phone => {
       const customer = customerStats[phone]
-      
+
       // 只對新客進行回訪判斷
       if (customer.isNewCustomer) {
         // 找出該客戶在查詢月份之後的所有訂單
@@ -355,7 +357,7 @@ export async function GET(request: NextRequest) {
 
         // 如果在查詢月份之後有訂單，則標記為已回訪
         customer.hasReturnedAfterNew = futureOrders.length > 0
-        
+
         if (customer.hasReturnedAfterNew) {
           console.log(`🔄 新客回訪: ${phone} (${customer.name}) 在 ${month} 後有 ${futureOrders.length} 筆訂單`)
         }
@@ -408,7 +410,7 @@ export async function GET(request: NextRequest) {
         customerPhone: customer.phone,
         orderCount: customer.orderCount,
         averageOrderAmount: Math.round(customer.totalAmount / customer.orderCount),
-        totalOrderAmount: Math.round(customer.totalAmount * 100) / 100,
+        totalOrderAmount: Math.round(customer.totalAmount),
         amountPercentage: Math.round((customer.totalAmount / monthlyTotalAmount) * 100 * 10) / 10, // 計算到小數點後一位
         cumulativePercentage: 0, // 將在後面計算
         hasAlcohol: customer.hasAlcohol,
@@ -440,7 +442,7 @@ export async function GET(request: NextRequest) {
 
     // 儲存到快取
     reportCache.set(cacheKey, result)
-    
+
     return NextResponse.json({
       success: true,
       data: result,

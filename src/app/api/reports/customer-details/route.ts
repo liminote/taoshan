@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const phone = searchParams.get('phone')
     const month = searchParams.get('month')
-    
+
     if (!phone || !month) {
       return NextResponse.json({ error: '請提供客戶電話和月份參數' }, { status: 400 })
     }
@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
 
     // Google Sheets 訂單資料
     const orderSheetUrl = 'https://docs.google.com/spreadsheets/d/1EWPECWQp_Ehz43Lfks_I8lcvEig8gV9DjyjEIzC5EO4/export?format=csv&gid=0'
-    
+
     const orderResponse = await fetch(orderSheetUrl)
 
     if (!orderResponse.ok) {
@@ -49,7 +49,7 @@ export async function GET(request: NextRequest) {
     // 解析訂單 CSV 資料
     const orderLines = orderCsv.split('\n').filter(line => line.trim())
     const orderHeaders = orderLines[0].split(',').map(h => h.replace(/"/g, '').trim())
-    
+
     // 找到需要的欄位索引
     const checkoutTimeIndex = orderHeaders.findIndex(h => h.includes('結帳時間'))
     const customerNameIndex = orderHeaders.findIndex(h => h.includes('顧客姓名'))
@@ -63,7 +63,7 @@ export async function GET(request: NextRequest) {
       // 使用正則表達式來更準確地解析CSV，處理引號內的逗號
       const csvRegex = /,(?=(?:[^"]*"[^"]*")*[^"]*$)/
       const values = line.split(csvRegex).map(v => v.replace(/^"|"$/g, '').trim())
-      
+
       const record = {
         checkout_time: values[checkoutTimeIndex],
         customer_name: values[customerNameIndex] || '',
@@ -72,12 +72,12 @@ export async function GET(request: NextRequest) {
         items: values[itemsIndex] || '',
         invoice_amount: parseFloat(values[invoiceAmountIndex]) || 0
       }
-      
-      
+
+
       return record
-    }).filter(record => 
-      record.checkout_time && 
-      record.checkout_time !== '' && 
+    }).filter(record =>
+      record.checkout_time &&
+      record.checkout_time !== '' &&
       record.customer_phone === phone
     )
 
@@ -85,7 +85,7 @@ export async function GET(request: NextRequest) {
     const monthlyOrders = orderData.filter(record => {
       const dateStr = record.checkout_time.replace(/\//g, '-')
       const date = new Date(dateStr)
-      
+
       if (!isNaN(date.getTime())) {
         const orderMonth = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
         return orderMonth === month
@@ -111,21 +111,21 @@ export async function GET(request: NextRequest) {
     // 解析品項字串並建立訂單明細，合併相同商品和價格
     function parseOrderItems(itemsString: string): OrderItem[] {
       if (!itemsString) return []
-      
+
       const itemsMap = new Map<string, OrderItem>()
-      
+
       itemsString.split(',').forEach(item => {
         const trimmedItem = item.trim()
         const lastSpaceIndex = trimmedItem.lastIndexOf(' $')
-        
+
         if (lastSpaceIndex !== -1) {
           const name = trimmedItem.substring(0, lastSpaceIndex)
           const priceStr = trimmedItem.substring(lastSpaceIndex + 2) // 去除 " $"
           const price = parseFloat(priceStr).toString() // 這樣會自動移除 .0
-          
+
           // 使用商品名稱+價格作為唯一key（相同商品不同價格分開統計）
           const key = `${name}|${price}`
-          
+
           if (itemsMap.has(key)) {
             itemsMap.get(key)!.quantity += 1
           } else {
@@ -133,7 +133,7 @@ export async function GET(request: NextRequest) {
           }
         }
       })
-      
+
       // 依照商品定價由高至低排序
       return Array.from(itemsMap.values()).sort((a, b) => parseFloat(b.price) - parseFloat(a.price))
     }
@@ -142,8 +142,8 @@ export async function GET(request: NextRequest) {
       const items = parseOrderItems(record.items)
       const itemsPriceSum = items.reduce((sum, item) => sum + parseFloat(item.price), 0)
       const actualAmount = record.invoice_amount || 0  // 使用原始結帳金額
-      
-      
+
+
       return {
         orderId: record.original_order_id || '無編號',
         orderTime: record.checkout_time,
@@ -155,7 +155,7 @@ export async function GET(request: NextRequest) {
     // 計算統計資訊
     const totalOrders = orders.length
     const totalAmount = orders.reduce((sum, order) => sum + order.totalAmount, 0)
-    
+
 
     const result: CustomerDetailsResponse = {
       customerName: monthlyOrders[0].customer_name,
@@ -164,7 +164,7 @@ export async function GET(request: NextRequest) {
       orders: orders.sort((a, b) => new Date(b.orderTime).getTime() - new Date(a.orderTime).getTime()), // 最新在前
       summary: {
         totalOrders,
-        totalAmount: Math.round(totalAmount * 100) / 100
+        totalAmount: Math.round(totalAmount)
       }
     }
 

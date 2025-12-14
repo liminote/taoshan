@@ -159,9 +159,9 @@ export default function ReportsContent() {
     '#FFFACD'  // 檸檬薄荷色
   ]
 
-  // 格式化數字
+  // 格式化數字（四捨五入至整數）
   const formatNumber = (num: number) => {
-    return new Intl.NumberFormat('zh-TW').format(num)
+    return new Intl.NumberFormat('zh-TW').format(Math.round(num))
   }
 
   // Fetch trends data (used for 趨勢觀測 tab)
@@ -833,7 +833,7 @@ export default function ReportsContent() {
               fill={chartColors[index % chartColors.length]}
               className="hover:opacity-80 transition-opacity cursor-pointer"
             >
-              <title>{`${item.category}: NT$ ${item.amount.toLocaleString()} (${item.percentage}%)`}</title>
+              <title>{`${item.category}: NT$ ${Math.round(item.amount).toLocaleString()} (${item.percentage}%)`}</title>
             </path>
           )
         })}
@@ -1441,7 +1441,7 @@ export default function ReportsContent() {
                         <div className="flex-1 min-w-0">
                           <div className="font-medium text-gray-900 truncate">{item.category}</div>
                           <div className="text-sm text-gray-600">
-                            {item.amount.toLocaleString()} ({item.percentage}%)
+                            {Math.round(item.amount).toLocaleString()} ({item.percentage}%)
                           </div>
                         </div>
                       </div>
@@ -1481,7 +1481,7 @@ export default function ReportsContent() {
                         <div className="flex-1 min-w-0">
                           <div className="font-medium text-gray-900 truncate">{item.category}</div>
                           <div className="text-sm text-gray-600">
-                            {item.amount.toLocaleString()} ({item.percentage}%)
+                            {Math.round(item.amount).toLocaleString()} ({item.percentage}%)
                           </div>
                         </div>
                       </div>
@@ -1495,7 +1495,7 @@ export default function ReportsContent() {
                         <div className="flex-1 min-w-0">
                           <div className="font-medium text-gray-900 truncate">其他</div>
                           <div className="text-sm text-gray-600">
-                            {monthlySmallCategoryData.slice(8).reduce((sum, item) => sum + item.amount, 0).toLocaleString()}
+                            {Math.round(monthlySmallCategoryData.slice(8).reduce((sum, item) => sum + item.amount, 0)).toLocaleString()}
                             ({Math.round(monthlySmallCategoryData.slice(8).reduce((sum, item) => sum + item.percentage, 0) * 10) / 10}%)
                           </div>
                         </div>
@@ -2066,7 +2066,7 @@ export default function ReportsContent() {
                       <div className="text-sm text-gray-600 mt-1">總訂單數</div>
                     </div>
                     <div className="text-center p-4 bg-purple-50 rounded-xl">
-                      <div className="text-2xl font-bold text-purple-600">NT$ {customerDetails.summary.totalAmount}</div>
+                      <div className="text-2xl font-bold text-purple-600">NT$ {Math.round(customerDetails.summary.totalAmount).toLocaleString()}</div>
                       <div className="text-sm text-gray-600 mt-1">總金額</div>
                     </div>
                   </div>
@@ -2087,7 +2087,7 @@ export default function ReportsContent() {
                           </div>
                           <div className="text-right">
                             <div className="text-lg font-bold text-gray-900">
-                              NT$ {order.totalAmount}
+                              NT$ {Math.round(order.totalAmount).toLocaleString()}
                             </div>
                           </div>
                         </div>
