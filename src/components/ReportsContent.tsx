@@ -70,6 +70,7 @@ interface CustomerAnalysisData {
   hasAlcohol?: boolean
   isNewCustomer?: boolean
   hasReturnedAfterNew?: boolean
+  hasReturnedAfterOld?: boolean
 }
 
 export default function ReportsContent() {
@@ -1863,7 +1864,7 @@ export default function ReportsContent() {
                             )}
                           </td>
                           <td className="px-4 py-3 text-center">
-                            {!customer.isNewCustomer && customer.hasReturnedAfterNew && (
+                            {!customer.isNewCustomer && customer.hasReturnedAfterOld && (
                               <span
                                 className="text-xs font-medium px-2 py-1 rounded-full text-orange-700 bg-orange-100"
                                 title="舊客戶且有回訪"
@@ -1972,7 +1973,7 @@ export default function ReportsContent() {
                             )}
                           </td>
                           <td className="px-4 py-3 text-center">
-                            {!customer.isNewCustomer && customer.hasReturnedAfterNew && (
+                            {!customer.isNewCustomer && customer.hasReturnedAfterOld && (
                               <span
                                 className="text-xs font-medium px-2 py-1 rounded-full text-orange-700 bg-orange-100"
                                 title="舊客戶且有回訪"

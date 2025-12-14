@@ -472,12 +472,7 @@ export async function GET(request: NextRequest) {
 
       customer.hasReturnedAfterOld = futureOrders.length > 0
 
-      // DEBUG: Append debug info to name for visual verification
-      if (phone === '960779556' || phone === '936818633' || phone === '935867990') {
-        const isNew = customer.isNewCustomer ? 'Y' : 'N'
-        const foCount = futureOrders.length
-        customer.name = `${customer.name} [New:${isNew}, FO:${foCount}]`
-      }
+
     })
 
     const oldCustomerCount = oldCustomers.length
