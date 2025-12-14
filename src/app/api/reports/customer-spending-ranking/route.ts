@@ -205,7 +205,7 @@ export async function GET(request: NextRequest) {
     // 獲取訂單資料
     console.log('📥 載入訂單資料...')
     const orderSheetUrl = 'https://docs.google.com/spreadsheets/d/1EWPECWQp_Ehz43Lfks_I8lcvEig8gV9DjyjEIzC5EO4/export?format=csv&gid=0'
-    const response = await fetch(orderSheetUrl)
+    const response = await fetch(orderSheetUrl, { cache: 'no-store' })
     if (!response.ok) throw new Error('無法獲取訂單資料')
 
     const orderCsv = await response.text()

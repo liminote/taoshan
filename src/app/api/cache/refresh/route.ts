@@ -6,11 +6,11 @@ import { SheetsCache } from '@/lib/sheets-cache'
 export async function POST() {
   try {
     console.log('🔄 開始手動刷新報表快取...')
-    
+
     // 清除所有舊快取
     reportCache.clear()
     SheetsCache.clearAll()
-    
+
     // Google Sheets URLs
     const orderSheetUrl = 'https://docs.google.com/spreadsheets/d/1EWPECWQp_Ehz43Lfks_I8lcvEig8gV9DjyjEIzC5EO4/export?format=csv&gid=0'
     const productSheetUrl = 'https://docs.google.com/spreadsheets/d/1GeRbtCX_oHJBooYvZeRbREaSxJ4r8P8QoL-vHiSz2eo/export?format=csv&gid=0'
@@ -19,9 +19,9 @@ export async function POST() {
     // 同時取得所有資料源
     console.log('📥 取得 Google Sheets 資料...')
     const [orderResponse, productResponse, masterResponse] = await Promise.all([
-      fetch(orderSheetUrl),
-      fetch(productSheetUrl), 
-      fetch(masterSheetUrl)
+      fetch(orderSheetUrl, { cache: 'no-store' }),
+      fetch(productSheetUrl, { cache: 'no-store' }),
+      fetch(masterSheetUrl, { cache: 'no-store' })
     ])
 
     if (!orderResponse.ok || !productResponse.ok || !masterResponse.ok) {
@@ -35,20 +35,20 @@ export async function POST() {
     ])
 
     console.log('⚡ 開始計算各項報表資料...')
-    
+
     // 1. 計算月銷售統計
     const monthlyData = await calculateMonthlySales(orderCsv, productCsv)
     reportCache.set(CACHE_KEYS.MONTHLY_SALES, monthlyData)
-    
+
     // 2. 計算折扣趨勢
     const discountData = await calculateDiscountTrends(orderCsv)
     reportCache.set(CACHE_KEYS.DISCOUNT_TRENDS, discountData)
-    
+
     // 3. 計算各月份的分類分布和排名（預設計算近13個月）
     await precalculateMonthlyData(productCsv, masterCsv)
-    
+
     console.log('✅ 報表快取刷新完成')
-    
+
     return NextResponse.json({
       success: true,
       message: '報表快取已更新',
@@ -70,7 +70,7 @@ export async function POST() {
 export async function GET() {
   try {
     const cacheInfo = reportCache.getAll()
-    
+
     return NextResponse.json({
       success: true,
       cached: cacheInfo.length > 0,
@@ -108,11 +108,11 @@ async function calculateMonthlySales(orderCsv: string, productCsv: string) {
   // 解析訂單資料
   const orderLines = orderCsv.split('\n').filter(line => line.trim())
   const orderHeaders = orderLines[0].split(',').map(h => h.replace(/"/g, '').trim())
-  
+
   const checkoutTimeIndex = orderHeaders.findIndex(h => h.includes('結帳時間'))
   const checkoutAmountIndex = orderHeaders.findIndex(h => h.includes('結帳金額'))
   const discountIndex = orderHeaders.findIndex(h => h.includes('折扣金額'))
-  
+
   const orderData = orderLines.slice(1).map(line => {
     const values = line.split(',').map(v => v.replace(/"/g, '').trim())
     return {
@@ -125,7 +125,7 @@ async function calculateMonthlySales(orderCsv: string, productCsv: string) {
   // 解析商品資料
   const productLines = productCsv.split('\n').filter(line => line.trim())
   const productHeaders = productLines[0].split(',').map(h => h.replace(/"/g, '').trim())
-  
+
   const productData = productLines.slice(1).map(line => {
     const values = line.split(',').map(v => v.replace(/"/g, '').trim())
     const record: Record<string, string> = {}
@@ -136,18 +136,20 @@ async function calculateMonthlySales(orderCsv: string, productCsv: string) {
   }).filter(record => record['結帳時間'] && record['結帳時間'] !== '')
 
   // 初始化統計
-  const monthlyStats: { [key: string]: { 
-    amount: number; 
-    orderCount: number; 
-    avgOrderValue: number;
-    productItems: Set<string>;
-    productItemCount: number;
-  } } = {}
+  const monthlyStats: {
+    [key: string]: {
+      amount: number;
+      orderCount: number;
+      avgOrderValue: number;
+      productItems: Set<string>;
+      productItemCount: number;
+    }
+  } = {}
 
   recentMonths.forEach(month => {
-    monthlyStats[month] = { 
-      amount: 0, 
-      orderCount: 0, 
+    monthlyStats[month] = {
+      amount: 0,
+      orderCount: 0,
       avgOrderValue: 0,
       productItems: new Set(),
       productItemCount: 0
@@ -160,10 +162,10 @@ async function calculateMonthlySales(orderCsv: string, productCsv: string) {
       if (record.checkout_time) {
         const dateStr = record.checkout_time.replace(/\//g, '-')
         const date = new Date(dateStr)
-        
+
         if (!isNaN(date.getTime())) {
           const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
-          
+
           if (monthlyStats[monthKey]) {
             monthlyStats[monthKey].orderCount += 1
             monthlyStats[monthKey].amount += record.invoice_amount || 0
@@ -178,14 +180,14 @@ async function calculateMonthlySales(orderCsv: string, productCsv: string) {
     productData.forEach((record) => {
       const checkoutTime = record['結帳時間']
       const productName = record['商品名稱'] || record['品項名稱'] || ''
-      
+
       if (checkoutTime && productName) {
         const dateStr = checkoutTime.replace(/\//g, '-')
         const date = new Date(dateStr)
-        
+
         if (!isNaN(date.getTime())) {
           const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
-          
+
           if (monthlyStats[monthKey]) {
             monthlyStats[monthKey].productItems.add(productName)
           }
@@ -232,10 +234,10 @@ async function calculateDiscountTrends(orderCsv: string) {
 
   const orderLines = orderCsv.split('\n').filter(line => line.trim())
   const orderHeaders = orderLines[0].split(',').map(h => h.replace(/"/g, '').trim())
-  
+
   const checkoutTimeIndex = orderHeaders.findIndex(h => h.includes('結帳時間'))
   const discountIndex = orderHeaders.findIndex(h => h.includes('折扣金額'))
-  
+
   const orderData = orderLines.slice(1).map(line => {
     const values = line.split(',').map(v => v.replace(/"/g, '').trim())
     return {
@@ -254,10 +256,10 @@ async function calculateDiscountTrends(orderCsv: string) {
       if (record.checkout_time) {
         const dateStr = record.checkout_time.replace(/\//g, '-')
         const date = new Date(dateStr)
-        
+
         if (!isNaN(date.getTime())) {
           const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
-          
+
           if (monthlyDiscounts.hasOwnProperty(monthKey)) {
             monthlyDiscounts[monthKey] += Math.abs(record.discount_amount || 0)
           }
@@ -302,23 +304,23 @@ async function precalculateMonthlyData(_productCsv: string, _masterCsv: string) 
       // 計算大分類分布
       const categoryData = await calculateCategoryDistribution()
       reportCache.set(`${CACHE_KEYS.CATEGORY_DISTRIBUTION}_${month}`, categoryData)
-      
+
       // 計算小分類分布  
       const smallCategoryData = await calculateSmallCategoryDistribution()
       reportCache.set(`${CACHE_KEYS.SMALL_CATEGORY_DISTRIBUTION}_${month}`, smallCategoryData)
-      
+
       // 計算支付方式分布
       const paymentData = await calculatePaymentDistribution(orderCsv, month)
       reportCache.set(`${CACHE_KEYS.PAYMENT_DISTRIBUTION}_${month}`, paymentData)
-      
+
       // 計算訂單類型分布
       const orderTypeData = await calculateOrderTypeDistribution(orderCsv, month)
       reportCache.set(`${CACHE_KEYS.ORDER_TYPE_DISTRIBUTION}_${month}`, orderTypeData)
-      
+
       // 計算排名
       const rankingData = await calculateRankings()
       reportCache.set(`${CACHE_KEYS.RANKINGS}_${month}`, rankingData)
-      
+
       console.log(`✅ 已快取 ${month} 的資料`)
     } catch (error) {
       console.error(`❌ 計算 ${month} 資料失敗:`, error)
@@ -342,11 +344,11 @@ async function calculateSmallCategoryDistribution(): Promise<never[]> {
 async function calculatePaymentDistribution(orderCsv: string, month: string) {
   const orderLines = orderCsv.split('\n').filter(line => line.trim())
   const orderHeaders = orderLines[0].split(',').map(h => h.replace(/"/g, '').trim())
-  
+
   // 找到支付方式欄位
-  const paymentMethodIndex = orderHeaders.findIndex(h => 
-    h.includes('支付方式') || 
-    h.includes('付款方式') || 
+  const paymentMethodIndex = orderHeaders.findIndex(h =>
+    h.includes('支付方式') ||
+    h.includes('付款方式') ||
     h.includes('付款類型') ||
     h.includes('Payment') ||
     h.includes('payment')
@@ -375,27 +377,27 @@ async function calculatePaymentDistribution(orderCsv: string, month: string) {
   // 篩選指定月份
   orderData = orderData.filter(record => {
     if (!record.checkoutTime) return false
-    
+
     const dateStr = record.checkoutTime.replace(/\//g, '-')
     const date = new Date(dateStr)
-    
+
     if (isNaN(date.getTime())) return false
-    
+
     const recordMonth = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
     return recordMonth === month
   })
 
   // 統計支付方式分布
   const paymentStats = new Map()
-  
+
   orderData.forEach(record => {
     const method = record.paymentMethod || '未知'
     const amount = record.amount || 0
-    
+
     if (!paymentStats.has(method)) {
       paymentStats.set(method, { count: 0, amount: 0 })
     }
-    
+
     const existing = paymentStats.get(method)
     existing.count += 1
     existing.amount += amount
@@ -417,11 +419,11 @@ async function calculatePaymentDistribution(orderCsv: string, month: string) {
 async function calculateOrderTypeDistribution(orderCsv: string, month: string) {
   const orderLines = orderCsv.split('\n').filter(line => line.trim())
   const orderHeaders = orderLines[0].split(',').map(h => h.replace(/"/g, '').trim())
-  
+
   // 找到訂單類型欄位
-  const orderTypeIndex = orderHeaders.findIndex(h => 
-    h.includes('訂單類型') || 
-    h.includes('用餐方式') || 
+  const orderTypeIndex = orderHeaders.findIndex(h =>
+    h.includes('訂單類型') ||
+    h.includes('用餐方式') ||
     h.includes('服務方式') ||
     h.includes('內用') ||
     h.includes('外帶') ||
@@ -453,22 +455,22 @@ async function calculateOrderTypeDistribution(orderCsv: string, month: string) {
   // 篩選指定月份
   orderData = orderData.filter(record => {
     if (!record.checkoutTime) return false
-    
+
     const dateStr = record.checkoutTime.replace(/\//g, '-')
     const date = new Date(dateStr)
-    
+
     if (isNaN(date.getTime())) return false
-    
+
     const recordMonth = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
     return recordMonth === month
   })
 
   // 統計訂單類型分布
   const orderTypeStats = new Map()
-  
+
   orderData.forEach(record => {
     let type = record.orderType || '未知'
-    
+
     // 正規化訂單類型名稱
     if (type.includes('內用') || type.includes('堂食') || type.includes('dine')) {
       type = '內用'
@@ -477,13 +479,13 @@ async function calculateOrderTypeDistribution(orderCsv: string, month: string) {
     } else if (type.includes('外送') || type.includes('送餐') || type.includes('delivery')) {
       type = '外送'
     }
-    
+
     const amount = record.amount || 0
-    
+
     if (!orderTypeStats.has(type)) {
       orderTypeStats.set(type, { count: 0, amount: 0 })
     }
-    
+
     const existing = orderTypeStats.get(type)
     existing.count += 1
     existing.amount += amount
