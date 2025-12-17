@@ -27,6 +27,29 @@ function getSupabaseClient() {
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY || '')
 const fileManager = new GoogleAIFileManager(process.env.GOOGLE_AI_API_KEY || '')
 
+// Helper function to parse action items from content string if structured
+function parseActionItemsFromContent(content: string): any[] {
+    const items: any[] = [];
+    if (!content) return items;
+
+    const lines = content.split('\n');
+    // Regex to match: * Task Content | Assignee | Date ...
+    // Example: * 聯絡廠商 | Allen | 2025-12-09
+    const regex = /^\s*\*\s*(.+?)\s*\|\s*(.+?)\s*\|\s*(\d{4}-\d{2}-\d{2})/;
+
+    for (const line of lines) {
+        const match = line.match(regex);
+        if (match) {
+            items.push({
+                content: match[1].trim(),
+                assignee: match[2].trim(),
+                dueDate: match[3].trim()
+            });
+        }
+    }
+    return items;
+}
+
 export async function POST(request: NextRequest) {
     let tempFilePath: string | null = null
 
@@ -96,9 +119,9 @@ export async function POST(request: NextRequest) {
       請輸出一個 JSON 物件，包含以下欄位：
       1. meeting_date: 會議日期 (YYYY-MM-DD)，若無法判斷請回傳 null。
       2. summary: 第一大項：會議摘要。約 100-200 字，描述討論事項，不需列出數字與待辦。
-      3. content: 第二大項：會議內容。以條列式整理討論內容 (繁體中文)。請將多點內容合併為一個長字串，用換行符號分隔。
+      3. content: 第二大項：會議內容。以條列式整理討論內容 (繁體中文)。若有明確的待辦事項，請務必同時列入 action_items，不要只寫在這裡。
       4. tags: 相關標籤陣列。
-      5. action_items: 第三大項：待辦事項陣列。每個項目包含：
+      5. action_items: 第三大項：待辦事項陣列（這是最重要的部分，請勿遺漏）。每個項目包含：
          - content: 事項內容
          - assignee: 負責人 (若無則為 null)
          - dueDate: 預計完成日 (YYYY-MM-DD，若無則為 null)
@@ -117,6 +140,16 @@ export async function POST(request: NextRequest) {
         // Clean up JSON string (remove markdown if present)
         const jsonStr = responseText.replace(/```json/g, '').replace(/```/g, '').trim()
         const data = JSON.parse(jsonStr)
+
+        // Fallback: If action_items is empty but content has structured items, parse them
+        if ((!data.action_items || data.action_items.length === 0) && data.content) {
+            console.log('Action items empty, attempting to parse from content...');
+            const parsedItems = parseActionItemsFromContent(data.content);
+            if (parsedItems.length > 0) {
+                console.log(`Parsed ${parsedItems.length} items from content string as fallback.`);
+                data.action_items = parsedItems;
+            }
+        }
 
         // 5. Insert into Database
         // supabase client is already initialized above
