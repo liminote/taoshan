@@ -41,90 +41,78 @@ function parseActionItemsFromContent(content: string, meetingDate: string): any[
     const items: any[] = [];
     if (!content) return items;
 
-    // Normalize fullwidth pipes and weird spaces
-    const normalizedContent = content.replace(/｜/g, '|').replace(/\s+/g, ' ');
+    // 1. Normalize fullwidth pipes/spaces
+    let normalizedContent = content.replace(/｜/g, '|').replace(/[\t\f\v]/g, ' ');
 
-    // Strategy 1: Global Regex for 4-column format (observed in user data)
-    // Pattern: Content | Assignee | DueDate/Note | CreatedDate/MeetingDate (YYYY-MM-DD)
-    // e.g. "Task... | Allen | 下次會議前 | 2025-12-23"
-    // Use non-greedy matching carefully.
-    const regex4Col = /([^|]+?)\s*\|\s*([^|]+?)\s*\|\s*([^|]+?)\s*\|\s*(\d{4}-\d{2}-\d{2})/g;
+    // 2. FORCE NEWLINES after dates in run-on lines
+    // Look for: Date + spaces + text + pipe (indicating start of next item)
+    // We insert a newline after the date to break it up.
+    normalizedContent = normalizedContent.replace(/(\d{4}-\d{2}-\d{2})\s+(?=[^|\n]+\|)/g, '$1\n');
 
-    // Strategy 2: Global Regex for 3-column format
-    // Pattern: Content | Assignee | DueDate (YYYY-MM-DD)
-    const regex3Col = /([^|]+?)\s*\|\s*([^|]+?)\s*\|\s*(\d{4}-\d{2}-\d{2})/g;
+    const lines = normalizedContent.split('\n');
 
-    let match;
-    let foundMatches = false;
+    for (const line of lines) {
+        const trimmedLine = line.trim();
+        if (!trimmedLine) continue;
 
-    // Check for 4-column matches first
-    while ((match = regex4Col.exec(normalizedContent)) !== null) {
-        foundMatches = true;
-        let contentText = match[1].trim();
-        const assignee = match[2].trim();
-        const col3 = match[3].trim();
-        const col4 = match[4].trim(); // Date
+        // We expect at least: Content | Assignee ...
+        // Split by pipe
+        const parts = trimmedLine.split('|').map(p => p.trim());
 
-        // Cleanup content
-        const datePrefixMatch = contentText.match(/^\d{4}-\d{2}-\d{2}\s+(.*)/);
-        if (datePrefixMatch) contentText = datePrefixMatch[1];
-        contentText = contentText.replace(/^[\s*\-.,]+/, '');
+        if (parts.length < 2) continue; // Need at least Content | Assignee
 
-        let finalDate = col4; // Default to the definitely-valid date in col 4
+        const contentTextRaw = parts[0];
+        const assignee = parts[1];
 
-        if (isValidDate(col3)) {
-            // If col3 is ALSO a date, use it (it's likely the specific due date)
+        // Potential columns for 3rd and 4th position
+        const col3 = parts[2];
+        const col4 = parts[3];
+
+        // Determine content, removing leading bullets
+        let finalContent = contentTextRaw.replace(/^[\s*\-.,]+/, '').trim();
+        // Remove trailing date from previous line if it leaked (though newline fix should prevent this)
+        const datePrefixMatch = finalContent.match(/^\d{4}-\d{2}-\d{2}\s+(.*)/);
+        if (datePrefixMatch) finalContent = datePrefixMatch[1];
+
+        // Determine due date
+        let finalDate = null;
+        let note = null;
+
+        // Check col4 (most likely date in 4-col format)
+        if (col4 && isValidDate(col4)) {
+            finalDate = col4;
+            // Then col3 is likely a note (or another date)
+            if (col3 && !isValidDate(col3)) note = col3;
+        }
+        // fallback: check col3 if col4 wasn't the date
+        else if (col3 && isValidDate(col3)) {
             finalDate = col3;
-        } else {
-            // Col3 is text (e.g. "下次會議前")
-            // Append to content
-            if (col3 && col3 !== 'null' && col3 !== 'undefined') {
-                contentText = `${contentText} (期限: ${col3})`;
-            }
+        }
+        else {
+            // No valid date found in col3 or col4.
+            // Check if col3 is a text note (e.g. "ASAP")
+            if (col3) note = col3;
         }
 
-        if (contentText && assignee) {
+        // If we have a note but no date, default to meetingDate
+        if (!finalDate && note) {
+            finalDate = meetingDate;
+        }
+        // If we have a date but no note, check if col3 was a text note we missed?
+        // (Handled by above logic: if col4 is date, col3 is note)
+
+        // Append note to content
+        if (note && note !== 'null' && note !== 'undefined') {
+            finalContent = `${finalContent} (期限: ${note})`;
+        }
+
+        // Final sanity check
+        if (finalContent && assignee) {
             items.push({
-                content: contentText,
+                content: finalContent,
                 assignee: assignee,
-                dueDate: finalDate
+                dueDate: finalDate || meetingDate // Fallback to ensure it appears
             });
-        }
-    }
-
-    if (foundMatches) return items;
-
-    // Strategy 2: Try 3-column if no 4-col matches
-    while ((match = regex3Col.exec(normalizedContent)) !== null) {
-        let contentText = match[1].trim();
-        const assignee = match[2].trim();
-        const dueDate = match[3].trim();
-
-        const datePrefixMatch = contentText.match(/^\d{4}-\d{2}-\d{2}\s+(.*)/);
-        if (datePrefixMatch) contentText = datePrefixMatch[1];
-        contentText = contentText.replace(/^[\s*\-.,]+/, '');
-
-        if (contentText && assignee && isValidDate(dueDate)) {
-            items.push({
-                content: contentText,
-                assignee: assignee,
-                dueDate: dueDate
-            });
-        }
-    }
-
-    // Strategy 3: Line-by-line fallback (for bullet points with newlines)
-    if (items.length === 0) {
-        const lines = content.split('\n');
-        for (const line of lines) {
-            const standardMatch = line.match(/^\s*[\*\-]\s*(.+?)\s*\|\s*(.+?)\s*\|\s*(\d{4}-\d{2}-\d{2})/);
-            if (standardMatch) {
-                items.push({
-                    content: standardMatch[1].trim(),
-                    assignee: standardMatch[2].trim(),
-                    dueDate: standardMatch[3].trim()
-                });
-            }
         }
     }
 
