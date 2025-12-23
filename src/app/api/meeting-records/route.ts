@@ -2,6 +2,7 @@ import { createClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
 import { GoogleGenerativeAI } from '@google/generative-ai'
 import { cache } from '@/lib/cache'
+import { parseActionItemsFromContent } from '@/lib/meeting-parser'
 
 let supabaseClient: ReturnType<typeof createClient> | null = null
 function getSupabaseClient() {
@@ -254,52 +255,46 @@ function parseTableTodoLine(line: string, meetingDate: string): ParsedTodo | nul
   }
 }
 
-function extractTodosFromContent(content: string, meetingDate: string): ParsedTodo[] {
-  const lines = content.split(/\r?\n/).map(line => line.trim()).filter(Boolean)
-  const todos: ParsedTodo[] = []
-  const todoSectionKeywords = ['代辦', '待辦', '行動項目', '行動清單', 'action']
-  let inTodoSection = false
-  let todoSectionFound = false
-
-  lines.forEach(line => {
-    const normalizedCompact = line.replace(/\s+/g, '').toLowerCase()
-    if (todoSectionKeywords.some(keyword => normalizedCompact.includes(keyword.toLowerCase()))) {
-      inTodoSection = true
-      todoSectionFound = true
-      return
-    }
-
-  if (inTodoSection && /^第[一二三四五六七八九十]/.test(line)) {
-    inTodoSection = false
-    return
-  }
-
-    if (!inTodoSection) return
-
-    const todo = parseTodoLine(line, meetingDate)
-    if (todo) todos.push(todo)
-  })
-
-  if (!todoSectionFound) {
-    console.log('[meeting-records] 未找到代辦事項段落，略過同步')
-    return []
-  }
-
-  return todos
+// Use shared parser directly
+function extractTodosFromContent(content: string, meetingDate: string): any[] {
+  return parseActionItemsFromContent(content, meetingDate)
 }
 
 async function syncTodosToImportantItems(
   supabase: ReturnType<typeof createClient>,
-  todos: ParsedTodo[]
+  todos: any[]
 ) {
   if (!todos.length) return
 
-  const payload = todos.slice(0, 20).map(todo => ({
-    date: todo.dueDate,
-    content: todo.content,
-    assignee: todo.assignee,
-    completed: false
-  }))
+  // Deduplication: Check for existing items with same content/assignee/date
+  const contents = todos.map(t => t.content)
+
+  // We only check for potential duplicates based on content to batch the query
+  const { data: existing } = await supabase
+    .from('important_items')
+    .select('content, assignee, date')
+    .in('content', contents)
+
+  const existingSet = new Set(
+    existing?.map(e => `${e.content}|${e.assignee}|${e.date}`) || []
+  )
+
+  const payload = todos
+    .filter(todo => {
+      const key = `${todo.content}|${todo.assignee}|${todo.dueDate}`
+      return !existingSet.has(key)
+    })
+    .map(todo => ({
+      date: todo.dueDate,
+      content: todo.content,
+      assignee: todo.assignee,
+      completed: false
+    }))
+
+  if (payload.length === 0) {
+    console.log('[meeting-records] 所有代辦事項已存在，略過新增')
+    return
+  }
 
   const { error } = await supabase.from('important_items').insert(payload)
   if (error) {
@@ -462,6 +457,14 @@ export async function PUT(request: NextRequest) {
     if (error) {
       console.error('更新會議記錄失敗:', error)
       return NextResponse.json({ error: '更新會議記錄失敗' }, { status: 500 })
+    }
+
+    if (data && data[0] && typeof content !== 'undefined') {
+      const updatedRecord = data[0]
+      const todos = extractTodosFromContent(updatedRecord.content, updatedRecord.meeting_date)
+      if (todos.length) {
+        await syncTodosToImportantItems(supabase, todos)
+      }
     }
 
     return NextResponse.json(data[0])
