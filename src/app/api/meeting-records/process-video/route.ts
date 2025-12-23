@@ -44,27 +44,64 @@ function parseActionItemsFromContent(content: string, meetingDate: string): any[
     // Normalize fullwidth pipes and weird spaces
     const normalizedContent = content.replace(/｜/g, '|').replace(/\s+/g, ' ');
 
-    // Strategy 1: Global Regex for "Content | Assignee | Date" pattern
-    // This handles the "run-on line" case where newlines are missing.
-    // We look for: [Text] | [Name] | [Date]
-    // The date must be YYYY-MM-DD.
-    const regex = /([^|]+?)\s*\|\s*([^|]+?)\s*\|\s*(\d{4}-\d{2}-\d{2})/g;
+    // Strategy 1: Global Regex for 4-column format (observed in user data)
+    // Pattern: Content | Assignee | DueDate/Note | CreatedDate/MeetingDate (YYYY-MM-DD)
+    // e.g. "Task... | Allen | 下次會議前 | 2025-12-23"
+    // Use non-greedy matching carefully.
+    const regex4Col = /([^|]+?)\s*\|\s*([^|]+?)\s*\|\s*([^|]+?)\s*\|\s*(\d{4}-\d{2}-\d{2})/g;
+
+    // Strategy 2: Global Regex for 3-column format
+    // Pattern: Content | Assignee | DueDate (YYYY-MM-DD)
+    const regex3Col = /([^|]+?)\s*\|\s*([^|]+?)\s*\|\s*(\d{4}-\d{2}-\d{2})/g;
 
     let match;
-    while ((match = regex.exec(normalizedContent)) !== null) {
+    let foundMatches = false;
+
+    // Check for 4-column matches first
+    while ((match = regex4Col.exec(normalizedContent)) !== null) {
+        foundMatches = true;
+        let contentText = match[1].trim();
+        const assignee = match[2].trim();
+        const col3 = match[3].trim();
+        const col4 = match[4].trim(); // Date
+
+        // Cleanup content
+        const datePrefixMatch = contentText.match(/^\d{4}-\d{2}-\d{2}\s+(.*)/);
+        if (datePrefixMatch) contentText = datePrefixMatch[1];
+        contentText = contentText.replace(/^[\s*\-.,]+/, '');
+
+        let finalDate = col4; // Default to the definitely-valid date in col 4
+
+        if (isValidDate(col3)) {
+            // If col3 is ALSO a date, use it (it's likely the specific due date)
+            finalDate = col3;
+        } else {
+            // Col3 is text (e.g. "下次會議前")
+            // Append to content
+            if (col3 && col3 !== 'null' && col3 !== 'undefined') {
+                contentText = `${contentText} (期限: ${col3})`;
+            }
+        }
+
+        if (contentText && assignee) {
+            items.push({
+                content: contentText,
+                assignee: assignee,
+                dueDate: finalDate
+            });
+        }
+    }
+
+    if (foundMatches) return items;
+
+    // Strategy 2: Try 3-column if no 4-col matches
+    while ((match = regex3Col.exec(normalizedContent)) !== null) {
         let contentText = match[1].trim();
         const assignee = match[2].trim();
         const dueDate = match[3].trim();
 
-        // Cleanup contentText: oftentimes it might include the trailing date from the previous item
-        // e.g. "2025-12-23 Next Task" -> We want "Next Task"
-        // Heuristic: if content starts with a date-like string, remove it.
         const datePrefixMatch = contentText.match(/^\d{4}-\d{2}-\d{2}\s+(.*)/);
-        if (datePrefixMatch) {
-            contentText = datePrefixMatch[1];
-        }
-
-        // Also remove leading bullet points or garbage
+        if (datePrefixMatch) contentText = datePrefixMatch[1];
         contentText = contentText.replace(/^[\s*\-.,]+/, '');
 
         if (contentText && assignee && isValidDate(dueDate)) {
@@ -76,21 +113,18 @@ function parseActionItemsFromContent(content: string, meetingDate: string): any[
         }
     }
 
-    // If Strategy 1 returned items, great.
-    if (items.length > 0) return items;
-
-    // Strategy 2: Line-by-line (Original logic, but improved for pipes)
-    // Only used if the global regex failed completely (unlikely for the format we saw)
-    const lines = content.split('\n');
-    for (const line of lines) {
-        // Standard bullet points: * Content | Assignee | Date
-        const standardMatch = line.match(/^\s*[\*\-]\s*(.+?)\s*\|\s*(.+?)\s*\|\s*(\d{4}-\d{2}-\d{2})/);
-        if (standardMatch) {
-            items.push({
-                content: standardMatch[1].trim(),
-                assignee: standardMatch[2].trim(),
-                dueDate: standardMatch[3].trim()
-            });
+    // Strategy 3: Line-by-line fallback (for bullet points with newlines)
+    if (items.length === 0) {
+        const lines = content.split('\n');
+        for (const line of lines) {
+            const standardMatch = line.match(/^\s*[\*\-]\s*(.+?)\s*\|\s*(.+?)\s*\|\s*(\d{4}-\d{2}-\d{2})/);
+            if (standardMatch) {
+                items.push({
+                    content: standardMatch[1].trim(),
+                    assignee: standardMatch[2].trim(),
+                    dueDate: standardMatch[3].trim()
+                });
+            }
         }
     }
 
