@@ -224,14 +224,29 @@ export async function POST(request: NextRequest) {
 
         const meetingDate = data.meeting_date || new Date().toISOString().split('T')[0]
 
-        // Fallback: If action_items is empty but content has structured items, parse them
-        if ((!data.action_items || data.action_items.length === 0) && data.content) {
-            console.log('Action items empty, attempting to parse from content...');
-            // Need meetingDate for fallback dates
+        // Always attempt to parse items from content, as Gemini sometimes hallucinates the JSON array 
+        // or puts a table in 'content' while returning an empty or partial 'action_items'.
+        if (data.content) {
+            console.log('Parsing additional items from content string...');
             const parsedItems = parseActionItemsFromContent(data.content, meetingDate);
+
             if (parsedItems.length > 0) {
-                console.log(`Parsed ${parsedItems.length} items from content string as fallback.`);
-                data.action_items = parsedItems;
+                console.log(`Parsed ${parsedItems.length} items from content.`);
+
+                // Initialize if undefined
+                if (!data.action_items) data.action_items = [];
+
+                // Merge and Deduplicate
+                // specific duplication check: compare content fuzzy match
+                const existingContent = new Set(data.action_items.map((i: any) => i.content.trim()));
+
+                for (const item of parsedItems) {
+                    const itemContent = item.content.trim();
+                    if (!existingContent.has(itemContent)) {
+                        data.action_items.push(item);
+                        existingContent.add(itemContent);
+                    }
+                }
             }
         }
 
