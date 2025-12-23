@@ -27,24 +27,82 @@ function getSupabaseClient() {
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY || '')
 const fileManager = new GoogleAIFileManager(process.env.GOOGLE_AI_API_KEY || '')
 
+function isValidDate(dateStr: string): boolean {
+    if (!dateStr) return false;
+    // Strict YYYY-MM-DD format check
+    const regex = /^\d{4}-\d{2}-\d{2}$/;
+    if (!regex.test(dateStr)) return false;
+    const date = new Date(dateStr);
+    return !isNaN(date.getTime());
+}
+
 // Helper function to parse action items from content string if structured
-function parseActionItemsFromContent(content: string): any[] {
+function parseActionItemsFromContent(content: string, meetingDate: string): any[] {
     const items: any[] = [];
     if (!content) return items;
 
     const lines = content.split('\n');
-    // Regex to match: * Task Content | Assignee | Date ...
-    // Example: * 聯絡廠商 | Allen | 2025-12-09
-    const regex = /^\s*\*\s*(.+?)\s*\|\s*(.+?)\s*\|\s*(\d{4}-\d{2}-\d{2})/;
+
+    // Regex for standard bullet points: * Content | Assignee | Date
+    const standardRegex = /^\s*[\*\-]\s*(.+?)\s*\|\s*(.+?)\s*\|\s*(\d{4}-\d{2}-\d{2})/;
 
     for (const line of lines) {
-        const match = line.match(regex);
+        // 1. Try standard regex first
+        const match = line.match(standardRegex);
         if (match) {
             items.push({
                 content: match[1].trim(),
                 assignee: match[2].trim(),
                 dueDate: match[3].trim()
             });
+            continue;
+        }
+
+        // 2. Try pipe-separated format (tolerant of no bullet points)
+        // e.g. "Content | Assignee | DueDate" or "Content | Assignee | DeadlineText | CreatedDate"
+        const cleanLine = line.replace(/^[\s*\-]*\s*/, '').trim(); // Remove leading markers
+        if (!cleanLine || !cleanLine.includes('|')) continue;
+
+        const parts = cleanLine.split('|').map(p => p.trim());
+
+        if (parts.length >= 3) {
+            const contentText = parts[0];
+            const assignee = parts[1];
+            let dueDateCandidate = parts[2];
+            let rawDeadlineText = parts[2];
+
+            // If there's a 4th column, it might be the date, or the 3rd might be text like "ASAP"
+            // Case A: Content | Assignee | Date(YYYY-MM-DD) | Date(YYYY-MM-DD) -> Take col 3
+            // Case B: Content | Assignee | "ASAP" | Date(YYYY-MM-DD) -> Take col 4 as date? Or just fallback.
+
+            // Check if col 2 (3rd part) is a date
+            if (isValidDate(dueDateCandidate)) {
+                items.push({
+                    content: contentText,
+                    assignee: assignee,
+                    dueDate: dueDateCandidate
+                });
+            } else {
+                // Col 2 is NOT a date (e.g. "下次會議前", "盡快")
+                // We will use meetingDate (or col 3 if it's a date) as the DB date,
+                // and append the text deadline to content.
+                let dbDate = meetingDate;
+
+                // If we have a 4th column and it IS a date, maybe use that?
+                // Usually the 4th column involves "Created Date" which is today.
+                if (parts.length >= 4 && isValidDate(parts[3])) {
+                    // Use the created date as the target date? 
+                    // Probably safer to stick to meetingDate or the explicit date if provided.
+                    // But if the user provided "2025-12-23" (today) as the 4th column, it's a safe fallback.
+                    dbDate = parts[3];
+                }
+
+                items.push({
+                    content: `${contentText} (期限: ${rawDeadlineText})`,
+                    assignee: assignee,
+                    dueDate: dbDate
+                });
+            }
         }
     }
     return items;
@@ -124,7 +182,7 @@ export async function POST(request: NextRequest) {
       5. action_items: 第三大項：待辦事項陣列（這是最重要的部分，請勿遺漏）。每個項目包含：
          - content: 事項內容
          - assignee: 負責人 (若無則為 null)
-         - dueDate: 預計完成日 (YYYY-MM-DD，若無則為 null)
+         - dueDate: 預計完成日 (必須是 YYYY-MM-DD 格式。若聽到「下週」、「盡快」等模糊時間，請回傳 null)
          
       注意：JSON 的 content 欄位請直接回傳整理好的條列式文字，不要回傳 JSON array。
       `
@@ -139,12 +197,27 @@ export async function POST(request: NextRequest) {
 
         // Clean up JSON string (remove markdown if present)
         const jsonStr = responseText.replace(/```json/g, '').replace(/```/g, '').trim()
-        const data = JSON.parse(jsonStr)
+
+        let data;
+        try {
+            data = JSON.parse(jsonStr)
+        } catch (e) {
+            console.error("Failed to parse JSON", e);
+            // Fallback: try to extract partial JSON or basic structure if possible
+            // But for now, just creating a basic structure to avoid crash
+            data = {
+                content: responseText, // Just dump everything to content
+                action_items: []
+            }
+        }
+
+        const meetingDate = data.meeting_date || new Date().toISOString().split('T')[0]
 
         // Fallback: If action_items is empty but content has structured items, parse them
         if ((!data.action_items || data.action_items.length === 0) && data.content) {
             console.log('Action items empty, attempting to parse from content...');
-            const parsedItems = parseActionItemsFromContent(data.content);
+            // Need meetingDate for fallback dates
+            const parsedItems = parseActionItemsFromContent(data.content, meetingDate);
             if (parsedItems.length > 0) {
                 console.log(`Parsed ${parsedItems.length} items from content string as fallback.`);
                 data.action_items = parsedItems;
@@ -153,8 +226,6 @@ export async function POST(request: NextRequest) {
 
         // 5. Insert into Database
         // supabase client is already initialized above
-
-        const meetingDate = data.meeting_date || new Date().toISOString().split('T')[0]
 
         const recordPayload = {
             meeting_date: meetingDate,
@@ -178,12 +249,25 @@ export async function POST(request: NextRequest) {
 
         // 6. Insert Action Items
         if (data.action_items && data.action_items.length > 0) {
-            const todos = data.action_items.map((item: any) => ({
-                date: item.dueDate || meetingDate,
-                content: item.content,
-                assignee: item.assignee || '未定',
-                completed: false
-            }))
+            const todos = data.action_items.map((item: any) => {
+                let finalDate = item.dueDate;
+                let finalContent = item.content;
+
+                if (!isValidDate(finalDate)) {
+                    // If date is invalid or null, use meetingDate but append info to content
+                    if (finalDate && finalDate.trim().length > 0) {
+                        finalContent = `${finalContent} (期限: ${finalDate})`;
+                    }
+                    finalDate = meetingDate;
+                }
+
+                return {
+                    date: finalDate,
+                    content: finalContent,
+                    assignee: item.assignee || '未定',
+                    completed: false
+                }
+            })
 
             const { error: todoError } = await supabase
                 .from('important_items')
