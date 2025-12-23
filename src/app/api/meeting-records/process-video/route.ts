@@ -41,70 +41,59 @@ function parseActionItemsFromContent(content: string, meetingDate: string): any[
     const items: any[] = [];
     if (!content) return items;
 
-    const lines = content.split('\n');
+    // Normalize fullwidth pipes and weird spaces
+    const normalizedContent = content.replace(/｜/g, '|').replace(/\s+/g, ' ');
 
-    // Regex for standard bullet points: * Content | Assignee | Date
-    const standardRegex = /^\s*[\*\-]\s*(.+?)\s*\|\s*(.+?)\s*\|\s*(\d{4}-\d{2}-\d{2})/;
+    // Strategy 1: Global Regex for "Content | Assignee | Date" pattern
+    // This handles the "run-on line" case where newlines are missing.
+    // We look for: [Text] | [Name] | [Date]
+    // The date must be YYYY-MM-DD.
+    const regex = /([^|]+?)\s*\|\s*([^|]+?)\s*\|\s*(\d{4}-\d{2}-\d{2})/g;
 
-    for (const line of lines) {
-        // 1. Try standard regex first
-        const match = line.match(standardRegex);
-        if (match) {
-            items.push({
-                content: match[1].trim(),
-                assignee: match[2].trim(),
-                dueDate: match[3].trim()
-            });
-            continue;
+    let match;
+    while ((match = regex.exec(normalizedContent)) !== null) {
+        let contentText = match[1].trim();
+        const assignee = match[2].trim();
+        const dueDate = match[3].trim();
+
+        // Cleanup contentText: oftentimes it might include the trailing date from the previous item
+        // e.g. "2025-12-23 Next Task" -> We want "Next Task"
+        // Heuristic: if content starts with a date-like string, remove it.
+        const datePrefixMatch = contentText.match(/^\d{4}-\d{2}-\d{2}\s+(.*)/);
+        if (datePrefixMatch) {
+            contentText = datePrefixMatch[1];
         }
 
-        // 2. Try pipe-separated format (tolerant of no bullet points)
-        // e.g. "Content | Assignee | DueDate" or "Content | Assignee | DeadlineText | CreatedDate"
-        const cleanLine = line.replace(/^[\s*\-]*\s*/, '').trim(); // Remove leading markers
-        if (!cleanLine || !cleanLine.includes('|')) continue;
+        // Also remove leading bullet points or garbage
+        contentText = contentText.replace(/^[\s*\-.,]+/, '');
 
-        const parts = cleanLine.split('|').map(p => p.trim());
-
-        if (parts.length >= 3) {
-            const contentText = parts[0];
-            const assignee = parts[1];
-            let dueDateCandidate = parts[2];
-            let rawDeadlineText = parts[2];
-
-            // If there's a 4th column, it might be the date, or the 3rd might be text like "ASAP"
-            // Case A: Content | Assignee | Date(YYYY-MM-DD) | Date(YYYY-MM-DD) -> Take col 3
-            // Case B: Content | Assignee | "ASAP" | Date(YYYY-MM-DD) -> Take col 4 as date? Or just fallback.
-
-            // Check if col 2 (3rd part) is a date
-            if (isValidDate(dueDateCandidate)) {
-                items.push({
-                    content: contentText,
-                    assignee: assignee,
-                    dueDate: dueDateCandidate
-                });
-            } else {
-                // Col 2 is NOT a date (e.g. "下次會議前", "盡快")
-                // We will use meetingDate (or col 3 if it's a date) as the DB date,
-                // and append the text deadline to content.
-                let dbDate = meetingDate;
-
-                // If we have a 4th column and it IS a date, maybe use that?
-                // Usually the 4th column involves "Created Date" which is today.
-                if (parts.length >= 4 && isValidDate(parts[3])) {
-                    // Use the created date as the target date? 
-                    // Probably safer to stick to meetingDate or the explicit date if provided.
-                    // But if the user provided "2025-12-23" (today) as the 4th column, it's a safe fallback.
-                    dbDate = parts[3];
-                }
-
-                items.push({
-                    content: `${contentText} (期限: ${rawDeadlineText})`,
-                    assignee: assignee,
-                    dueDate: dbDate
-                });
-            }
+        if (contentText && assignee && isValidDate(dueDate)) {
+            items.push({
+                content: contentText,
+                assignee: assignee,
+                dueDate: dueDate
+            });
         }
     }
+
+    // If Strategy 1 returned items, great.
+    if (items.length > 0) return items;
+
+    // Strategy 2: Line-by-line (Original logic, but improved for pipes)
+    // Only used if the global regex failed completely (unlikely for the format we saw)
+    const lines = content.split('\n');
+    for (const line of lines) {
+        // Standard bullet points: * Content | Assignee | Date
+        const standardMatch = line.match(/^\s*[\*\-]\s*(.+?)\s*\|\s*(.+?)\s*\|\s*(\d{4}-\d{2}-\d{2})/);
+        if (standardMatch) {
+            items.push({
+                content: standardMatch[1].trim(),
+                assignee: standardMatch[2].trim(),
+                dueDate: standardMatch[3].trim()
+            });
+        }
+    }
+
     return items;
 }
 
@@ -171,20 +160,20 @@ export async function POST(request: NextRequest) {
       
       【重要規則】
       1. 人名修正：若聽到 "Louis" 請修正為 "Luis"，若聽到 "Alen" 請修正為 "Allen"。
-      2. 風格要求：如實陳述，不要加油添醋，不要廢話，不要使用過度修飾的形容詞（如「旨在將此次的挫敗轉化為...」這類話術）。
+      2. 風格要求：如實陳述，不要加油添醋，不要廢話，不要使用過度修飾的形容詞。
       3. 格式要求：請嚴格遵守以下 JSON 結構。
 
       請輸出一個 JSON 物件，包含以下欄位：
       1. meeting_date: 會議日期 (YYYY-MM-DD)，若無法判斷請回傳 null。
       2. summary: 第一大項：會議摘要。約 100-200 字，描述討論事項，不需列出數字與待辦。
-      3. content: 第二大項：會議內容。以條列式整理討論內容 (繁體中文)。若有明確的待辦事項，請務必同時列入 action_items，不要只寫在這裡。
+      3. content: 第二大項：會議內容。請使用「Markdown 條列式」呈現，**不要** 使用表格或特殊的 '|' 分隔符號。每一點請換行。
       4. tags: 相關標籤陣列。
       5. action_items: 第三大項：待辦事項陣列（這是最重要的部分，請勿遺漏）。每個項目包含：
          - content: 事項內容
          - assignee: 負責人 (若無則為 null)
          - dueDate: 預計完成日 (必須是 YYYY-MM-DD 格式。若聽到「下週」、「盡快」等模糊時間，請回傳 null)
          
-      注意：JSON 的 content 欄位請直接回傳整理好的條列式文字，不要回傳 JSON array。
+      注意：JSON 的 content 欄位請直接回傳整理好的條列式文字，不要回傳 JSON array。確保 action_items 是完整且有效的 JSON Array。
       `
 
         const result = await model.generateContent([
