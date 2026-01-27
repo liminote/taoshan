@@ -1,0 +1,24 @@
+{
+    "google_credentials_path": "../../.env.local",
+    "sheets": {
+        "product_master": {
+            "id": "18iWZVRT8LB7I_WBNXGPl3WI8S3zEVq5ANq5yTj8Nzd8",
+            "sheet_name": "A1",
+            "columns": {
+                "name": "商品名稱",
+                "new_name": "新商品名稱",
+                "category": "大分類",
+                "small_category": "小分類"
+            }
+        },
+        "orders": {
+            "id": "1EWPECWQp_Ehz43Lfks_I8lcvEig8gV9DjyjEIzC5EO4",
+            "sheet_name": "工作表1"
+        },
+        "product_sales": {
+            "id": "1GeRbtCX_oHJBooYvZeRbREaSxJ4r8P8QoL-vHiSz2eo",
+            "sheet_name": "工作表1"
+        }
+    },
+    "input_folder": "./downloads"
+}

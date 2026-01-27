@@ -46,3 +46,6 @@ next-env.d.ts
 
 # local cache
 /.cache
+
+# meeting records
+meeting_videos/

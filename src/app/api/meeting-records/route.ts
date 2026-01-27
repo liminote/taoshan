@@ -381,6 +381,13 @@ export async function POST(request: NextRequest) {
     }
     if (computedSummary) payload.summary = computedSummary
 
+    // Explicitly handle action_items if provided by the client (Python skill)
+    // This allows us to bypass the regex parser if we already have high-quality structured data
+    let providedActionItems: any[] | null = null
+    if (Array.isArray(body.action_items)) {
+      providedActionItems = body.action_items
+    }
+
     const { data, error } = await supabase
       .from('meeting_records')
       .insert([payload])
@@ -393,7 +400,17 @@ export async function POST(request: NextRequest) {
 
     const createdRecord = data[0]
     if (createdRecord) {
-      const todos = extractTodosFromContent(content, meeting_date)
+      let todos: any[] = []
+      if (providedActionItems) {
+        todos = providedActionItems.map((item: any) => ({
+          content: item.content,
+          assignee: item.assignee,
+          dueDate: item.dueDate
+        }))
+      } else {
+        todos = extractTodosFromContent(content, meeting_date)
+      }
+
       if (todos.length) {
         await syncTodosToImportantItems(supabase, todos)
       }
