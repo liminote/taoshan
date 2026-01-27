@@ -49,3 +49,6 @@ next-env.d.ts
 
 # meeting records
 meeting_videos/
+config.json
+__pycache__/
+backup_meeting_record_*.json

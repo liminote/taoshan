@@ -299,9 +299,11 @@ async function syncTodosToImportantItems(
   const { error } = await supabase.from('important_items').insert(payload)
   if (error) {
     console.error('同步會議代辦事項失敗:', error)
+    return error
   } else {
     clearImportantItemsCache()
     console.log(`已同步 ${payload.length} 筆會議代辦至重要事項`)
+    return null
   }
 }
 
@@ -395,10 +397,15 @@ export async function POST(request: NextRequest) {
 
     if (error) {
       console.error('新增會議記錄失敗:', error)
-      return NextResponse.json({ error: '新增會議記錄失敗' }, { status: 500 })
+      return NextResponse.json({
+        error: '新增會議記錄失敗',
+        details: typeof error === 'object' ? JSON.stringify(error) : String(error)
+      }, { status: 500 })
     }
 
     const createdRecord = data[0]
+    let syncError = null
+
     if (createdRecord) {
       let todos: any[] = []
       if (providedActionItems) {
@@ -412,14 +419,18 @@ export async function POST(request: NextRequest) {
       }
 
       if (todos.length) {
-        await syncTodosToImportantItems(supabase, todos)
+        const err = await syncTodosToImportantItems(supabase, todos)
+        if (err) syncError = err
       }
     }
 
-    return NextResponse.json(createdRecord)
+    return NextResponse.json({ ...createdRecord, syncError })
   } catch (error) {
     console.error('新增會議記錄失敗:', error)
-    return NextResponse.json({ error: '新增會議記錄失敗' }, { status: 500 })
+    return NextResponse.json({
+      error: '新增會議記錄失敗',
+      details: typeof error === 'object' && error !== null ? (error as any).message || JSON.stringify(error) : String(error)
+    }, { status: 500 })
   }
 }
 

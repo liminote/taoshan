@@ -31,7 +31,8 @@ genai.configure(api_key=GOOGLE_API_KEY)
 def extract_audio(video_path):
     """Extracts audio from video using ffmpeg."""
     filename = os.path.basename(video_path)
-    audio_path = os.path.join(os.path.dirname(video_path), f"{os.path.splitext(filename)[0]}.mp3")
+    # Use hidden file to prevent watcher from triggering
+    audio_path = os.path.join(os.path.dirname(video_path), f".{os.path.splitext(filename)[0]}.mp3")
     
     print(f"Extracting audio to {audio_path}...")
     
@@ -88,45 +89,107 @@ def wait_for_files_active(files):
 def generate_meeting_minutes(file):
     """Generates meeting minutes using Gemini."""
     print("Generating meeting minutes...")
-    model = genai.GenerativeModel(model_name="gemini-1.5-flash")
+    # Update to available model
+    model = genai.GenerativeModel(model_name="gemini-flash-latest")
 
     prompt = """
     請分析這個會議音檔，並產出 JSON 格式的會議記錄。
 
     【重要規則】
-    1. 人名修正：若聽到 "Louis" 請修正為 "Luis"，若聽到 "Alen" 請修正為 "Allen"。
-    2. 風格要求：詳細、如實陳述，保留重要細節。
-    3. 格式要求：請嚴格遵守以下 JSON 結構。
+    1. 人名修正：
+       - 若聽到 "Louis" 請修正為 "Luis"
+       - 若聽到 "Alen" 請修正為 "Allen"
+       - 若聽到 "美豬" 請修正為 "美珠"
+    2. 風格要求：
+       - 如實陳述，不要加油添醋，不要廢話。
+    3. **待辦事項 (Action Items) 定義 (關鍵)**：
+       - 凡是會議中提到的 **「承諾」(promises)**、**「要求」(requirements)**、**「決議」(decisions)** 或 **「預計完成」** 的事項，**無論原本在會議內容中有沒有提到，都必須「額外」提取並放入 `action_items` 陣列中**。
+       - 請將對話轉化為具體的執行指令 (例如：「Allen 說他會去教...」 -> 「教導新進員工流程」)。
 
-    請輸出一個 JSON 物件，包含以下欄位：
-    1. meeting_date: 會議日期 (YYYY-MM-DD)，若無法判斷請回傳 null (或今日日期)。
-    2. summary: 第一大項：會議摘要。約 200-300 字，描述核心討論事項。
-    3. content: 第二大項：詳細會議內容。請使用「Markdown 條列式」呈現，**不要** 使用表格。盡量詳細記錄討論過程。
-    4. tags: 相關標籤陣列 (例如: ["產品", "行銷"])。
-    5. action_items: 第三大項：待辦事項陣列 (Action Items)。每個項目包含：
-        - content: 事項內容
-        - assignee: 負責人 (若無則為 null)
-        - dueDate: 預計完成日 (必須是 YYYY-MM-DD 格式。若聽到「下週」、「盡快」等模糊時間，請回傳 null)
-    
-    確保 content 欄位是 Markdown 字串。確保 action_items 是完整的 JSON Array。
-    請只回傳 JSON 字串，不要包含 markdown code block 標記。
+    【JSON 輸出格式要求】
+    請嚴格遵守以下 JSON 結構回傳 (不要 Markdown Code Block)：
+    {
+      "meeting_date": "YYYY-MM-DD (若無法判斷請填 null)",
+      "summary": "100-200字摘要",
+      "content": "Markdown 條列式詳細內容 (不要用表格)",
+      "tags": ["tag1", "tag2"],
+      "action_items": [
+        {
+          "content": "待辦事項內容",
+          "assignee": "負責人 (例如 Allen)",
+          "dueDate": "YYYY-MM-DD (需推算具體日期，若無明確時間請填 null)"
+        }
+      ]
+    }
     """
 
-    response = model.generate_content(
-        [file, prompt],
-        request_options={"timeout": 600}
-    )
+    retry_count = 0
+    max_retries = 5
+    while retry_count < max_retries:
+        try:
+            response = model.generate_content(
+                [file, prompt],
+                request_options={"timeout": 600}
+            )
+            return response.text
+        except Exception as e:
+            if "429" in str(e) or "ResourceExhausted" in str(e):
+                print(f"Quota limit hit, waiting 60 seconds to retry... ({retry_count + 1}/{max_retries})")
+                time.sleep(60)
+                retry_count += 1
+            else:
+                raise e
     
-    return response.text
+    raise Exception("Max retries exceeded for API quota.")
 
-def upload_to_website(data):
+def upload_to_website(data, filename_date=None):
     """Uploads the result to the website API."""
     print(f"Uploading to {API_ENDPOINT}...")
     
     try:
         # Clean up JSON string if Gemini adds backticks
         json_str = data.replace('```json', '').replace('```', '').strip()
-        payload = json.loads(json_str)
+        # Parse with strict=False to allow control characters (newlines) in strings
+        payload = json.loads(json_str, strict=False)
+        
+        # Override meeting_date if provided from filename
+        if filename_date:
+            payload['meeting_date'] = filename_date
+            print(f"Using date from filename: {filename_date}")
+        
+        # Append Action Items to Content for display in record
+        if 'action_items' in payload and payload['action_items']:
+            action_items_md = "\n\n### 第三大項：待辦事項\n"
+            today_str = time.strftime('%Y-%m-%d')
+            meeting_date = payload.get('meeting_date') or today_str
+            meeting_year = meeting_date.split('-')[0]
+
+            for item in payload['action_items']:
+                # Sanitize values for API (DB likely rejects nulls)
+                if not item.get('assignee'):
+                    item['assignee'] = '待分配'
+                
+                if not item.get('dueDate'):
+                    item['dueDate'] = meeting_date
+                else:
+                    # Fix Hallucinated Years (e.g., AI says 2024/2025 but it is 2026)
+                    d_date = item['dueDate']
+                    if d_date and d_date.startswith('202') and not d_date.startswith(meeting_year):
+                         # Replace year with meeting year
+                         fixed_date = meeting_year + d_date[4:]
+                         print(f"Fixed date year: {d_date} -> {fixed_date}")
+                         item['dueDate'] = fixed_date
+
+
+                content = item.get('content', '')
+                assignee = item['assignee']
+                due_date = item['dueDate']
+                created_date = meeting_date
+                
+                # Format: 內容 ｜ 負責人 ｜ 預計完成時間 ｜ 建立時間
+                action_items_md += f"- {content} ｜ {assignee} ｜ {due_date} ｜ {created_date}\n"
+            
+            payload['content'] = payload.get('content', '') + action_items_md
         
         # Ensure payload has required fields
         if 'content' not in payload:
@@ -136,8 +199,12 @@ def upload_to_website(data):
         res = requests.post(API_ENDPOINT, json=payload)
         
         if res.status_code == 200:
+            resp_json = res.json()
             print("Successfully uploaded record!")
-            print(f"Record ID: {res.json().get('id')}")
+            print(f"Record ID: {resp_json.get('id')}")
+            
+            if resp_json.get('syncError'):
+                print(f"⚠️ Warning: Action Items Sync Failed! Error: {resp_json.get('syncError')}")
             return True
         else:
             print(f"Failed to upload. Status: {res.status_code}")
@@ -150,7 +217,26 @@ def upload_to_website(data):
         return False
     except Exception as e:
         print(f"Error uploading: {e}")
+        
+        # Failsafe: Save to local file if upload fails
+        try:
+            timestamp = int(time.time())
+            backup_file = f"backup_meeting_record_{timestamp}.json"
+            clean_data = data.replace('```json', '').replace('```', '').strip()
+            
+            with open(backup_file, 'w', encoding='utf-8') as f:
+                f.write(clean_data)
+            print(f"⚠️  Backup: Saved meeting record to {backup_file} locally.")
+        except Exception as backup_error:
+            print(f"Failed to save backup: {backup_error}")
+            
         return False
+
+import re
+def extract_date_from_filename(filename):
+    """Extracts date (YYYY-MM-DD) from filename if exists."""
+    match = re.search(r'(\d{4}-\d{2}-\d{2})', filename)
+    return match.group(1) if match else None
 
 def process_video(video_path):
     """Main processing logic for a single video."""
@@ -172,7 +258,11 @@ def process_video(video_path):
         result_text = generate_meeting_minutes(file)
         
         # 4. Upload to Website
-        success = upload_to_website(result_text)
+        # Extract date from filename to force correct date
+        filename = os.path.basename(video_path)
+        filename_date = extract_date_from_filename(filename)
+        
+        success = upload_to_website(result_text, filename_date)
         return success
 
     except Exception as e:
