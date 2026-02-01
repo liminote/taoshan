@@ -8,9 +8,16 @@ export async function GET() {
     const cachedData = reportCache.get(CACHE_KEYS.MONTHLY_SALES)
     if (cachedData) {
       console.log('📋 使用快取的月銷售資料')
+      
+      // 檢查快取格式（兼容舊的陣列格式）
+      const isLegacyCache = Array.isArray(cachedData)
+      const data = isLegacyCache ? cachedData : (cachedData as any).trends
+      const lastSalesDate = isLegacyCache ? null : (cachedData as any).lastSalesDate
+
       return NextResponse.json({
         success: true,
-        data: cachedData,
+        data: data,
+        lastSalesDate: lastSalesDate,
         cached: true,
         cacheTimestamp: reportCache.getTimestamp(CACHE_KEYS.MONTHLY_SALES)
       })
@@ -117,6 +124,10 @@ export async function GET() {
       }
     })
 
+    // 追踪最後銷售日期
+    let latestSalesDateStr = ''
+    let latestTimestamp = 0
+
     // 處理訂單資料
     if (orderData && orderData.length > 0) {
       console.log(`取得 ${orderData.length} 筆訂單資料`)
@@ -130,6 +141,13 @@ export async function GET() {
           const date = new Date(dateStr)
 
           if (!isNaN(date.getTime())) {
+            // 更新最後銷售日期
+            if (date.getTime() > latestTimestamp) {
+              latestTimestamp = date.getTime()
+              // 統一日期格式為 YYYY/MM/DD
+              latestSalesDateStr = `${date.getFullYear()}/${String(date.getMonth() + 1).padStart(2, '0')}/${String(date.getDate()).padStart(2, '0')}`
+            }
+
             const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
 
             if (index < 5) {
@@ -147,7 +165,7 @@ export async function GET() {
 
       console.log('樣本日期:', sampleDates)
       console.log(`處理了 ${processedCount} 筆有效資料`)
-      console.log('目標月份範圍:', recentMonths)
+      console.log('最後銷售日期:', latestSalesDateStr)
     }
 
     // 處理商品資料來計算商品品項數
@@ -181,7 +199,7 @@ export async function GET() {
     })
 
     // 轉換為陣列格式並按時間排序（最新在前）
-    const result = recentMonths.map(month => ({
+    const trendsResult = recentMonths.map(month => ({
       month: month,
       monthDisplay: month.replace('-', '年') + '月',
       amount: Math.round(monthlyStats[month].amount),
@@ -190,12 +208,19 @@ export async function GET() {
       productItemCount: monthlyStats[month].productItemCount
     }))
 
+    // 準備快取資料
+    const cacheData = {
+      trends: trendsResult,
+      lastSalesDate: latestSalesDateStr
+    }
+
     // 儲存到快取
-    reportCache.set(CACHE_KEYS.MONTHLY_SALES, result)
+    reportCache.set(CACHE_KEYS.MONTHLY_SALES, cacheData)
 
     return NextResponse.json({
       success: true,
-      data: result,
+      data: trendsResult,
+      lastSalesDate: latestSalesDateStr,
       cached: false,
       computed: true
     })

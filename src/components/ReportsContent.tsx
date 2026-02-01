@@ -93,6 +93,7 @@ export default function ReportsContent() {
   // Trends tab data (all time data - no filtering)
   const [salesData, setSalesData] = useState<MonthlySalesData[]>([])
   const [discountData, setDiscountData] = useState<DiscountData[]>([])
+  const [latestSalesDate, setLatestSalesDate] = useState<string>('')
 
   // Monthly tab data (filtered by selected month)
   const [selectedMonth, setSelectedMonth] = useState<string>(() => {
@@ -123,6 +124,7 @@ export default function ReportsContent() {
   // Cache for trends data
   const [cachedData, setCachedData] = useState<{
     salesData?: MonthlySalesData[]
+    latestSalesDate?: string
     discountData?: DiscountData[]
     monthlyData?: Record<string, {
       categoryData: CategoryData[]
@@ -173,6 +175,7 @@ export default function ReportsContent() {
     // 檢查是否有有效的緩存資料
     if (!forceRefresh && cachedData.timestamp && (now.getTime() - cachedData.timestamp.getTime() < cacheExpireTime)) {
       setSalesData(cachedData.salesData || [])
+      setLatestSalesDate(cachedData.latestSalesDate || '')
       setDiscountData(cachedData.discountData || [])
       setLoading(false)
       return
@@ -190,11 +193,15 @@ export default function ReportsContent() {
 
       let newSalesData: MonthlySalesData[] = []
       let newDiscountData: DiscountData[] = []
+      let newLatestSalesDate = ''
 
       if (salesResponse.ok) {
         const salesResult = await salesResponse.json()
         newSalesData = salesResult.data || salesResult
+        // 兼容舊 API 格式
+        newLatestSalesDate = salesResult.lastSalesDate || ''
         setSalesData(newSalesData)
+        setLatestSalesDate(newLatestSalesDate)
       }
 
       if (discountResponse.ok) {
@@ -206,6 +213,7 @@ export default function ReportsContent() {
       // 更新緩存
       setCachedData({
         salesData: newSalesData,
+        latestSalesDate: newLatestSalesDate,
         discountData: newDiscountData,
         timestamp: now
       })
@@ -886,7 +894,17 @@ export default function ReportsContent() {
                 <h1 className="text-3xl font-bold text-gray-800">
                   報表管理
                 </h1>
-                <p className="text-gray-600 mt-1">數據分析與報表檢視</p>
+                <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-3 mt-1">
+                  <p className="text-gray-600">數據分析與報表檢視</p>
+                  {latestSalesDate && (
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 animate-fade-in-up">
+                      <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      統計至 {latestSalesDate}
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
 
