@@ -514,8 +514,7 @@ export default function RewardCardsContent() {
                                                 Object.keys(row).forEach(key => {
                                                     if (key.startsWith('p')) {
                                                         const val = parseInt(key.substring(1))
-                                                        // 排除 0 點，只顯示 1 點以上的分布
-                                                        if (!isNaN(val) && val > 0) points.add(val)
+                                                        if (!isNaN(val)) points.add(val)
                                                     }
                                                 })
                                             })
@@ -533,8 +532,7 @@ export default function RewardCardsContent() {
                                             Object.keys(r).forEach(key => {
                                                 if (key.startsWith('p')) {
                                                     const val = parseInt(key.substring(1))
-                                                    // 排除 0 點
-                                                    if (!isNaN(val) && val > 0) points.add(val)
+                                                    if (!isNaN(val)) points.add(val)
                                                 }
                                             })
                                         })
