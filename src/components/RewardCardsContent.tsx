@@ -155,7 +155,8 @@ export default function RewardCardsContent() {
                             <table className="w-full">
                                 <thead className="bg-gray-50">
                                     <tr>
-                                        <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">日期</th>
+                                        <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">歸屬區間</th>
+                                        <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">資料日期</th>
                                         <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">名稱</th>
                                         <th className="px-6 py-4 text-right text-xs font-bold text-emerald-600 uppercase tracking-wider">使用率</th>
                                         <th className="px-6 py-4 text-right text-xs font-bold text-blue-600 uppercase tracking-wider">週二三四訂單</th>
@@ -173,7 +174,16 @@ export default function RewardCardsContent() {
                                 <tbody className="bg-white divide-y divide-gray-200">
                                     {rewardCardHistory.map((row, idx) => (
                                         <tr key={idx} className="hover:bg-emerald-50/30 transition-colors">
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900">{row.date}</td>
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <div className="text-sm font-bold text-emerald-700 bg-emerald-50 px-2 py-1 rounded inline-block">
+                                                    {row.periodLabel}
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <div className="text-xs text-gray-500 tabular-nums">
+                                                    {row.date}
+                                                </div>
+                                            </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{row.name}</td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-right font-bold text-emerald-600">
                                                 {(row.usageRate * 100).toFixed(1)}%
@@ -189,8 +199,14 @@ export default function RewardCardsContent() {
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">{row.storeVisitPoints}</td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">{row.WelcomeBonusesAwarded}</td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right text-red-500">{row.expiredPoints}</td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">{row.vouchersAwarded}</td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right text-emerald-600">{row.vouchersUsed}</td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">
+                                                <div className="font-medium">{row.vouchersAwarded}</div>
+                                                <div className="text-[10px] text-gray-400">本期 +{row.newVouchersAwarded}</div>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right text-emerald-600">
+                                                <div className="font-medium">{row.vouchersUsed}</div>
+                                                <div className="text-[10px] text-emerald-400">本期 +{row.newVouchersUsed}</div>
+                                            </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
                                                 {row.deleted === 'TRUE' ? (
                                                     <span className="px-2.5 py-1 text-xs font-bold bg-gray-100 text-gray-500 rounded-full">已刪除</span>
@@ -202,7 +218,7 @@ export default function RewardCardsContent() {
                                     ))}
                                     {rewardCardHistory.length === 0 && (
                                         <tr>
-                                            <td colSpan={13} className="px-6 py-12 text-center text-gray-500 italic">尚無歷史資料資料</td>
+                                            <td colSpan={14} className="px-6 py-12 text-center text-gray-500 italic">尚無歷史資料資料</td>
                                         </tr>
                                     )}
                                 </tbody>
