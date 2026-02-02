@@ -78,9 +78,9 @@ export default function ReportsContent() {
   const searchParams = useSearchParams()
 
   // Tab state with URL sync
-  const [activeTab, setActiveTab] = useState<'trends' | 'monthly' | 'customer-analysis' | 'reward-cards' | 'ai-chat'>(() => {
+  const [activeTab, setActiveTab] = useState<'trends' | 'monthly' | 'customer-analysis' | 'ai-chat'>(() => {
     const tab = searchParams.get('tab')
-    const validTabs = ['monthly', 'trends', 'customer-analysis', 'reward-cards', 'ai-chat']
+    const validTabs = ['monthly', 'trends', 'customer-analysis', 'ai-chat']
     return validTabs.includes(tab as any) ? tab as any : 'trends'
   })
 
@@ -138,18 +138,8 @@ export default function ReportsContent() {
       spendingRanking: CustomerAnalysisData[]
       frequencyRanking: CustomerAnalysisData[]
     }>
-    rewardCardData?: {
-      cardHistory: any[]
-      pointHistory: any[]
-    }
     timestamp?: Date
   }>({})
-
-  // Reward Cards Tab State
-  const [rewardCardTab, setRewardCardTab] = useState<'overall' | 'card-history' | 'point-history'>('overall')
-  const [rewardCardHistory, setRewardCardHistory] = useState<any[]>([])
-  const [rewardPointHistory, setRewardPointHistory] = useState<any[]>([])
-  const [loadingRewardCards, setLoadingRewardCards] = useState(false)
 
   // AI Chat state
   const [chatInput, setChatInput] = useState('')
@@ -491,43 +481,6 @@ export default function ReportsContent() {
     }
   }, [customerAnalysisMonth, activeTab, fetchCustomerAnalysisData])
 
-  // Fetch Reward Cards data
-  const fetchRewardCardData = useCallback(async (forceRefresh = false) => {
-    if (!forceRefresh && cachedData.rewardCardData) {
-      setRewardCardHistory(cachedData.rewardCardData.cardHistory)
-      setRewardPointHistory(cachedData.rewardCardData.pointHistory)
-      return
-    }
-
-    setLoadingRewardCards(true)
-    try {
-      const response = await fetch('/api/reports/reward-cards')
-      if (response.ok) {
-        const result = await response.json()
-        const cardHistory = result.cardHistory || []
-        const pointHistory = result.pointHistory || []
-
-        setRewardCardHistory(cardHistory)
-        setRewardPointHistory(pointHistory)
-
-        setCachedData(prev => ({
-          ...prev,
-          rewardCardData: { cardHistory, pointHistory }
-        }))
-      }
-    } catch (error) {
-      console.error('獲取集點卡資料失敗:', error)
-    } finally {
-      setLoadingRewardCards(false)
-    }
-  }, [cachedData.rewardCardData])
-
-  // Fetch Reward Cards data when active tab changes
-  useEffect(() => {
-    if (activeTab === 'reward-cards') {
-      fetchRewardCardData()
-    }
-  }, [activeTab, fetchRewardCardData])
 
   // Manual cache refresh handler
   const handleManualRefresh = async () => {
@@ -547,8 +500,6 @@ export default function ReportsContent() {
         setRankingData(null)
         setCustomerSpendingRanking([])
         setCustomerFrequencyRanking([])
-        setRewardCardHistory([])
-        setRewardPointHistory([])
         setCachedData({})
 
         // 重新載入當前標籤頁的資料
@@ -558,8 +509,6 @@ export default function ReportsContent() {
           await fetchMonthlyCategoryData(selectedMonth, true)
         } else if (activeTab === 'customer-analysis') {
           await fetchCustomerAnalysisData(customerAnalysisMonth, true)
-        } else if (activeTab === 'reward-cards') {
-          await fetchRewardCardData(true)
         }
 
         setLastRefreshTime(new Date())
@@ -583,8 +532,6 @@ export default function ReportsContent() {
       fetchMonthlyCategoryData(selectedMonth, true)
     } else if (activeTab === 'customer-analysis') {
       fetchCustomerAnalysisData(customerAnalysisMonth, true)
-    } else if (activeTab === 'reward-cards') {
-      fetchRewardCardData(true)
     }
   }
 
@@ -947,7 +894,7 @@ export default function ReportsContent() {
               </div>
               <div>
                 <h1 className="text-3xl font-bold text-gray-800">
-                  {activeTab === 'reward-cards' ? '集點卡統計' : '報表管理'}
+                  報表管理
                 </h1>
                 <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-3 mt-1">
                   <p className="text-gray-600">數據分析與報表檢視</p>
@@ -1038,18 +985,6 @@ export default function ReportsContent() {
                   }`}
               >
                 顧客分析
-              </button>
-              <button
-                onClick={() => {
-                  setActiveTab('reward-cards')
-                  router.push('/reports?tab=reward-cards', { scroll: false })
-                }}
-                className={`px-6 py-3 rounded-lg font-medium transition-all ${activeTab === 'reward-cards'
-                  ? 'bg-secondary text-gray-800 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50'
-                  }`}
-              >
-                集點卡統計
               </button>
             </div>
             <div className="bg-white rounded-xl shadow-sm p-1">
@@ -1480,160 +1415,6 @@ export default function ReportsContent() {
           </div>
         )}
 
-        {/* Reward Cards Tab Content */}
-        {activeTab === 'reward-cards' && (
-          <div className="space-y-6">
-            <div className="bg-white rounded-xl shadow-sm p-1 inline-flex mb-4">
-              <button
-                onClick={() => setRewardCardTab('overall')}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${rewardCardTab === 'overall'
-                  ? 'bg-gray-100 text-gray-800'
-                  : 'text-gray-500 hover:text-gray-700'
-                  }`}
-              >
-                整體統計
-              </button>
-              <button
-                onClick={() => setRewardCardTab('card-history')}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${rewardCardTab === 'card-history'
-                  ? 'bg-gray-100 text-gray-800'
-                  : 'text-gray-500 hover:text-gray-700'
-                  }`}
-              >
-                卡片使用狀態歷史資料
-              </button>
-              <button
-                onClick={() => setRewardCardTab('point-history')}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${rewardCardTab === 'point-history'
-                  ? 'bg-gray-100 text-gray-800'
-                  : 'text-gray-500 hover:text-gray-700'
-                  }`}
-              >
-                點數使用狀態歷史資料
-              </button>
-            </div>
-
-            {loadingRewardCards ? (
-              <div className="flex justify-center py-12">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500"></div>
-              </div>
-            ) : rewardCardTab === 'overall' ? (
-              <div className="bg-white rounded-2xl shadow-lg p-12 text-center border border-gray-100">
-                <div className="w-20 h-20 rounded-full bg-purple-50 mx-auto mb-4 flex items-center justify-center">
-                  <svg className="w-10 h-10 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                  </svg>
-                </div>
-                <h3 className="text-xl font-bold text-gray-800 mb-2">整體統計即將推出</h3>
-                <p className="text-gray-600">目前請先查看下方的歷史資料標籤</p>
-              </div>
-            ) : rewardCardTab === 'card-history' ? (
-              <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">日期</th>
-                        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">名稱</th>
-                        <th className="px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">有效卡數</th>
-                        <th className="px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">已發行</th>
-                        <th className="px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">來店點數</th>
-                        <th className="px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">贈送歡迎點數</th>
-                        <th className="px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">過期點數</th>
-                        <th className="px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">發出優惠券</th>
-                        <th className="px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">使用優惠券</th>
-                        <th className="px-6 py-4 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">已刪除</th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                      {rewardCardHistory.map((row, idx) => (
-                        <tr key={idx} className="hover:bg-gray-50 transition-colors">
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{row.date}</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{row.name}</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">{row.validCards}</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">{row.issuedCards}</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">{row.storeVisitPoints}</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">{row.WelcomeBonusesAwarded}</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">{row.expiredPoints}</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">{row.vouchersAwarded}</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">{row.vouchersUsed}</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
-                            {row.deleted === 'TRUE' ? (
-                              <span className="px-2 py-1 text-xs font-medium bg-red-100 text-red-600 rounded-full">是</span>
-                            ) : (
-                              <span className="px-2 py-1 text-xs font-medium bg-green-100 text-green-600 rounded-full">否</span>
-                            )}
-                          </td>
-                        </tr>
-                      ))}
-                      {rewardCardHistory.length === 0 && (
-                        <tr>
-                          <td colSpan={10} className="px-6 py-8 text-center text-gray-500">尚無資料</td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            ) : (
-              <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider sticky left-0 bg-gray-50">日期</th>
-                        {(() => {
-                          // Extract all unique point columns from history
-                          const points = new Set<number>()
-                          rewardPointHistory.forEach(row => {
-                            Object.keys(row).forEach(key => {
-                              if (key.startsWith('p')) {
-                                points.add(parseInt(key.substring(1)))
-                              }
-                            })
-                          })
-                          const sortedPoints = Array.from(points).sort((a, b) => b - a)
-                          return sortedPoints.map(p => (
-                            <th key={p} className="px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider min-w-[100px]">{p} 點</th>
-                          ))
-                        })()}
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                      {rewardPointHistory.map((row, idx) => {
-                        const points = new Set<number>()
-                        rewardPointHistory.forEach(r => {
-                          Object.keys(r).forEach(key => {
-                            if (key.startsWith('p')) {
-                              points.add(parseInt(key.substring(1)))
-                            }
-                          })
-                        })
-                        const sortedPoints = Array.from(points).sort((a, b) => b - a)
-
-                        return (
-                          <tr key={idx} className="hover:bg-gray-50 transition-colors">
-                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 sticky left-0 bg-white">{row.date}</td>
-                            {sortedPoints.map(p => (
-                              <td key={p} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">
-                                {row[`p${p}`] || 0} 人
-                              </td>
-                            ))}
-                          </tr>
-                        )
-                      })}
-                      {rewardPointHistory.length === 0 && (
-                        <tr>
-                          <td colSpan={10} className="px-6 py-8 text-center text-gray-500">尚無資料</td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
 
         {/* Monthly Tab Content */}
         {activeTab === 'monthly' && (
