@@ -1,11 +1,12 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useSearchParams } from 'next/navigation'
 import { useState } from 'react'
 
 export default function Header() {
   const pathname = usePathname()
+  const searchParams = useSearchParams()
 
   const navigation = [
     {
@@ -23,6 +24,15 @@ export default function Header() {
       icon: (
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10m-9 4h5m4 7H8a3 3 0 01-3-3V7a3 3 0 013-3h8a3 3 0 013 3v12a3 3 0 01-3 3z" />
+        </svg>
+      )
+    },
+    {
+      name: '集點卡統計',
+      href: '/reports?tab=reward-cards',
+      icon: (
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
         </svg>
       )
     },
@@ -111,7 +121,7 @@ export default function Header() {
                 <Link
                   key={item.name}
                   href={item.href}
-                  className={`inline-flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${isActive
+                  className={`inline-flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${isActive || (item.name === '集點卡統計' && pathname === '/reports' && searchParams.get('tab') === 'reward-cards')
                     ? 'bg-emerald-600 text-white shadow-sm'
                     : 'text-gray-600 hover:text-emerald-600 hover:bg-emerald-50'
                     }`}

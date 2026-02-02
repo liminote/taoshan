@@ -947,7 +947,7 @@ export default function ReportsContent() {
               </div>
               <div>
                 <h1 className="text-3xl font-bold text-gray-800">
-                  報表管理
+                  {activeTab === 'reward-cards' ? '集點卡統計' : '報表管理'}
                 </h1>
                 <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-3 mt-1">
                   <p className="text-gray-600">數據分析與報表檢視</p>
