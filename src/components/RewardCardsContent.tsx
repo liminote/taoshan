@@ -95,7 +95,7 @@ export default function RewardCardsContent() {
         Object.keys(latestPoints).forEach(key => {
             if (key.startsWith('p')) {
                 const points = parseInt(key.substring(1))
-                const count = latestPoints[key] || 0
+                const count = Number(latestPoints[key]) || 0
                 if (points === 1) experience += count
                 else if (points === 2) advanced += count
                 else if (points >= 3) core += count
@@ -110,7 +110,7 @@ export default function RewardCardsContent() {
         const maxVouchers = Math.max(...trendData.flatMap(d => [d.newVouchersAwarded, d.newVouchersUsed]), 1)
 
         return {
-            latestValidCards: latest.validCards,
+            latestValidCards: totalJourney,
             avgUsageRate: avgUsage,
             avgInflowRate: avgInflow,
             journey: {
@@ -514,7 +514,8 @@ export default function RewardCardsContent() {
                                                 Object.keys(row).forEach(key => {
                                                     if (key.startsWith('p')) {
                                                         const val = parseInt(key.substring(1))
-                                                        if (!isNaN(val)) points.add(val)
+                                                        // 排除 0 點，只顯示 1 點以上的分布
+                                                        if (!isNaN(val) && val > 0) points.add(val)
                                                     }
                                                 })
                                             })
@@ -532,7 +533,8 @@ export default function RewardCardsContent() {
                                             Object.keys(r).forEach(key => {
                                                 if (key.startsWith('p')) {
                                                     const val = parseInt(key.substring(1))
-                                                    if (!isNaN(val)) points.add(val)
+                                                    // 排除 0 點
+                                                    if (!isNaN(val) && val > 0) points.add(val)
                                                 }
                                             })
                                         })
