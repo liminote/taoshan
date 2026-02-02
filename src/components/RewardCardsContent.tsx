@@ -11,7 +11,7 @@ export default function RewardCardsContent() {
     const [isManualRefreshing, setIsManualRefreshing] = useState(false)
 
     // Reward Cards Tab State
-    const [rewardCardTab, setRewardCardTab] = useState<'overall' | 'card-history' | 'point-history'>('overall')
+    const [rewardCardTab, setRewardCardTab] = useState<'overall' | 'card-history' | 'point-history' | 'instruction'>('overall')
     const [rewardCardHistory, setRewardCardHistory] = useState<any[]>([])
     const [rewardPointHistory, setRewardPointHistory] = useState<any[]>([])
     const [loadingRewardCards, setLoadingRewardCards] = useState(false)
@@ -23,6 +23,21 @@ export default function RewardCardsContent() {
             pointHistory: any[]
         }
     }>({})
+
+    // Sync tab with URL
+    useEffect(() => {
+        const tab = searchParams.get('tab')
+        if (tab && ['overall', 'card-history', 'point-history', 'instruction'].includes(tab)) {
+            setRewardCardTab(tab as any)
+        }
+    }, [searchParams])
+
+    const handleTabChange = (tab: 'overall' | 'card-history' | 'point-history' | 'instruction') => {
+        setRewardCardTab(tab)
+        const params = new URLSearchParams(searchParams.toString())
+        params.set('tab', tab)
+        router.push(`?${params.toString()}`)
+    }
 
     // Fetch Reward Cards data
     const fetchRewardCardData = useCallback(async (forceRefresh = false) => {
@@ -104,7 +119,7 @@ export default function RewardCardsContent() {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8 space-y-6">
                 <div className="bg-white rounded-xl shadow-sm p-1 inline-flex">
                     <button
-                        onClick={() => setRewardCardTab('overall')}
+                        onClick={() => handleTabChange('overall')}
                         className={`px-6 py-2.5 rounded-lg text-sm font-semibold transition-all ${rewardCardTab === 'overall'
                             ? 'bg-emerald-600 text-white shadow-md'
                             : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
@@ -113,7 +128,7 @@ export default function RewardCardsContent() {
                         整體統計
                     </button>
                     <button
-                        onClick={() => setRewardCardTab('card-history')}
+                        onClick={() => handleTabChange('card-history')}
                         className={`px-6 py-2.5 rounded-lg text-sm font-semibold transition-all ${rewardCardTab === 'card-history'
                             ? 'bg-emerald-600 text-white shadow-md'
                             : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
@@ -122,13 +137,22 @@ export default function RewardCardsContent() {
                         卡片使用狀態歷史資料
                     </button>
                     <button
-                        onClick={() => setRewardCardTab('point-history')}
+                        onClick={() => handleTabChange('point-history')}
                         className={`px-6 py-2.5 rounded-lg text-sm font-semibold transition-all ${rewardCardTab === 'point-history'
                             ? 'bg-emerald-600 text-white shadow-md'
                             : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
                             }`}
                     >
                         點數使用狀態歷史資料
+                    </button>
+                    <button
+                        onClick={() => handleTabChange('instruction')}
+                        className={`px-6 py-2.5 rounded-lg text-sm font-semibold transition-all ${rewardCardTab === 'instruction'
+                            ? 'bg-emerald-600 text-white shadow-md'
+                            : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                            }`}
+                    >
+                        使用說明
                     </button>
                 </div>
 
@@ -141,7 +165,7 @@ export default function RewardCardsContent() {
                     <div className="bg-white rounded-2xl shadow-lg p-16 text-center border border-gray-100">
                         <div className="w-24 h-24 rounded-full bg-emerald-50 mx-auto mb-6 flex items-center justify-center">
                             <svg className="w-12 h-12 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2-2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                             </svg>
                         </div>
                         <h3 className="text-2xl font-bold text-gray-800 mb-3">整體統計即將推出</h3>
@@ -157,9 +181,9 @@ export default function RewardCardsContent() {
                                     <tr>
                                         <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">歸屬區間</th>
                                         <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">資料日期</th>
-                                        <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">名稱</th>
+                                        <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">卡片管理</th>
                                         <th className="px-6 py-4 text-right text-xs font-bold text-emerald-600 uppercase tracking-wider">使用率</th>
-                                        <th className="px-6 py-4 text-right text-xs font-bold text-blue-600 uppercase tracking-wider">週二三四訂單</th>
+                                        <th className="px-6 py-4 text-right text-xs font-bold text-blue-600 uppercase tracking-wider">周間訂單</th>
                                         <th className="px-6 py-4 text-right text-xs font-bold text-purple-600 uppercase tracking-wider">引流率</th>
                                         <th className="px-6 py-4 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">有效卡數</th>
                                         <th className="px-6 py-4 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">已發行</th>
@@ -168,7 +192,6 @@ export default function RewardCardsContent() {
                                         <th className="px-6 py-4 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">過期點數</th>
                                         <th className="px-6 py-4 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">發出券數</th>
                                         <th className="px-6 py-4 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">核銷券數</th>
-                                        <th className="px-6 py-4 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">狀態</th>
                                     </tr>
                                 </thead>
                                 <tbody className="bg-white divide-y divide-gray-200">
@@ -184,7 +207,7 @@ export default function RewardCardsContent() {
                                                     {row.date}
                                                 </div>
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{row.name}</td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 font-medium">{row.name}</td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-right font-bold text-emerald-600">
                                                 {(row.usageRate * 100).toFixed(1)}%
                                             </td>
@@ -194,7 +217,7 @@ export default function RewardCardsContent() {
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-right font-bold text-purple-600">
                                                 {(row.inflowRate * 100).toFixed(1)}%
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right font-medium">{row.validCards}</td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">{row.validCards}</td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">{row.issuedCards}</td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">{row.storeVisitPoints}</td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">{row.WelcomeBonusesAwarded}</td>
@@ -207,25 +230,18 @@ export default function RewardCardsContent() {
                                                 <div className="font-medium">{row.vouchersUsed}</div>
                                                 <div className="text-[10px] text-emerald-400">本期 +{row.newVouchersUsed}</div>
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
-                                                {row.deleted === 'TRUE' ? (
-                                                    <span className="px-2.5 py-1 text-xs font-bold bg-gray-100 text-gray-500 rounded-full">已刪除</span>
-                                                ) : (
-                                                    <span className="px-2.5 py-1 text-xs font-bold bg-emerald-100 text-emerald-600 rounded-full">使用中</span>
-                                                )}
-                                            </td>
                                         </tr>
                                     ))}
                                     {rewardCardHistory.length === 0 && (
                                         <tr>
-                                            <td colSpan={14} className="px-6 py-12 text-center text-gray-500 italic">尚無歷史資料資料</td>
+                                            <td colSpan={13} className="px-6 py-12 text-center text-gray-500 italic">尚無歷史資料資料</td>
                                         </tr>
                                     )}
                                 </tbody>
                             </table>
                         </div>
                     </div>
-                ) : (
+                ) : rewardCardTab === 'point-history' ? (
                     <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
                         <div className="overflow-x-auto">
                             <table className="w-full">
@@ -280,6 +296,142 @@ export default function RewardCardsContent() {
                                     )}
                                 </tbody>
                             </table>
+                        </div>
+                    </div>
+                ) : (
+                    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+                        {/* 核心指標說明 */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="bg-gradient-to-br from-emerald-50 to-white p-8 rounded-3xl border border-emerald-100 shadow-sm relative overflow-hidden group">
+                                <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-200/20 rounded-full -mr-16 -mt-16 transition-transform group-hover:scale-110 duration-500"></div>
+                                <div className="relative">
+                                    <div className="flex items-center space-x-3 mb-6">
+                                        <div className="p-3 bg-white rounded-2xl shadow-sm">
+                                            <svg className="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                                            </svg>
+                                        </div>
+                                        <h3 className="text-xl font-bold text-gray-800">1. 核心經營指標：引流率</h3>
+                                    </div>
+                                    <div className="space-y-4">
+                                        <div className="bg-white/60 p-4 rounded-xl">
+                                            <p className="text-sm font-bold text-emerald-700 mb-1">計算公式：</p>
+                                            <p className="text-gray-700 font-mono text-sm bg-white p-2 rounded border border-emerald-50">本期新增發出券數 / 本期周間訂單總數</p>
+                                        </div>
+                                        <div className="space-y-3">
+                                            <p className="text-sm text-gray-600 leading-relaxed italic">衡量「平日進店客人」轉化為「集點會員」的成效。</p>
+                                            <div className="grid grid-cols-1 gap-3">
+                                                <div className="flex items-start space-x-2">
+                                                    <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full mt-2"></span>
+                                                    <p className="text-sm text-gray-600"><span className="font-bold text-emerald-600">高引流率：</span>代表平日客群對集點獎勵很有感，且店員推廣到位。</p>
+                                                </div>
+                                                <div className="flex items-start space-x-2">
+                                                    <span className="w-1.5 h-1.5 bg-gray-400 rounded-full mt-2"></span>
+                                                    <p className="text-sm text-gray-600"><span className="font-bold text-gray-600">低引流率：</span>代表平日客群可能不在意福利，或平均消費未達門檻。</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="bg-gradient-to-br from-blue-50 to-white p-8 rounded-3xl border border-blue-100 shadow-sm relative overflow-hidden group">
+                                <div className="absolute top-0 right-0 w-32 h-32 bg-blue-200/20 rounded-full -mr-16 -mt-16 transition-transform group-hover:scale-110 duration-500"></div>
+                                <div className="relative">
+                                    <div className="flex items-center space-x-3 mb-6">
+                                        <div className="p-3 bg-white rounded-2xl shadow-sm">
+                                            <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                            </svg>
+                                        </div>
+                                        <h3 className="text-xl font-bold text-gray-800">2. 回流指標：使用率</h3>
+                                    </div>
+                                    <div className="space-y-4">
+                                        <div className="bg-white/60 p-4 rounded-xl">
+                                            <p className="text-sm font-bold text-blue-700 mb-1">計算公式：</p>
+                                            <p className="text-gray-700 font-mono text-sm bg-white p-2 rounded border border-blue-50">本期核銷券數 / 本期發出券數 × 100%</p>
+                                        </div>
+                                        <div className="space-y-3">
+                                            <p className="text-sm text-gray-600 leading-relaxed italic">衡量「獎勵品項」對顧客回訪的真實吸力。</p>
+                                            <div className="p-3 bg-blue-100/50 rounded-lg">
+                                                <p className="text-xs text-blue-700 font-bold mb-1">優化門檻：</p>
+                                                <p className="text-sm text-blue-800">建議將目標設在 <span className="text-lg font-black underline">15%</span> 以上，若長期偏低，應考慮升級獎勵品項。</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* 詳細數據說明 */}
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                                <h4 className="text-lg font-bold text-gray-800 mb-4 pb-2 border-b border-gray-50 flex items-center">
+                                    <span className="w-2 h-6 bg-emerald-500 rounded-full mr-3"></span>
+                                    基礎參與數據
+                                </h4>
+                                <ul className="space-y-4">
+                                    <li className="space-y-1">
+                                        <p className="text-sm font-bold text-gray-800">有效卡片 (Active Cards)</p>
+                                        <p className="text-xs text-gray-500 leading-relaxed">目前「持有集點卡且點數 &gt; 0」的顧客數。代表平日實際集點的真實客群規模。</p>
+                                    </li>
+                                    <li className="space-y-1">
+                                        <p className="text-sm font-bold text-gray-800">已發行卡片 (Cards Issued)</p>
+                                        <p className="text-xs text-gray-500 leading-relaxed">曾點開過集點卡的總人數。與有效卡片的差值為「領卡後未到店」的潛在對象。</p>
+                                    </li>
+                                    <li className="space-y-1">
+                                        <p className="text-sm font-bold text-gray-800">來店點數 (Total Points)</p>
+                                        <p className="text-xs text-gray-500 leading-relaxed">發出的總點數。計算方式：來店點數 × 1,000 元 = 平日集點帶來的預估營業額。</p>
+                                    </li>
+                                </ul>
+                            </div>
+
+                            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                                <h4 className="text-lg font-bold text-gray-800 mb-4 pb-2 border-b border-gray-50 flex items-center">
+                                    <span className="w-2 h-6 bg-blue-500 rounded-full mr-3"></span>
+                                    優惠券與獎勵數據
+                                </h4>
+                                <ul className="space-y-4">
+                                    <li className="space-y-1">
+                                        <p className="text-sm font-bold text-gray-800">已發行優惠券 (Rewards Issued)</p>
+                                        <p className="text-xs text-gray-500 leading-relaxed">獎勵券總數。每達 3 點產出一張。代表「獎勵達標次數」，而非人數。</p>
+                                    </li>
+                                    <li className="space-y-1">
+                                        <p className="text-sm font-bold text-gray-800">已使用優惠券 (Rewards Redeemed)</p>
+                                        <p className="text-xs text-gray-500 leading-relaxed">顧客回店並核銷獎勵的次數。是衡量「平日回流成效」最核心的指標。</p>
+                                    </li>
+                                    <li className="space-y-1">
+                                        <p className="text-sm font-bold text-gray-800">有效期限 (3 個月)</p>
+                                        <p className="text-xs text-gray-500 leading-relaxed">點數與獎勵券時限。只要在三個月內有再次集點，舊點數期限會自動延長。</p>
+                                    </li>
+                                </ul>
+                            </div>
+
+                            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                                <h4 className="text-lg font-bold text-gray-800 mb-4 pb-2 border-b border-gray-50 flex items-center">
+                                    <span className="w-2 h-6 bg-purple-500 rounded-full mr-3"></span>
+                                    顧客行為分佈
+                                </h4>
+                                <div className="space-y-4">
+                                    <div className="p-4 bg-purple-50 rounded-xl">
+                                        <p className="text-sm font-bold text-purple-800 mb-2">點數分佈（第 3 頁簽）：</p>
+                                        <ul className="space-y-3">
+                                            <li className="flex items-start space-x-2">
+                                                <span className="text-purple-600 font-bold text-xs mt-0.5">3點:</span>
+                                                <p className="text-xs text-gray-600">代表多數客人在消費約 3,000 元後尚未回訪。</p>
+                                            </li>
+                                            <li className="flex items-start space-x-2">
+                                                <span className="text-purple-600 font-bold text-xs mt-0.5">6點↑:</span>
+                                                <p className="text-xs text-gray-600">核心熟客，代表已完成兩次以上的平日回訪。</p>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                    <div className="p-4 bg-orange-50 rounded-xl">
+                                        <p className="text-sm font-bold text-orange-800 mb-1">特別規則：</p>
+                                        <p className="text-xs text-gray-600 leading-relaxed">由於卡片上限為 3 點，所有的獎勵券本質上都是「滿點禮」。</p>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 )}
