@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 
 export default function RewardCardsContent() {
@@ -77,6 +77,47 @@ export default function RewardCardsContent() {
     const handleRefresh = () => {
         fetchRewardCardData(true)
     }
+
+    // Calculate Overall Dashboard Stats
+    const overallStats = useMemo(() => {
+        if (rewardCardHistory.length === 0) return null
+
+        const latest = rewardCardHistory[0]
+        const avgUsage = rewardCardHistory.reduce((acc, row) => acc + row.usageRate, 0) / rewardCardHistory.length
+        const avgInflow = rewardCardHistory.reduce((acc, row) => acc + row.inflowRate, 0) / rewardCardHistory.length
+
+        // Customer Journey (latest snapshot)
+        const latestPoints = rewardPointHistory[0] || {}
+        let experience = 0
+        let advanced = 0
+        let core = 0
+
+        Object.keys(latestPoints).forEach(key => {
+            if (key.startsWith('p')) {
+                const points = parseInt(key.substring(1))
+                const count = latestPoints[key] || 0
+                if (points === 1) experience += count
+                else if (points === 2) advanced += count
+                else if (points >= 3) core += count
+            }
+        })
+
+        const totalJourney = experience + advanced + core
+
+        return {
+            latestValidCards: latest.validCards,
+            avgUsageRate: avgUsage,
+            avgInflowRate: avgInflow,
+            journey: {
+                experience,
+                advanced,
+                core,
+                experiencePct: totalJourney ? (experience / totalJourney * 100).toFixed(1) : '0',
+                advancedPct: totalJourney ? (advanced / totalJourney * 100).toFixed(1) : '0',
+                corePct: totalJourney ? (core / totalJourney * 100).toFixed(1) : '0'
+            }
+        }
+    }, [rewardCardHistory, rewardPointHistory])
 
     return (
         <div className="min-h-screen bg-gray-50/50 pb-20">
@@ -162,16 +203,118 @@ export default function RewardCardsContent() {
                         <p className="text-gray-500 font-medium">載入集點卡資料中...</p>
                     </div>
                 ) : rewardCardTab === 'overall' ? (
-                    <div className="bg-white rounded-2xl shadow-lg p-16 text-center border border-gray-100">
-                        <div className="w-24 h-24 rounded-full bg-emerald-50 mx-auto mb-6 flex items-center justify-center">
-                            <svg className="w-12 h-12 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2-2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                            </svg>
-                        </div>
-                        <h3 className="text-2xl font-bold text-gray-800 mb-3">整體統計即將推出</h3>
-                        <p className="text-gray-600 max-w-sm mx-auto text-lg">
-                            正在開發自動化的彙總功能，目前請先查看下方的歷史資料標籤以獲取詳細數據。
-                        </p>
+                    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+                        {overallStats ? (
+                            <>
+                                {/* KPI Cards */}
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                    <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 flex flex-col justify-between">
+                                        <div>
+                                            <p className="text-sm font-bold text-gray-500 mb-1">品牌總活躍人數</p>
+                                            <h4 className="text-4xl font-black text-gray-800 tabular-nums">
+                                                {overallStats.latestValidCards.toLocaleString()}
+                                            </h4>
+                                        </div>
+                                        <div className="mt-4 pt-4 border-t border-gray-50 flex items-center text-xs text-gray-400">
+                                            <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
+                                            持卡且點數 &gt; 0 的總人數
+                                        </div>
+                                    </div>
+
+                                    <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 relative overflow-hidden group">
+                                        <div className={`absolute top-0 right-0 w-2 h-full ${overallStats.avgUsageRate >= 0.1 ? 'bg-emerald-500' : 'bg-red-500'}`}></div>
+                                        <div>
+                                            <p className="text-sm font-bold text-gray-500 mb-1">平均使用率</p>
+                                            <div className="flex items-baseline space-x-2">
+                                                <h4 className={`text-4xl font-black tabular-nums ${overallStats.avgUsageRate >= 0.1 ? 'text-emerald-600' : 'text-red-600'}`}>
+                                                    {(overallStats.avgUsageRate * 100).toFixed(1)}%
+                                                </h4>
+                                                <span className="text-xs font-bold text-gray-400">/ 標竿 10%</span>
+                                            </div>
+                                        </div>
+                                        <div className="mt-4">
+                                            {overallStats.avgUsageRate >= 0.1 ? (
+                                                <div className="bg-emerald-50 text-emerald-700 text-xs px-3 py-2 rounded-lg font-medium inline-flex items-center">
+                                                    🟢 表現優良：獎勵品項具備吸引力
+                                                </div>
+                                            ) : (
+                                                <div className="bg-red-50 text-red-700 text-xs px-3 py-2 rounded-lg font-medium inline-flex items-center">
+                                                    🔴 待優化：建議加強或調整獎勵品項
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
+                                        <div>
+                                            <p className="text-sm font-bold text-gray-500 mb-1">平均引流率</p>
+                                            <h4 className="text-4xl font-black text-blue-600 tabular-nums">
+                                                {(overallStats.avgInflowRate * 100).toFixed(1)}%
+                                            </h4>
+                                        </div>
+                                        <div className="mt-4 pt-4 border-t border-gray-50 flex items-center text-xs text-gray-400">
+                                            衡量平日進店客轉化為會員的效率
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Customer Journey Segmentation */}
+                                <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+                                    <div className="px-8 py-6 border-b border-gray-50 flex items-center justify-between">
+                                        <h3 className="text-lg font-bold text-gray-800">顧客旅程分佈 (Customer Journey)</h3>
+                                        <span className="text-xs text-gray-400 font-medium italic">基於最新數據快照</span>
+                                    </div>
+                                    <div className="p-8">
+                                        <div className="flex h-12 rounded-2xl overflow-hidden mb-8 shadow-inner bg-gray-100">
+                                            <div style={{ width: `${overallStats.journey.experiencePct}%` }} className="bg-emerald-400 transition-all hover:brightness-110" title={`體驗層: ${overallStats.journey.experiencePct}%`}></div>
+                                            <div style={{ width: `${overallStats.journey.advancedPct}%` }} className="bg-blue-400 transition-all hover:brightness-110" title={`進階層: ${overallStats.journey.advancedPct}%`}></div>
+                                            <div style={{ width: `${overallStats.journey.corePct}%` }} className="bg-purple-500 transition-all hover:brightness-110" title={`熟客層: ${overallStats.journey.corePct}%`}></div>
+                                        </div>
+
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                                            <div className="space-y-3">
+                                                <div className="flex items-center space-x-2">
+                                                    <div className="w-3 h-3 bg-emerald-400 rounded-full"></div>
+                                                    <p className="font-bold text-gray-700">體驗層 (1 點)</p>
+                                                </div>
+                                                <div className="pl-5">
+                                                    <p className="text-2xl font-black text-gray-800">{overallStats.journey.experience} <span className="text-sm font-normal text-gray-500">人</span></p>
+                                                    <p className="text-xs text-gray-500 mt-1 leading-relaxed">初次嘗試集點的客人，是未來回流的種子群。</p>
+                                                </div>
+                                            </div>
+
+                                            <div className="space-y-3">
+                                                <div className="flex items-center space-x-2">
+                                                    <div className="w-3 h-3 bg-blue-400 rounded-full"></div>
+                                                    <p className="font-bold text-gray-700">進階層 (2 點)</p>
+                                                </div>
+                                                <div className="pl-5">
+                                                    <p className="text-2xl font-black text-gray-800">{overallStats.journey.advanced} <span className="text-sm font-normal text-gray-500">人</span></p>
+                                                    <p className="text-xs text-gray-500 mt-1 leading-relaxed">已產生一次回購，具有極高潛力達成滿點獎勵。</p>
+                                                </div>
+                                            </div>
+
+                                            <div className="space-y-3">
+                                                <div className="flex items-center space-x-2">
+                                                    <div className="w-3 h-3 bg-purple-500 rounded-full"></div>
+                                                    <p className="font-bold text-gray-700">熟客層 (3 點↑)</p>
+                                                </div>
+                                                <div className="pl-5">
+                                                    <p className="text-2xl font-black text-gray-800">{overallStats.journey.core} <span className="text-sm font-normal text-gray-500">人</span></p>
+                                                    <p className="text-xs text-gray-500 mt-1 leading-relaxed">核心熟客群，代表已完成完整的商務回流循環。</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </>
+                        ) : (
+                            <div className="bg-white rounded-2xl shadow-lg p-16 text-center border border-gray-100">
+                                <p className="text-gray-500">尚無足夠資料產生整體統計</p>
+                            </div>
+                        )}
                     </div>
                 ) : rewardCardTab === 'card-history' ? (
                     <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
