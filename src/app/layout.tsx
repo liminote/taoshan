@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Header from '@/components/Header';
@@ -32,7 +33,9 @@ export default function RootLayout({
         suppressHydrationWarning
       >
         <AuthProvider>
-          <Header />
+          <Suspense fallback={<div className="h-16 bg-white border-b border-gray-200/50" />}>
+            <Header />
+          </Suspense>
           {children}
         </AuthProvider>
       </body>
