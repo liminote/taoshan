@@ -104,6 +104,11 @@ export default function RewardCardsContent() {
 
         const totalJourney = experience + advanced + core
 
+        // Trend Data (Chronological)
+        const trendData = [...rewardCardHistory].reverse()
+        const maxValidCards = Math.max(...trendData.map(d => d.validCards), 1)
+        const maxVouchers = Math.max(...trendData.flatMap(d => [d.newVouchersAwarded, d.newVouchersUsed]), 1)
+
         return {
             latestValidCards: latest.validCards,
             avgUsageRate: avgUsage,
@@ -115,6 +120,11 @@ export default function RewardCardsContent() {
                 experiencePct: totalJourney ? (experience / totalJourney * 100).toFixed(1) : '0',
                 advancedPct: totalJourney ? (advanced / totalJourney * 100).toFixed(1) : '0',
                 corePct: totalJourney ? (core / totalJourney * 100).toFixed(1) : '0'
+            },
+            trends: {
+                data: trendData,
+                maxValidCards,
+                maxVouchers
             }
         }
     }, [rewardCardHistory, rewardPointHistory])
@@ -306,6 +316,113 @@ export default function RewardCardsContent() {
                                                     <p className="text-xs text-gray-500 mt-1 leading-relaxed">核心熟客群，代表已完成完整的商務回流循環。</p>
                                                 </div>
                                             </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Growth Trends Section */}
+                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                                    {/* Line Chart: Valid Cards Growth */}
+                                    <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
+                                        <div className="flex items-center justify-between mb-8">
+                                            <div>
+                                                <h3 className="text-lg font-bold text-gray-800">有效卡數成長趨勢</h3>
+                                                <p className="text-xs text-gray-400 mt-1">追蹤平日會員規模的擴張路徑</p>
+                                            </div>
+                                            <div className="flex items-center space-x-2">
+                                                <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
+                                                <span className="text-xs font-bold text-emerald-600">有效卡數</span>
+                                            </div>
+                                        </div>
+                                        <div className="h-48 w-full relative">
+                                            <svg className="w-full h-full overflow-visible" viewBox="0 0 100 100" preserveAspectRatio="none">
+                                                {/* Grid Lines */}
+                                                {[0, 25, 50, 75, 100].map(val => (
+                                                    <line key={val} x1="0" y1={val} x2="100" y2={val} stroke="#f3f4f6" strokeWidth="0.5" />
+                                                ))}
+                                                {/* Line Path */}
+                                                <path
+                                                    d={overallStats.trends.data.map((d, i) => {
+                                                        const x = (i / (overallStats.trends.data.length - 1)) * 100
+                                                        const y = 100 - (d.validCards / overallStats.trends.maxValidCards) * 100
+                                                        return `${i === 0 ? 'M' : 'L'} ${x} ${y}`
+                                                    }).join(' ')}
+                                                    fill="none"
+                                                    stroke="#10b981"
+                                                    strokeWidth="3"
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                    className="drop-shadow-[0_2px_4px_rgba(16,185,129,0.3)]"
+                                                />
+                                                {/* Points */}
+                                                {overallStats.trends.data.map((d, i) => {
+                                                    const x = (i / (overallStats.trends.data.length - 1)) * 100
+                                                    const y = 100 - (d.validCards / overallStats.trends.maxValidCards) * 100
+                                                    return (
+                                                        <circle
+                                                            key={i}
+                                                            cx={x}
+                                                            cy={y}
+                                                            r="3"
+                                                            fill="white"
+                                                            stroke="#10b981"
+                                                            strokeWidth="2"
+                                                        />
+                                                    )
+                                                })}
+                                            </svg>
+                                        </div>
+                                        <div className="flex justify-between mt-4">
+                                            {overallStats.trends.data.map((d, i) => (
+                                                <span key={i} className="text-[10px] text-gray-400 font-medium rotate-45 origin-left">
+                                                    {d.periodLabel.split(' ')[0]}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    {/* Bar Chart: Voucher Performance */}
+                                    <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
+                                        <div className="flex items-center justify-between mb-8">
+                                            <div>
+                                                <h3 className="text-lg font-bold text-gray-800">獎勵券效能對照</h3>
+                                                <p className="text-xs text-gray-400 mt-1">發券數 (左) 與核銷數 (右) 的對比</p>
+                                            </div>
+                                            <div className="flex space-x-4">
+                                                <div className="flex items-center space-x-1.5">
+                                                    <div className="w-2 h-2 bg-blue-400 rounded-sm"></div>
+                                                    <span className="text-[10px] font-bold text-gray-500 uppercase">發券</span>
+                                                </div>
+                                                <div className="flex items-center space-x-1.5">
+                                                    <div className="w-2 h-2 bg-emerald-500 rounded-sm"></div>
+                                                    <span className="text-[10px] font-bold text-gray-500 uppercase">核銷</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className="h-48 flex items-end justify-between space-x-2">
+                                            {overallStats.trends.data.map((d, i) => (
+                                                <div key={i} className="flex-1 flex items-end justify-center space-x-1 h-full relative group">
+                                                    <div
+                                                        style={{ height: `${(d.newVouchersAwarded / overallStats.trends.maxVouchers) * 100}%` }}
+                                                        className="w-1.5 bg-blue-400/80 rounded-t-sm transition-all group-hover:bg-blue-400"
+                                                    ></div>
+                                                    <div
+                                                        style={{ height: `${(d.newVouchersUsed / overallStats.trends.maxVouchers) * 100}%` }}
+                                                        className="w-1.5 bg-emerald-500/80 rounded-t-sm transition-all group-hover:bg-emerald-500"
+                                                    ></div>
+                                                    {/* Tooltip on hover */}
+                                                    <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-[10px] py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-20 shadow-xl">
+                                                        獲贈: {d.newVouchersAwarded} | 核銷: {d.newVouchersUsed}
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                        <div className="flex justify-between mt-4">
+                                            {overallStats.trends.data.map((d, i) => (
+                                                <span key={i} className="text-[10px] text-gray-400 font-medium rotate-45 origin-left">
+                                                    {d.periodLabel.split(' ')[0]}
+                                                </span>
+                                            ))}
                                         </div>
                                     </div>
                                 </div>
