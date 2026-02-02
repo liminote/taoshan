@@ -157,6 +157,9 @@ export default function RewardCardsContent() {
                                     <tr>
                                         <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">日期</th>
                                         <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">名稱</th>
+                                        <th className="px-6 py-4 text-right text-xs font-bold text-emerald-600 uppercase tracking-wider">使用率</th>
+                                        <th className="px-6 py-4 text-right text-xs font-bold text-blue-600 uppercase tracking-wider">週二三四訂單</th>
+                                        <th className="px-6 py-4 text-right text-xs font-bold text-purple-600 uppercase tracking-wider">引流率</th>
                                         <th className="px-6 py-4 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">有效卡數</th>
                                         <th className="px-6 py-4 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">已發行</th>
                                         <th className="px-6 py-4 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">來店點數</th>
@@ -172,6 +175,15 @@ export default function RewardCardsContent() {
                                         <tr key={idx} className="hover:bg-emerald-50/30 transition-colors">
                                             <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900">{row.date}</td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{row.name}</td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-right font-bold text-emerald-600">
+                                                {(row.usageRate * 100).toFixed(1)}%
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-right font-bold text-blue-600">
+                                                {row.tueThuOrders.toLocaleString()}
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-right font-bold text-purple-600">
+                                                {(row.inflowRate * 100).toFixed(1)}%
+                                            </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right font-medium">{row.validCards}</td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">{row.issuedCards}</td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">{row.storeVisitPoints}</td>
@@ -190,7 +202,7 @@ export default function RewardCardsContent() {
                                     ))}
                                     {rewardCardHistory.length === 0 && (
                                         <tr>
-                                            <td colSpan={10} className="px-6 py-12 text-center text-gray-500 italic">尚無歷史資料資料</td>
+                                            <td colSpan={13} className="px-6 py-12 text-center text-gray-500 italic">尚無歷史資料資料</td>
                                         </tr>
                                     )}
                                 </tbody>
