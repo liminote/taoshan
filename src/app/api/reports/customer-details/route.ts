@@ -56,7 +56,7 @@ export async function GET(request: NextRequest) {
     const customerPhoneIndex = orderHeaders.findIndex(h => h.includes('顧客電話'))
     const originalOrderIdIndex = orderHeaders.findIndex(h => h.includes('原始單號'))
     const itemsIndex = orderHeaders.findIndex(h => h.includes('品項'))
-    const invoiceAmountIndex = orderHeaders.findIndex(h => h.includes('結帳金額'))
+    const invoiceAmountIndex = orderHeaders.findIndex(h => h.includes('結帳金額') || h.includes('發票金額'))
 
 
     const orderData = orderLines.slice(1).map((line, index) => {

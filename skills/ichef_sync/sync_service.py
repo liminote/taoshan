@@ -145,7 +145,9 @@ def sync_product_sales_raw(client, config, file_path, df_new):
         # Normalize Column Names (Fix mismatches)
         df_new = df_new.rename(columns={
             '載具／捐贈碼': '載具/捐贈碼',  # Full-width slash to half-width
-            '發票金額': '結帳金額'        # Invoice Amount to Checkout Amount
+            '發票金額': '結帳金額',        # Invoice Amount to Checkout Amount
+            '支付模組': '支付方式',        # Payment Module to Payment Method
+            '訂單標籤與備註': '訂單備註'    # Tags to Notes
         })
         
         # Filter out voided transactions (目前概況 contains '已作廢')
@@ -215,7 +217,10 @@ def sync_orders(client, config, file_path):
         
         # Normalize Column Names for Orders (Fix mismatches)
         df = df.rename(columns={
-            '發票金額': '結帳金額'        # Invoice Amount to Checkout Amount
+            '載具／捐贈碼': '載具/捐贈碼',  # Full-width slash to half-width
+            '發票金額': '結帳金額',        # Invoice Amount to Checkout Amount
+            '支付模組': '支付方式',        # Payment Module to Payment Method
+            '訂單標籤與備註': '訂單備註'    # Tags to Notes
         })
         
         # Filter out voided transactions (目前概況 contains '已作廢')

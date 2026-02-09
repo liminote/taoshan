@@ -8,7 +8,7 @@ export async function GET() {
     const cachedData = reportCache.get(CACHE_KEYS.MONTHLY_SALES)
     if (cachedData) {
       console.log('📋 使用快取的月銷售資料')
-      
+
       // 檢查快取格式（兼容舊的陣列格式）
       const isLegacyCache = Array.isArray(cachedData)
       const data = isLegacyCache ? cachedData : (cachedData as any).trends
@@ -72,7 +72,7 @@ export async function GET() {
 
     // 找到需要的欄位索引
     const checkoutTimeIndex = orderHeaders.findIndex(h => h.includes('結帳時間'))
-    const checkoutAmountIndex = orderHeaders.findIndex(h => h.includes('結帳金額'))
+    const checkoutAmountIndex = orderHeaders.findIndex(h => h.includes('結帳金額') || h.includes('發票金額'))
     const discountIndex = orderHeaders.findIndex(h => h.includes('折扣金額'))
 
     const orderData = orderLines.map(line => {

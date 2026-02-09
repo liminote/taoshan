@@ -159,7 +159,7 @@ export async function GET(request: NextRequest) {
 
     // 找到正確的欄位索引
     const checkoutTimeIndex = orderHeaders.findIndex(h => h.includes('結帳時間'))
-    const checkoutAmountIndex = orderHeaders.findIndex(h => h.includes('結帳金額'))
+    const checkoutAmountIndex = orderHeaders.findIndex(h => h.includes('結帳金額') || h.includes('發票金額'))
     const customerNameIndex = orderHeaders.findIndex(h => h.includes('顧客姓名'))
     const customerPhoneIndex = orderHeaders.findIndex(h => h.includes('顧客電話'))
     const itemsIndex = orderHeaders.findIndex(h => h.includes('品項'))

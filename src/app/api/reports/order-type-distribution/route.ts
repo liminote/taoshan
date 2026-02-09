@@ -53,7 +53,7 @@ export async function GET(request: NextRequest) {
       h.includes('type')
     )
     const checkoutTimeIndex = orderHeaders.findIndex(h => h.includes('結帳時間'))
-    const checkoutAmountIndex = orderHeaders.findIndex(h => h.includes('結帳金額'))
+    const checkoutAmountIndex = orderHeaders.findIndex(h => h.includes('結帳金額') || h.includes('發票金額'))
 
     if (orderTypeIndex === -1) {
       console.log('⚠️ 找不到訂單類型欄位，可用欄位:', orderHeaders)

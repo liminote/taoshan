@@ -1,0 +1,28 @@
+/Users/vannyma/antigravity/02_Business_Studio/Client_Taoshan/skills/meeting_assistant/process.py:7: FutureWarning: 
+
+All support for the `google.generativeai` package has ended. It will no longer be receiving 
+updates or bug fixes. Please switch to the `google.genai` package as soon as possible.
+See README for more details:
+
+https://github.com/google-gemini/deprecated-generative-ai-python/blob/main/README.md
+
+  import google.generativeai as genai
+Extracting audio to ../../meeting_videos/.zzp-cwgi-cxi (2026-02-03 12_56 GMT+8).mp3...
+Audio extraction complete.
+Uploading ../../meeting_videos/.zzp-cwgi-cxi (2026-02-03 12_56 GMT+8).mp3 to Gemini...
+Uploaded file '.zzp-cwgi-cxi (2026-02-03 12_56 GMT+8).mp3' as: https://generativelanguage.googleapis.com/v1beta/files/1cgy3yk1k059
+Waiting for file processing...
+
+File is ready.
+Generating meeting minutes...
+Uploading to http://localhost:3000/api/meeting-records...
+Using date from filename: 2026-02-03
+Fixed date year: 2024-02-09 -> 2026-02-09
+Fixed date year: 2024-02-02 -> 2026-02-02
+Fixed date year: 2024-02-02 -> 2026-02-02
+Fixed date year: 2024-02-08 -> 2026-02-08
+Fixed date year: 2024-02-02 -> 2026-02-02
+Fixed date year: 2024-02-08 -> 2026-02-08
+Fixed date year: 2024-02-09 -> 2026-02-09
+Successfully uploaded record!
+Record ID: 21
