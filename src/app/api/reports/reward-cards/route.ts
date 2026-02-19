@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server'
 import { parseCsv } from '@/lib/csv'
 
-const REWARD_CARDS_URL = 'https://docs.google.com/spreadsheets/d/1EWPECWQp_Ehz43Lfks_I8lcvEig8gV9DjyjEIzC5EO4/export?format=csv&gid=1119747530' // 我需要確認 gid
-const REWARD_POINTS_URL = 'https://docs.google.com/spreadsheets/d/1EWPECWQp_Ehz43Lfks_I8lcvEig8gV9DjyjEIzC5EO4/export?format=csv&gid=473489832'
+const REWARD_CARDS_URL = 'https://docs.google.com/spreadsheets/d/1EWPECWQp_Ehz43Lfks_I8lcvEig8gV9DjyjEIzC5EO4/export?format=csv&gid=1365932888'
+const REWARD_POINTS_URL = 'https://docs.google.com/spreadsheets/d/1EWPECWQp_Ehz43Lfks_I8lcvEig8gV9DjyjEIzC5EO4/export?format=csv&gid=995416755'
 const ORDER_SHEET_URL = 'https://docs.google.com/spreadsheets/d/1EWPECWQp_Ehz43Lfks_I8lcvEig8gV9DjyjEIzC5EO4/export?format=csv&gid=0'
 
 /**
