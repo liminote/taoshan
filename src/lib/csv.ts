@@ -1,5 +1,10 @@
 // 簡易 CSV 解析器，支援引號與跳脫處理
 export function parseCsv(content: string): string[][] {
+  // 移除 BOM (Byte Order Mark) 以防止欄位名稱判定錯誤
+  if (content.charCodeAt(0) === 0xFEFF) {
+    content = content.slice(1)
+  }
+
   const rows: string[][] = []
   let currentField = ''
   let currentRow: string[] = []

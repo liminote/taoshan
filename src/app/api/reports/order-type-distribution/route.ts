@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { reportCache, CACHE_KEYS } from '@/lib/cache'
+import { parseCsv } from '@/lib/csv'
+
+const ORDER_SHEET_URL = 'https://docs.google.com/spreadsheets/d/1EWPECWQp_Ehz43Lfks_I8lcvEig8gV9DjyjEIzC5EO4/export?format=csv&gid=0'
 
 export async function GET(request: NextRequest) {
   try {
@@ -22,10 +25,7 @@ export async function GET(request: NextRequest) {
 
     console.log('⚠️ 無快取資料，執行即時計算，月份:', month)
 
-    // 使用 Google Sheets 訂單資料
-    const orderSheetUrl = 'https://docs.google.com/spreadsheets/d/1EWPECWQp_Ehz43Lfks_I8lcvEig8gV9DjyjEIzC5EO4/export?format=csv&gid=0'
-
-    const orderResponse = await fetch(orderSheetUrl)
+    const orderResponse = await fetch(ORDER_SHEET_URL)
 
     if (!orderResponse.ok) {
       console.error('無法獲取 Google Sheets 資料')
@@ -33,44 +33,32 @@ export async function GET(request: NextRequest) {
     }
 
     const orderCsv = await orderResponse.text()
-    const { parseCsv } = await import('@/lib/csv')
+
+    // 解析訂單 CSV 資料 (使用強健解析器)
     const orderRows = parseCsv(orderCsv)
+
     if (orderRows.length === 0) {
       return NextResponse.json({ error: '無資料' }, { status: 404 })
     }
 
-    const orderHeaders = orderRows[0].map(h => h.trim().replace(/"/g, ''))
+    const orderHeaders = orderRows[0].map(h => h.trim().replace(/^"|"$/g, ''))
     const orderLines = orderRows.slice(1)
 
     console.log('訂單表格欄位:', orderHeaders)
 
-    // 找到需要的欄位索引 - 嘗試各種可能的訂單類型欄位名稱
-    const orderTypeIndex = orderHeaders.findIndex(h =>
-      h.includes('訂單類型') ||
-      h.includes('訂單種類') ||
-      h.includes('用餐方式') ||
-      h.includes('服務方式') ||
-      h.includes('內用') ||
-      h.includes('外帶') ||
-      h.includes('外送') ||
-      h.includes('Type') ||
-      h.includes('type')
-    )
-    const checkoutTimeIndex = orderHeaders.findIndex(h => h.includes('結帳時間'))
-    const checkoutAmountIndex = orderHeaders.findIndex(h => h.includes('結帳金額') || h.includes('發票金額'))
+    // 找到需要的欄位索引 - 使用 Regex 增加容錯率
+    const orderTypeIndex = orderHeaders.findIndex(h => /(訂單|用餐|服務)(類型|種類|方式)|Type/i.test(h) || /內用|外帶|外送/.test(h))
+    const checkoutTimeIndex = orderHeaders.findIndex(h => /結帳時間|Time/i.test(h))
+    const checkoutAmountIndex = orderHeaders.findIndex(h => /結帳金額|發票金額|Amount/i.test(h))
 
     if (orderTypeIndex === -1) {
       console.log('⚠️ 找不到訂單類型欄位，可用欄位:', orderHeaders)
-      // 如果找不到訂單類型欄位，返回預設資料以供測試
       const defaultData = [
         { type: '內用', count: 491, amount: 98200, percentage: 98.1 },
         { type: '外送', count: 7, amount: 1400, percentage: 1.4 },
         { type: '外帶', count: 2, amount: 400, percentage: 0.5 }
       ]
-
-      // 儲存到快取
       reportCache.set(cacheKey, defaultData)
-
       return NextResponse.json({
         success: true,
         month,
@@ -81,8 +69,7 @@ export async function GET(request: NextRequest) {
       })
     }
 
-    let orderData = orderLines.map(line => {
-      const values = line.map(v => v.trim())
+    let orderData = orderLines.map(values => {
       const amountStr = (values[checkoutAmountIndex] || '0').replace(/,/g, '')
       return {
         orderType: values[orderTypeIndex] || '',
@@ -94,48 +81,39 @@ export async function GET(request: NextRequest) {
     // 篩選指定月份的訂單資料
     orderData = orderData.filter(record => {
       if (!record.checkoutTime) return false
-
       const dateStr = record.checkoutTime.replace(/\//g, '-')
       const date = new Date(dateStr)
-
       if (isNaN(date.getTime())) return false
-
       const recordMonth = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
       return recordMonth === month
     })
 
     console.log(`📊 訂單類型資料: ${orderData.length} 筆 (篩選月份: ${month})`)
 
-    // 統計訂單類型分佈
-    const orderTypeStats = new Map()
+    const orderTypeStats = new Map<string, { count: number, amount: number }>()
 
     orderData.forEach(record => {
       let type = record.orderType || '未知'
 
       // 正規化訂單類型名稱
-      if (type.includes('內用') || type.includes('堂食') || type.includes('dine')) {
-        type = '內用'
-      } else if (type.includes('外帶') || type.includes('帶走') || type.includes('take')) {
-        type = '外帶'
-      } else if (type.includes('外送') || type.includes('送餐') || type.includes('delivery')) {
-        type = '外送'
-      }
+      if (/內用|堂食|dine/i.test(type)) type = '內用'
+      else if (/外帶|帶走|take/i.test(type)) type = '外帶'
+      else if (/外送|送餐|delivery/i.test(type)) type = '外送'
+
+      // 去除括號或其他雜訊
+      type = type.split('(')[0].trim()
 
       const amount = record.amount || 0
 
       if (!orderTypeStats.has(type)) {
         orderTypeStats.set(type, { count: 0, amount: 0 })
       }
-
-      const existing = orderTypeStats.get(type)
+      const existing = orderTypeStats.get(type)!
       existing.count += 1
       existing.amount += amount
     })
 
-    // 計算總數用於百分比計算
     const totalCount = orderData.length
-
-    // 轉換為陣列並排序
     const orderTypeDistribution = Array.from(orderTypeStats.entries())
       .map(([type, stats]) => ({
         type: type,
@@ -146,10 +124,6 @@ export async function GET(request: NextRequest) {
       .sort((a, b) => b.count - a.count)
 
     console.log('✅ 訂單類型統計完成')
-    console.log(`- 總訂單數: ${totalCount} 筆`)
-    console.log(`- 訂單類型種類: ${orderTypeDistribution.length} 種`)
-
-    // 儲存到快取
     reportCache.set(cacheKey, orderTypeDistribution)
 
     return NextResponse.json({
