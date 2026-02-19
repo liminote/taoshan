@@ -42,11 +42,20 @@ def find_excel_files():
     order_files = []
 
     for f in files:
-        filename = os.path.basename(f) # Case sensitive for Chinese might be safer, but usually ok
+        filename = os.path.basename(f)
         if '商品' in filename or 'Product' in filename or '結帳品項紀錄' in filename:
             product_files.append(f)
         elif '訂單' in filename or 'Order' in filename or '作廢紀錄' in filename:
             order_files.append(f)
+    
+    # Also look in reward_cards subdirectory
+    reward_dir = os.path.join(os.path.dirname(os.path.dirname(DOWNLOADS_DIR)), 'reward_cards')
+    if os.path.exists(reward_dir):
+        csv_files = glob.glob(os.path.join(reward_dir, "*.csv"))
+        for f in csv_files:
+            filename = os.path.basename(f)
+            if '_cards_' in filename or '_points_' in filename:
+                order_files.append(f) # Reusing list or handle separately
     
     return product_files, order_files
 
@@ -174,26 +183,61 @@ def sync_product_sales_raw(client, config, file_path, df_new):
         else:
             target_headers = worksheet.row_values(1)
         
-        # Strict Alignment: 
-        # Construct a new DataFrame or list of lists that EXACTLY matches target_headers order.
-        # If a header column is not in df, fill with empty string.
-        
+        # Define column aliases to handle mismatches
+        aliases = {
+            '發票金額': '結帳金額',
+            '結帳金額': '發票金額',
+            '支付模組': '支付方式',
+            '支付方式': '支付模組',
+            '載具／捐贈碼': '載具/捐贈碼',
+            '載具/捐贈碼': '載具／捐贈碼',
+            '訂單標籤與備註': '訂單備註',
+            '訂單備註': '訂單標籤與備註'
+        }
+
+        # Prevent Duplicates: Get existing invoice numbers & times to skip
+        existing_keys = set()
+        if existing_data:
+            inv_idx = -1
+            time_idx = -1
+            for i, h in enumerate(target_headers):
+                if '發票號碼' in h: inv_idx = i
+                if '結帳時間' in h: time_idx = i
+            
+            if inv_idx != -1 and time_idx != -1:
+                # Use (InvoiceNumber, Time) as a unique key
+                for r in existing_data[1:]:
+                    if len(r) > max(inv_idx, time_idx):
+                        existing_keys.add((r[inv_idx].strip(), r[time_idx].strip()))
+
+        # Strict Alignment with Alias Support & Deduplication: 
         aligned_rows = []
+        inv_col = '發票號碼'
+        time_col = '結帳時間'
+
         for _, row in df_new.iterrows():
+            # Check if exists
+            current_key = (str(row.get(inv_col, '')).strip(), str(row.get(time_col, '')).strip())
+            if current_key[0] and current_key in existing_keys:
+                continue
+
             new_row = []
             for h in target_headers:
-                if h in df_new.columns:
-                    new_row.append(row[h])
+                target_h = h.strip()
+                if target_h in df_new.columns:
+                    new_row.append(row[target_h])
+                elif target_h in aliases and aliases[target_h] in df_new.columns:
+                    new_row.append(row[aliases[target_h]])
                 else:
-                    # Column exists in Sheet but not in Excel (e.g. empty first col, or specific manual col)
                     new_row.append("") 
             aligned_rows.append(new_row)
+            existing_keys.add(current_key) # Prevent duplicates WITHIN the same file
 
         if not aligned_rows:
-            print("No data to upload after alignment.")
-            return False
+            print("No NEW data to upload after deduplication.")
+            return True # Not a failure, just nothing new
 
-        print(f"Appending {len(aligned_rows)} rows to Product Sales sheet...")
+        print(f"Appending {len(aligned_rows)} NEW rows to Product Sales sheet...")
         worksheet.append_rows(aligned_rows)
         print("Raw Product Sales Synced.")
         return True
@@ -276,23 +320,60 @@ def sync_orders(client, config, file_path):
             # Sheet exists, get headers
             target_headers = worksheet.row_values(1)
             
-        # Strict Alignment for Orders
+        # Define column aliases to handle mismatches
+        aliases = {
+            '發票金額': '結帳金額',
+            '結帳金額': '發票金額',
+            '支付模組': '支付方式',
+            '支付方式': '支付模組',
+            '載具／捐贈碼': '載具/捐贈碼',
+            '載具/捐贈碼': '載具／捐贈碼',
+            '訂單標籤與備註': '訂單備註',
+            '訂單備註': '訂單標籤與備註'
+        }
+
+        # Prevent Duplicates for Orders
+        existing_keys = set()
+        if existing_data:
+            inv_idx = -1
+            time_idx = -1
+            for i, h in enumerate(target_headers):
+                if '發票號碼' in h: inv_idx = i
+                if '結帳時間' in h: time_idx = i
+            
+            if inv_idx != -1 and time_idx != -1:
+                for r in existing_data[1:]:
+                    if len(r) > max(inv_idx, time_idx):
+                        existing_keys.add((r[inv_idx].strip(), r[time_idx].strip()))
+
+        # Strict Alignment for Orders with Alias Support & Deduplication
         aligned_rows = []
+        inv_col = '發票號碼'
+        time_col = '結帳時間'
+
         for _, row in df.iterrows():
+            # Check if exists
+            current_key = (str(row.get(inv_col, '')).strip(), str(row.get(time_col, '')).strip())
+            if current_key[0] and current_key in existing_keys:
+                continue
+
             new_row = []
             for h in target_headers:
-                if h in df.columns:
-                    new_row.append(row[h])
+                target_h = h.strip()
+                if target_h in df.columns:
+                    new_row.append(row[target_h])
+                elif target_h in aliases and aliases[target_h] in df.columns:
+                    new_row.append(row[aliases[target_h]])
                 else:
-                    # Column exists in Sheet but not in Excel (e.g. empty first col)
                     new_row.append("") 
             aligned_rows.append(new_row)
+            existing_keys.add(current_key)
 
         if not aligned_rows:
-            print("No data to upload after alignment.")
-            return False
-            
-        print(f"Appending {len(aligned_rows)} rows to Orders sheet...")
+            print("No NEW order data to upload.")
+            return True
+
+        print(f"Appending {len(aligned_rows)} NEW rows to Orders sheet...")
         worksheet.append_rows(aligned_rows)
         print("Done.")
 
@@ -301,6 +382,55 @@ def sync_orders(client, config, file_path):
         return False
         
     return True
+
+def sync_reward_data(client, config, file_path):
+    print(f"Processing Reward Data File: {file_path}")
+    filename = os.path.basename(file_path)
+    is_points = '_points_' in filename
+    sheet_type = 'reward_points' if is_points else 'reward_cards'
+    
+    sheet_id = config['sheets'][sheet_type]['id']
+    sheet_name = config['sheets'][sheet_type]['sheet_name']
+
+    # Extract date from filename (e.g., 20260218)
+    import re
+    date_match = re.search(r'(\d{8})', filename)
+    file_date_str = date_match.group(1) if date_match else "Unknown"
+
+    try:
+        # Load CSV
+        df = pd.read_csv(file_path, encoding='utf-8-sig') # Handle BOM
+        df = df.fillna('').astype(str)
+        
+        # Add 'Data_Date' column to the beginning
+        df.insert(0, 'Data_Date', file_date_str)
+        
+        sh = client.open_by_key(sheet_id)
+        # Ensure worksheet exists
+        try:
+            worksheet = sh.worksheet(sheet_name)
+        except gspread.exceptions.WorksheetNotFound:
+            print(f"Creating missing worksheet: {sheet_name}")
+            worksheet = sh.add_worksheet(title=sheet_name, rows="100", cols="20")
+            worksheet.append_row(df.columns.tolist())
+
+        # Check for existing data for THIS date to prevent duplicates
+        existing_data = worksheet.get_all_values()
+        if existing_data:
+            existing_dates = set([r[0] for r in existing_data[1:]])
+            if file_date_str in existing_dates:
+                print(f"Data for {file_date_str} already exists in {sheet_name}. Skipping.")
+                return True
+
+        # Append data
+        data_to_append = df.values.tolist()
+        worksheet.append_rows(data_to_append)
+        print(f"Successfully synced {len(data_to_append)} rows to {sheet_name}.")
+        return True
+        
+    except Exception as e:
+        print(f"Error syncing reward data: {repr(e)}")
+        return False
 
 def archive_file(file_path):
     filename = os.path.basename(file_path)
@@ -336,7 +466,12 @@ def main():
             archive_file(f)
         
     for f in order_files:
-        if sync_orders(client, config, f):
+        if f.endswith('.csv'):
+            if sync_reward_data(client, config, f):
+                # We don't archive reward cards yet to keep them as a record locally, 
+                # but we could. For now let's just mark as done.
+                print(f"Marked {f} as synced.")
+        elif sync_orders(client, config, f):
             archive_file(f)
 
     print("Sync completed.")

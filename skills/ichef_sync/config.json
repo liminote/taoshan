@@ -18,6 +18,14 @@
         "product_sales": {
             "id": "1GeRbtCX_oHJBooYvZeRbREaSxJ4r8P8QoL-vHiSz2eo",
             "sheet_name": "工作表1"
+        },
+        "reward_cards": {
+            "id": "1EWPECWQp_Ehz43Lfks_I8lcvEig8gV9DjyjEIzC5EO4",
+            "sheet_name": "Reward_Cards"
+        },
+        "reward_points": {
+            "id": "1EWPECWQp_Ehz43Lfks_I8lcvEig8gV9DjyjEIzC5EO4",
+            "sheet_name": "Reward_Points"
         }
     },
     "input_folder": "./downloads"

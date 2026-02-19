@@ -193,9 +193,13 @@ export async function GET(request: NextRequest) {
 
     const orderData = orderLines.slice(1).map(line => {
       const values = parseCSVLine(line).map(v => v.replace(/^"|"$/g, '').trim()) // 移除首尾引號
+
+      const amountStr = (values[checkoutAmountIndex] || '0').replace(/,/g, '').replace(/"/g, '')
+      const amt = parseFloat(amountStr)
+
       return {
         結帳時間: values[checkoutTimeIndex] || '',
-        結帳金額: parseFloat(values[checkoutAmountIndex]) || 0,
+        結帳金額: isNaN(amt) ? 0 : amt,
         顧客姓名: values[customerNameIndex] || '',
         顧客電話: values[customerPhoneIndex] || '',
         品項: values[itemsIndex] || ''

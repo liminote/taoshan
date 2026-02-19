@@ -100,6 +100,8 @@ def generate_meeting_minutes(file):
        - 若聽到 "Louis" 請修正為 "Luis"
        - 若聽到 "Alen" 請修正為 "Allen"
        - 若聽到 "美豬" 請修正為 "美珠"
+       - 若聽到 "Vanny" 或 "馬姐" 請修正為 "馬姐"
+       - 若提到 "全體"、"大家"、"所有人" 請修正為 "All"
     2. 風格要求：
        - 如實陳述，不要加油添醋，不要廢話。
     3. **待辦事項 (Action Items) 定義 (關鍵)**：

@@ -33,10 +33,14 @@ export async function GET(request: NextRequest) {
     }
 
     const orderCsv = await orderResponse.text()
+    const { parseCsv } = await import('@/lib/csv')
+    const orderRows = parseCsv(orderCsv)
+    if (orderRows.length === 0) {
+      return NextResponse.json({ error: '無資料' }, { status: 404 })
+    }
 
-    // 解析訂單 CSV 資料
-    const orderLines = orderCsv.split('\n').filter(line => line.trim())
-    const orderHeaders = orderLines[0].split(',').map(h => h.replace(/"/g, '').trim())
+    const orderHeaders = orderRows[0].map(h => h.trim().replace(/"/g, ''))
+    const orderLines = orderRows.slice(1)
 
     console.log('訂單表格欄位:', orderHeaders)
 
@@ -77,12 +81,13 @@ export async function GET(request: NextRequest) {
       })
     }
 
-    let orderData = orderLines.slice(1).map(line => {
-      const values = line.split(',').map(v => v.replace(/"/g, '').trim())
+    let orderData = orderLines.map(line => {
+      const values = line.map(v => v.trim())
+      const amountStr = (values[checkoutAmountIndex] || '0').replace(/,/g, '')
       return {
         orderType: values[orderTypeIndex] || '',
         checkoutTime: values[checkoutTimeIndex] || '',
-        amount: parseFloat(values[checkoutAmountIndex]) || 0
+        amount: parseFloat(amountStr) || 0
       }
     }).filter(record => record.checkoutTime && record.checkoutTime !== '')
 

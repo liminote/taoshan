@@ -22,7 +22,7 @@ export default function Home() {
     content: '',
     assignee: ''
   })
-  const [availableTags, setAvailableTags] = useState(['Allen', 'Luis', '香師傅', 'Vanny', '馬姐'])
+  const [availableTags, setAvailableTags] = useState(['Allen', 'Luis', '香師傅', '馬姐', 'All'])
   const [newTag, setNewTag] = useState('')
   const [notification, setNotification] = useState<{ type: 'success' | 'error', message: string } | null>(null)
   const [editingItem, setEditingItem] = useState<ImportantItem | null>(null)
@@ -32,16 +32,19 @@ export default function Home() {
   const canonicalAssignee = (name: string) => {
     const mapping: Record<string, string> = {
       'Louis': 'Luis',
-      'Vanny': 'Vanny',
-      '馬姐': 'Vanny',
-      '外場團隊': 'Allen'
+      'Vanny': '馬姐',
+      '馬姐': '馬姐',
+      '外場團隊': 'Allen',
+      '全體': 'All',
+      'all': 'All',
+      '所有人': 'All'
     }
     const trimmed = name?.trim()
     if (!trimmed) return '其他'
     return mapping[trimmed] || trimmed
   }
 
-  const boardAssignees = ['Allen', 'Luis', '馬姐', '香師傅']
+  const boardAssignees = ['Allen', 'Luis', '馬姐', '香師傅', 'All']
   const boardSections = [...boardAssignees, '其他']
   const groupedItems = useMemo(() => {
     const map: Record<string, ImportantItem[]> = {}
@@ -218,8 +221,8 @@ export default function Home() {
       'Allen': 'bg-melon-100 text-gray-800',
       'Luis': 'bg-fawn-100 text-gray-800',
       '香師傅': 'bg-lemon_chiffon-100 text-gray-800',
-      'Vanny': 'bg-mint_green-100 text-gray-800',
-      '馬姐': 'bg-mint_green-100 text-gray-800'
+      '馬姐': 'bg-mint_green-100 text-gray-800',
+      'All': 'bg-lavender_blush-100 text-gray-800'
     }
     return colors[assignee as keyof typeof colors] || 'bg-gray-100 text-gray-800'
   }
@@ -258,8 +261,8 @@ export default function Home() {
         {/* 通知訊息 */}
         {notification && (
           <div className={`fixed top-4 right-4 z-50 px-4 py-3 rounded-lg shadow-lg transition-all duration-300 ${notification.type === 'success'
-              ? 'bg-green-500 text-white'
-              : 'bg-red-500 text-white'
+            ? 'bg-green-500 text-white'
+            : 'bg-red-500 text-white'
             }`}>
             <div className="flex items-center space-x-2">
               {notification.type === 'success' ? (
@@ -359,8 +362,8 @@ export default function Home() {
                               type="button"
                               onClick={() => setFormData({ ...formData, assignee: tag })}
                               className={`px-3 py-1 rounded-full text-sm font-medium transition-all ${formData.assignee === tag
-                                  ? 'bg-melon text-white'
-                                  : 'bg-white border border-gray-300 hover:bg-gray-50 text-gray-700'
+                                ? 'bg-melon text-white'
+                                : 'bg-white border border-gray-300 hover:bg-gray-50 text-gray-700'
                                 }`}
                             >
                               {tag}
@@ -417,7 +420,7 @@ export default function Home() {
                   </button>
                   <button
                     type="submit"
-                    className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-600 transition-colors"
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-md font-medium"
                   >
                     儲存
                   </button>

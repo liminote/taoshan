@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { reportCache, CACHE_KEYS } from '@/lib/cache'
+import { parseCsv } from '@/lib/csv'
 
 export async function GET(request: NextRequest) {
   try {
@@ -36,22 +37,29 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: '查詢失敗' }, { status: 500 })
     }
 
-    const productCsv = await productResponse.text()
-    const masterCsv = await masterResponse.text()
+    const [productCsv, masterCsv] = await Promise.all([
+      productResponse.text(),
+      masterResponse.text()
+    ])
 
-    // 解析商品銷售資料 CSV
-    const productLines = productCsv.split('\n').filter(line => line.trim())
-    const productHeaders = productLines[0].split(',').map(h => h.replace(/"/g, '').trim())
+    // 解析商品銷售資料 CSV - 使用強健的 parseCsv
+    const productRows = parseCsv(productCsv)
+    if (productRows.length < 1) throw new Error('無法讀取商品銷售資料')
 
-    const productNameIndex = productHeaders.findIndex(h => h.includes('商品名稱') || h.includes('品項名稱'))
-    const amountIndex = productHeaders.findIndex(h => h.includes('金額') || h.includes('價格'))
-    const checkoutTimeIndex = productHeaders.findIndex(h => h.includes('結帳時間'))
+    const productHeaders = productRows[0].map(h => h.trim())
 
-    let productSales = productLines.slice(1).map(line => {
-      const values = line.split(',').map(v => v.replace(/"/g, '').trim())
+    const productNameIndex = productHeaders.findIndex((h: string) => /商品名稱|品項名稱/.test(h))
+    const amountIndex = productHeaders.findIndex((h: string) => /發票金額|結帳金額|金額/.test(h))
+    const checkoutTimeIndex = productHeaders.findIndex((h: string) => /結帳時間|時間/.test(h))
+
+    let productSales = productRows.slice(1).map((values: string[]) => {
+      const rawAmt = values[amountIndex] || '0'
+      const cleanAmt = rawAmt.replace(/[^-0-9.]/g, '')
+      const amt = parseFloat(cleanAmt) || 0
+
       return {
         productName: values[productNameIndex] || '',
-        amount: parseFloat(values[amountIndex]) || 0,
+        amount: amt,
         checkoutTime: values[checkoutTimeIndex] || ''
       }
     }).filter(record => record.productName && record.amount > 0)

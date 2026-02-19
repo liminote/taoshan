@@ -4,229 +4,131 @@ import { parseCsv } from '@/lib/csv'
 
 export async function GET() {
   try {
-    // 先檢查快取
+    // 1. 檢查快取
     const cachedData = reportCache.get(CACHE_KEYS.MONTHLY_SALES)
     if (cachedData) {
-      console.log('📋 使用快取的月銷售資料')
-
-      // 檢查快取格式（兼容舊的陣列格式）
       const isLegacyCache = Array.isArray(cachedData)
       const data = isLegacyCache ? cachedData : (cachedData as any).trends
-      const lastSalesDate = isLegacyCache ? null : (cachedData as any).lastSalesDate
-
       return NextResponse.json({
         success: true,
         data: data,
-        lastSalesDate: lastSalesDate,
-        cached: true,
-        cacheTimestamp: reportCache.getTimestamp(CACHE_KEYS.MONTHLY_SALES)
+        lastSalesDate: isLegacyCache ? null : (cachedData as any).lastSalesDate,
+        cached: true
       })
     }
 
-    console.log('⚠️ 無快取資料，執行即時計算...')
-
-    // 動態生成從當月回推13個月的月份列表
-    const now = new Date()
-    const currentYear = now.getFullYear()
-    const currentMonth = now.getMonth() + 1 // getMonth() 返回 0-11，需要 +1
-
-    const recentMonths: string[] = []
-
-    // 從當月開始，往前推13個月
-    for (let i = 0; i < 13; i++) {
-      const targetDate = new Date(currentYear, currentMonth - 1 - i, 1)
-      const year = targetDate.getFullYear()
-      const month = targetDate.getMonth() + 1
-      const monthKey = `${year}-${String(month).padStart(2, '0')}`
-      recentMonths.unshift(monthKey) // 加到陣列開頭，保持時間順序
-    }
-
-    console.log('📅 動態生成的月份範圍:', recentMonths[0], '至', recentMonths[recentMonths.length - 1])
-
-    // 使用 Google Sheets 訂單資料
+    // 2. 獲取資料
     const orderSheetUrl = 'https://docs.google.com/spreadsheets/d/1EWPECWQp_Ehz43Lfks_I8lcvEig8gV9DjyjEIzC5EO4/export?format=csv&gid=0'
     const productSheetUrl = 'https://docs.google.com/spreadsheets/d/1GeRbtCX_oHJBooYvZeRbREaSxJ4r8P8QoL-vHiSz2eo/export?format=csv&gid=0'
 
-    const [orderResponse, productResponse] = await Promise.all([
-      fetch(orderSheetUrl),
-      fetch(productSheetUrl)
+    const [orderRes, productRes] = await Promise.all([
+      fetch(orderSheetUrl, { cache: 'no-store' }),
+      fetch(productSheetUrl, { cache: 'no-store' })
     ])
 
-    if (!orderResponse.ok || !productResponse.ok) {
-      console.error('無法獲取 Google Sheets 資料')
-      return NextResponse.json({ error: '查詢失敗' }, { status: 500 })
-    }
+    const orderCsv = await orderRes.text()
+    const productCsv = await productRes.text()
 
-    const orderCsv = await orderResponse.text()
-    const productCsv = await productResponse.text()
-
-    // 解析訂單 CSV 資料
+    // 3. 解析訂單
     const orderRows = parseCsv(orderCsv)
-    if (orderRows.length === 0) {
-      console.error('月報訂單 CSV 無有效資料')
-      return NextResponse.json({ error: '查詢失敗' }, { status: 500 })
-    }
+    if (orderRows.length < 1) throw new Error('無法讀取訂單資料')
 
     const orderHeaders = orderRows[0].map(h => h.trim())
-    const orderLines = orderRows.slice(1)
 
-    // 找到需要的欄位索引
-    const checkoutTimeIndex = orderHeaders.findIndex(h => h.includes('結帳時間'))
-    const checkoutAmountIndex = orderHeaders.findIndex(h => h.includes('結帳金額') || h.includes('發票金額'))
-    const discountIndex = orderHeaders.findIndex(h => h.includes('折扣金額'))
-
-    const orderData = orderLines.map(line => {
-      const values = line.map(v => v.trim())
-      return {
-        checkout_time: values[checkoutTimeIndex],
-        invoice_amount: parseFloat(values[checkoutAmountIndex]) || 0,
-        discount_amount: parseFloat(values[discountIndex]) || 0
+    // 超強健欄位搜尋
+    const findIndexByNames = (names: string[]) => {
+      for (const name of names) {
+        const idx = orderHeaders.findIndex(h => h.includes(name))
+        if (idx !== -1) return idx
       }
-    }).filter(record => record.checkout_time && record.checkout_time !== '')
-
-    // 解析商品 CSV 資料
-    const productRows = parseCsv(productCsv)
-    if (productRows.length === 0) {
-      console.error('月報商品 CSV 無有效資料')
-      return NextResponse.json({ error: '查詢失敗' }, { status: 500 })
+      return -1
     }
 
-    const productHeaders = productRows[0].map(h => h.trim())
-    const productLines = productRows.slice(1)
+    const timeIdx = findIndexByNames(['結帳時間', '發票時間', '時間'])
+    const amountIdx = findIndexByNames(['發票金額', '結帳金額', '總計', '金額'])
 
-    const productData = productLines.map(line => {
-      const values = line.map(v => v.trim())
-      const record: Record<string, string> = {}
-      productHeaders.forEach((header, index) => {
-        record[header] = values[index] || ''
-      })
-      return record
-    }).filter(record => record['結帳時間'] && record['結帳時間'] !== '')
+    if (timeIdx === -1 || amountIdx === -1) {
+      console.error('CRITICAL: 找不到必要欄位', { orderHeaders, timeIdx, amountIdx })
+    }
 
-    // 初始化所有月份的統計數據
-    const monthlyStats: {
-      [key: string]: {
-        amount: number;
-        orderCount: number;
-        avgOrderValue: number;
-        productItems: Set<string>;
-        productItemCount: number;
-      }
-    } = {}
-
-    recentMonths.forEach(month => {
-      monthlyStats[month] = {
+    // 初始化 13 個月
+    const trends: Record<string, any> = {}
+    const now = new Date()
+    for (let i = 0; i < 13; i++) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+      trends[key] = {
+        month: key,
+        monthDisplay: `${key.replace('-', '年')}月`,
         amount: 0,
         orderCount: 0,
         avgOrderValue: 0,
-        productItems: new Set(),
-        productItemCount: 0
+        productItemCount: 0,
+        productItems: new Set()
+      }
+    }
+
+    let latestDate = ''
+
+    // 處理每一行資料
+    orderRows.slice(1).forEach(row => {
+      const timeStr = row[timeIdx]
+      if (!timeStr) return
+
+      const date = new Date(timeStr.replace(/\//g, '-'))
+      if (isNaN(date.getTime())) return
+
+      const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
+      if (trends[monthKey]) {
+        const rawAmount = row[amountIdx] || '0'
+        const cleanAmount = rawAmount.replace(/[^-0-9.]/g, '') // 只保留數字相關字元
+        const amt = parseFloat(cleanAmount) || 0
+
+        trends[monthKey].amount += amt
+        trends[monthKey].orderCount += 1
+
+        const dateStr = `${date.getFullYear()}/${String(date.getMonth() + 1).padStart(2, '0')}/${String(date.getDate()).padStart(2, '0')}`
+        if (dateStr > latestDate) latestDate = dateStr
       }
     })
 
-    // 追踪最後銷售日期
-    let latestSalesDateStr = ''
-    let latestTimestamp = 0
+    // 4. 處理商品多樣性
+    const productRows = parseCsv(productCsv)
+    const pHeaders = productRows[0].map(h => h.trim())
+    const pTimeIdx = pHeaders.findIndex(h => h.includes('結帳時間') || h.includes('時間'))
+    const pNameIdx = pHeaders.findIndex(h => h.includes('商品名稱') || h.includes('品項'))
 
-    // 處理訂單資料
-    if (orderData && orderData.length > 0) {
-      console.log(`取得 ${orderData.length} 筆訂單資料`)
-      let processedCount = 0
-      const sampleDates: string[] = []
-
-      orderData.forEach((record, index) => {
-        if (record.checkout_time) {
-          // 處理日期格式 YYYY-MM-DD HH:MM:SS 或 YYYY/MM/DD HH:MM:SS
-          const dateStr = record.checkout_time.replace(/\//g, '-')
-          const date = new Date(dateStr)
-
-          if (!isNaN(date.getTime())) {
-            // 更新最後銷售日期
-            if (date.getTime() > latestTimestamp) {
-              latestTimestamp = date.getTime()
-              // 統一日期格式為 YYYY/MM/DD
-              latestSalesDateStr = `${date.getFullYear()}/${String(date.getMonth() + 1).padStart(2, '0')}/${String(date.getDate()).padStart(2, '0')}`
-            }
-
-            const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
-
-            if (index < 5) {
-              sampleDates.push(`${record.checkout_time} -> ${monthKey}`)
-            }
-
-            if (monthlyStats[monthKey]) {
-              monthlyStats[monthKey].orderCount += 1
-              monthlyStats[monthKey].amount += record.invoice_amount || 0
-              processedCount++
-            }
-          }
+    productRows.slice(1).forEach(row => {
+      const timeStr = row[pTimeIdx]
+      const name = row[pNameIdx]
+      if (timeStr && name && trends) {
+        const date = new Date(timeStr.replace(/\//g, '-'))
+        const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
+        if (trends[monthKey]) {
+          trends[monthKey].productItems.add(name)
         }
-      })
-
-      console.log('樣本日期:', sampleDates)
-      console.log(`處理了 ${processedCount} 筆有效資料`)
-      console.log('最後銷售日期:', latestSalesDateStr)
-    }
-
-    // 處理商品資料來計算商品品項數
-    if (productData && productData.length > 0) {
-      console.log(`取得 ${productData.length} 筆商品資料`)
-
-      productData.forEach((record) => {
-        const checkoutTime = record['結帳時間']
-        const productName = record['商品名稱'] || record['品項名稱'] || ''
-
-        if (checkoutTime && productName) {
-          const dateStr = checkoutTime.replace(/\//g, '-')
-          const date = new Date(dateStr)
-
-          if (!isNaN(date.getTime())) {
-            const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
-
-            if (monthlyStats[monthKey]) {
-              monthlyStats[monthKey].productItems.add(productName)
-            }
-          }
-        }
-      })
-    }
-
-    // 計算平均單價和商品品項數
-    Object.keys(monthlyStats).forEach(month => {
-      const stats = monthlyStats[month]
-      stats.avgOrderValue = stats.orderCount > 0 ? Math.round(stats.amount / stats.orderCount) : 0
-      stats.productItemCount = stats.productItems.size
+      }
     })
 
-    // 轉換為陣列格式並按時間排序（最新在前）
-    const trendsResult = recentMonths.map(month => ({
-      month: month,
-      monthDisplay: month.replace('-', '年') + '月',
-      amount: Math.round(monthlyStats[month].amount),
-      orderCount: monthlyStats[month].orderCount,
-      avgOrderValue: monthlyStats[month].avgOrderValue,
-      productItemCount: monthlyStats[month].productItemCount
-    }))
+    // 5. 格式化輸出
+    const sortedTrends = Object.values(trends)
+      .sort((a, b) => b.month.localeCompare(a.month))
+      .map(t => ({
+        month: t.month,
+        monthDisplay: t.monthDisplay,
+        amount: Math.round(t.amount),
+        orderCount: t.orderCount,
+        avgOrderValue: t.orderCount > 0 ? Math.round(t.amount / t.orderCount) : 0,
+        productItemCount: t.productItems.size
+      }))
 
-    // 準備快取資料
-    const cacheData = {
-      trends: trendsResult,
-      lastSalesDate: latestSalesDateStr
-    }
+    const finalResult = { trends: sortedTrends, lastSalesDate: latestDate }
+    reportCache.set(CACHE_KEYS.MONTHLY_SALES, finalResult)
 
-    // 儲存到快取
-    reportCache.set(CACHE_KEYS.MONTHLY_SALES, cacheData)
-
-    return NextResponse.json({
-      success: true,
-      data: trendsResult,
-      lastSalesDate: latestSalesDateStr,
-      cached: false,
-      computed: true
-    })
+    return NextResponse.json({ success: true, data: sortedTrends, lastSalesDate: latestDate })
 
   } catch (error) {
-    console.error('處理月銷售報表時發生錯誤:', error)
-    return NextResponse.json({ error: '伺服器錯誤' }, { status: 500 })
+    console.error('Monthly Sales API Error:', error)
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
   }
 }
