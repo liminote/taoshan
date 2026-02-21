@@ -4,20 +4,31 @@
 :root {
   /* 背景系統 */
   --background: #ffffff;
-  --foreground: #1F2937; /* gray-800 */
-  
-  /* 你的 10 色設計系統變數 */
-  --lemon-chiffon: #FBF8CC;
-  --fawn: #FDE4CF;
-  --melon: #FFCFD2;
-  --lavender-blush: #F1C0E8;
-  --mauve: #CFBAF0;
-  --periwinkle: #A3C4F3;
-  --sky-blue: #90DBF4;
-  --aquamarine: #8EECF5;
-  --mint-green: #98F5E1;
-  --tea-green: #B9FBC0;
-  
+  --foreground: #1F2937;
+  /* gray-800 */
+
+  /* 你的 10 色設計系統變數 (已轉換為 Vanny Design System - Morandi 風格) */
+  --lemon-chiffon: #FEC89A;
+  /* 暖陽橘 */
+  --fawn: #EDE9E1;
+  /* 沙地米底 */
+  --melon: #FFD7D5;
+  /* 櫻花粉紅 */
+  --lavender-blush: #FCD5CE;
+  /* 柔霧水蜜桃 */
+  --mauve: #BFACC8;
+  /* 薰衣草紫 */
+  --periwinkle: #9DBEDB;
+  /* 柔霧海藍 */
+  --sky-blue: #5E7182;
+  /* 深石板藍 */
+  --aquamarine: #708898;
+  /* 共和國藍 */
+  --mint-green: #AEC2D1;
+  /* 淺霧藍 */
+  --tea-green: #E9ECEF;
+  /* 中性灰底 */
+
   /* 語意化顏色 */
   --primary: var(--sky-blue);
   --secondary: var(--periwinkle);
@@ -107,31 +118,31 @@ a:visited {
   .text-restaurant-primary {
     color: var(--primary);
   }
-  
+
   .text-restaurant-secondary {
     color: var(--secondary);
   }
-  
+
   .text-restaurant-accent {
     color: var(--accent);
   }
-  
+
   .bg-restaurant-primary {
     background-color: var(--primary);
   }
-  
+
   .bg-restaurant-secondary {
     background-color: var(--secondary);
   }
-  
+
   .bg-restaurant-accent {
     background-color: var(--accent);
   }
-  
+
   .bg-page-gradient {
-    background: linear-gradient(135deg, 
-      var(--lemon-chiffon) 0%, 
-      var(--fawn) 50%, 
-      var(--melon) 100%);
+    background: linear-gradient(135deg,
+        var(--lemon-chiffon) 0%,
+        var(--fawn) 50%,
+        var(--melon) 100%);
   }
 }
