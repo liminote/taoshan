@@ -151,13 +151,13 @@ export default function ReportsContent() {
 
   // 設計系統 10 色配色盤
   const chartColors = [
-    '#9DBEDB', // 工作藍底
-    '#EDE9E1', // 沙地米底
-    '#FFD7D5', // 櫻花粉紅
-    '#FCD5CE', // 柔霧水蜜桃
-    '#BFACC8', // 薰衣草紫
-    '#FEC89A', // 暖陽橘
-    '#E9ECEF'  // 中性灰底
+    '#FEC89A', // 暖陽橘 (最舒適的大面積底色)
+    '#EDE9E1', // 沙地米底 (極其輕透的次大面積)
+    '#9DBEDB', // 工作藍底 (核心品牌色，放第三位收斂視覺)
+    '#FFD7D5', // 櫻花粉紅 (活潑的點綴)
+    '#E9ECEF', // 中性灰底 (平衡用空氣感)
+    '#BFACC8', // 薰衣草紫 (冷色調次要強調)
+    '#FCD5CE'  // 柔霧水蜜桃 (暖色調收尾)
   ]
 
   // 格式化數字（四捨五入至整數）
@@ -1637,7 +1637,7 @@ export default function ReportsContent() {
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div className="text-center p-4 bg-primary-50 rounded-xl">
+                    <div className="text-center p-4 bg-[#F5F5F7] rounded-xl">
                       <div className="text-2xl font-bold text-primary-600">{formatNumber(rankingData.totals.totalQuantity)}</div>
                       <div className="text-sm text-gray-600 mt-1">總銷量</div>
                     </div>
@@ -1672,7 +1672,7 @@ export default function ReportsContent() {
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-200">
                           {rankingData.quantityRanking.slice(0, 20).map((item, index) => (
-                            <tr key={index} className={`${index < 3 ? 'bg-primary-50' : ''} hover:bg-gray-50 transition-colors`}>
+                            <tr key={index} className={`${index < 3 ? 'bg-[#F5F5F7]' : ''} hover:bg-gray-50 transition-colors`}>
                               <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
                                 {index < 3 ? (
                                   <span className="inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold text-white"
@@ -1860,7 +1860,7 @@ export default function ReportsContent() {
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
                       {customerSpendingRanking.slice(0, 30).map((customer, index) => (
-                        <tr key={customer.customerPhone} className={`${index < 3 ? 'bg-primary-50' : ''} hover:bg-gray-50 transition-colors`}>
+                        <tr key={customer.customerPhone} className={`${index < 3 ? 'bg-[#F5F5F7]' : ''} hover:bg-gray-50 transition-colors`}>
                           <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
                             {index < 3 ? (
                               <span className="inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold text-white"
@@ -1886,8 +1886,8 @@ export default function ReportsContent() {
                             {customer.isNewCustomer && (
                               <span
                                 className={`text-xs font-medium px-2 py-1 rounded-full ${customer.hasReturnedAfterNew
-                                  ? 'text-secondary-700 bg-secondary-100'
-                                  : 'text-success-600 bg-success-100'
+                                  ? 'text-gray-600 bg-gray-100 border border-gray-200'
+                                  : 'text-gray-600 bg-gray-100 border border-gray-200'
                                   }`}
                                 title={customer.hasReturnedAfterNew ? "新客戶且已回訪" : "新客戶"}
                               >
@@ -1898,7 +1898,7 @@ export default function ReportsContent() {
                           <td className="px-4 py-3 text-center">
                             {!customer.isNewCustomer && customer.hasReturnedAfterOld && (
                               <span
-                                className="text-xs font-medium px-2 py-1 rounded-full text-warning-700 bg-warning-100"
+                                className="text-xs font-medium px-2 py-1 rounded-full text-gray-600 bg-gray-100 border border-gray-200"
                                 title="舊客戶且有回訪"
                               >
                                 舊回
@@ -1995,8 +1995,8 @@ export default function ReportsContent() {
                             {customer.isNewCustomer && (
                               <span
                                 className={`text-xs font-medium px-2 py-1 rounded-full ${customer.hasReturnedAfterNew
-                                  ? 'text-secondary-700 bg-secondary-100'
-                                  : 'text-success-600 bg-success-100'
+                                  ? 'text-gray-600 bg-gray-100 border border-gray-200'
+                                  : 'text-gray-600 bg-gray-100 border border-gray-200'
                                   }`}
                                 title={customer.hasReturnedAfterNew ? "新客戶且已回訪" : "新客戶"}
                               >
@@ -2007,7 +2007,7 @@ export default function ReportsContent() {
                           <td className="px-4 py-3 text-center">
                             {!customer.isNewCustomer && customer.hasReturnedAfterOld && (
                               <span
-                                className="text-xs font-medium px-2 py-1 rounded-full text-warning-700 bg-warning-100"
+                                className="text-xs font-medium px-2 py-1 rounded-full text-gray-600 bg-gray-100 border border-gray-200"
                                 title="舊客戶且有回訪"
                               >
                                 舊回
@@ -2094,7 +2094,7 @@ export default function ReportsContent() {
                 <div className="space-y-6">
                   {/* 摘要統計 */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="text-center p-4 bg-primary-50 rounded-xl">
+                    <div className="text-center p-4 bg-[#F5F5F7] rounded-xl">
                       <div className="text-2xl font-bold text-primary-600">{customerDetails.summary.totalOrders}</div>
                       <div className="text-sm text-gray-600 mt-1">總訂單數</div>
                     </div>
