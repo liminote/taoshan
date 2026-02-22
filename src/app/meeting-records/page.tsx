@@ -367,8 +367,8 @@ export default function MeetingRecordsPage() {
                       file:mr-4 file:py-2 file:px-4
                       file:rounded-full file:border-0
                       file:text-sm file:font-semibold
-                      file:bg-secondary-50 file:text-secondary-700
-                      hover:file:bg-secondary-100"
+                      file:bg-secondary-50 file:text-[#52525b] border border-[#e4e4e7]
+                      hover:file:bg-[#f4f4f5]"
                   />
                 </div>
               </div>
@@ -405,7 +405,7 @@ export default function MeetingRecordsPage() {
                             }`}
                         >
                           <div>
-                            <div className={`font-medium ${isLarge ? 'text-error-700' : 'text-gray-900 group-hover:text-secondary-700'}`}>
+                            <div className={`font-medium ${isLarge ? 'text-error-700' : 'text-gray-900 group-hover:text-[#52525b] border border-[#e4e4e7]'}`}>
                               {file.name}
                             </div>
                             <div className="text-xs text-gray-500 mt-1 flex gap-2">
@@ -531,7 +531,7 @@ export default function MeetingRecordsPage() {
                     {rec.tags && rec.tags.length > 0 && (
                       <div className="mt-2 flex flex-wrap gap-1">
                         {rec.tags.map(tag => (
-                          <span key={tag} className="inline-block px-2 py-1 bg-secondary-100 text-secondary-700 text-xs rounded">
+                          <span key={tag} className="inline-block px-2 py-1 bg-[#f4f4f5] text-[#52525b] border border-[#e4e4e7] text-xs rounded">
                             {tag}
                           </span>
                         ))}
@@ -637,7 +637,7 @@ export default function MeetingRecordsPage() {
                       <h3 className="text-sm font-medium text-gray-700 mb-2">標籤</h3>
                       <div className="flex flex-wrap gap-2">
                         {selected.tags.map(tag => (
-                          <span key={tag} className="inline-block px-2 py-1 bg-secondary-100 text-secondary-700 text-xs rounded-full">
+                          <span key={tag} className="inline-block px-2 py-1 bg-[#f4f4f5] text-[#52525b] border border-[#e4e4e7] text-xs rounded-full">
                             {tag}
                           </span>
                         ))}
