@@ -285,7 +285,7 @@ export default function MeetingRecordsPage() {
               }))
               setShowCreateForm(true)
             }}
-            className="px-4 py-2 bg-green-500 text-white rounded-lg text-sm hover:bg-green-600"
+            className="px-4 py-2 bg-success-500 text-white rounded-lg text-sm hover:bg-success-600"
           >
             + 新增記錄
           </button>
@@ -492,7 +492,7 @@ export default function MeetingRecordsPage() {
                 <button
                   onClick={createNewRecord}
                   disabled={isCreating}
-                  className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:opacity-50"
+                  className="px-4 py-2 bg-success-500 text-white rounded-lg hover:bg-success-600 disabled:opacity-50"
                 >
                   {isCreating ? '建立中...' : '建立'}
                 </button>

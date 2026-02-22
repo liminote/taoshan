@@ -221,7 +221,7 @@ export default function Home() {
       'Allen': 'bg-melon-100 text-gray-800',
       'Luis': 'bg-fawn-100 text-gray-800',
       '香師傅': 'bg-lemon_chiffon-100 text-gray-800',
-      '馬姐': 'bg-mint_green-100 text-gray-800',
+      '馬姐': 'bg-mint_success-100 text-gray-800',
       'All': 'bg-lavender_blush-100 text-gray-800'
     }
     return colors[assignee as keyof typeof colors] || 'bg-gray-100 text-gray-800'
@@ -261,7 +261,7 @@ export default function Home() {
         {/* 通知訊息 */}
         {notification && (
           <div className={`fixed top-4 right-4 z-50 px-4 py-3 rounded-lg shadow-lg transition-all duration-300 ${notification.type === 'success'
-            ? 'bg-green-500 text-white'
+            ? 'bg-success-500 text-white'
             : 'bg-error-500 text-white'
             }`}>
             <div className="flex items-center space-x-2">
@@ -393,7 +393,7 @@ export default function Home() {
                         <button
                           type="button"
                           onClick={addNewTag}
-                          className="px-3 py-2 bg-tea_green text-white text-sm rounded-lg hover:bg-tea_green-600 transition-colors"
+                          className="px-3 py-2 bg-tea_green text-white text-sm rounded-lg hover:bg-tea_success-600 transition-colors"
                         >
                           +
                         </button>

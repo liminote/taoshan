@@ -197,7 +197,7 @@ export default function CategoriesPage() {
                       {category.subcategories.map((sub) => (
                         <span
                           key={sub.id}
-                          className="px-3 py-1 bg-gradient-to-r from-primary-100 to-green-100 text-gray-700 text-sm rounded-lg border border-primary-200/50"
+                          className="px-3 py-1 bg-gradient-to-r from-primary-100 to-success-100 text-gray-700 text-sm rounded-lg border border-primary-200/50"
                         >
                           {sub.name}
                         </span>

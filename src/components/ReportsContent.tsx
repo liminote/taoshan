@@ -899,7 +899,7 @@ export default function ReportsContent() {
                 <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-3 mt-1">
                   <p className="text-gray-600">數據分析與報表檢視</p>
                   {latestSalesDate && (
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 animate-fade-in-up">
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-success-100 text-green-800 animate-fade-in-up">
                       <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                       </svg>
@@ -1109,31 +1109,31 @@ export default function ReportsContent() {
               {/* 步驟指示器 */}
               <div className="flex items-center justify-center space-x-4 mt-6">
                 <div className="flex items-center space-x-2">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${selectedCategory ? 'bg-mint_green-500 text-white' : 'bg-mint_green-200 text-gray-800'
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${selectedCategory ? 'bg-mint_success-500 text-white' : 'bg-mint_success-200 text-gray-800'
                     }`}>
                     1
                   </div>
-                  <span className={`text-sm font-medium ${selectedCategory ? 'text-mint_green-600' : 'text-gray-500'}`}>
+                  <span className={`text-sm font-medium ${selectedCategory ? 'text-mint_success-600' : 'text-gray-500'}`}>
                     選擇問題分類
                   </span>
                 </div>
                 <div className="w-8 h-px bg-gray-300"></div>
                 <div className="flex items-center space-x-2">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${selectedCategory && chatInput.trim() ? 'bg-mint_green-500 text-white' : 'bg-gray-200 text-gray-600'
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${selectedCategory && chatInput.trim() ? 'bg-mint_success-500 text-white' : 'bg-gray-200 text-gray-600'
                     }`}>
                     2
                   </div>
-                  <span className={`text-sm font-medium ${selectedCategory && chatInput.trim() ? 'text-mint_green-600' : 'text-gray-500'}`}>
+                  <span className={`text-sm font-medium ${selectedCategory && chatInput.trim() ? 'text-mint_success-600' : 'text-gray-500'}`}>
                     輸入問題
                   </span>
                 </div>
                 <div className="w-8 h-px bg-gray-300"></div>
                 <div className="flex items-center space-x-2">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${answer ? 'bg-mint_green-500 text-white' : 'bg-gray-200 text-gray-600'
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${answer ? 'bg-mint_success-500 text-white' : 'bg-gray-200 text-gray-600'
                     }`}>
                     3
                   </div>
-                  <span className={`text-sm font-medium ${answer ? 'text-mint_green-600' : 'text-gray-500'}`}>
+                  <span className={`text-sm font-medium ${answer ? 'text-mint_success-600' : 'text-gray-500'}`}>
                     AI 回答
                   </span>
                 </div>
@@ -1144,7 +1144,7 @@ export default function ReportsContent() {
             <div className="bg-white rounded-2xl shadow-lg border border-gray-100">
               <div className="p-6 border-b border-gray-100">
                 <div className="flex items-center space-x-3 mb-4">
-                  <div className="w-8 h-8 rounded-full bg-mint_green-500 text-white flex items-center justify-center text-sm font-medium">
+                  <div className="w-8 h-8 rounded-full bg-mint_success-500 text-white flex items-center justify-center text-sm font-medium">
                     1
                   </div>
                   <h3 className="text-lg font-semibold text-gray-800">選擇問題分類</h3>
@@ -1211,12 +1211,12 @@ export default function ReportsContent() {
                   <button
                     onClick={() => setSelectedCategory('category')}
                     className={`p-4 rounded-xl border-2 transition-all text-left group ${selectedCategory === 'category'
-                      ? 'border-mint_green bg-mint_green-50 shadow-lg'
-                      : 'border-gray-200 bg-white hover:border-mint_green-200 hover:shadow-md'
+                      ? 'border-mint_green bg-mint_success-50 shadow-lg'
+                      : 'border-gray-200 bg-white hover:border-mint_success-200 hover:shadow-md'
                       }`}
                   >
                     <div className="flex items-center space-x-3 mb-3">
-                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${selectedCategory === 'category' ? 'bg-mint_green text-white' : 'bg-mint_green-100 text-mint_green-600'
+                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${selectedCategory === 'category' ? 'bg-mint_green text-white' : 'bg-mint_success-100 text-mint_success-600'
                         }`}>
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
@@ -1243,7 +1243,7 @@ export default function ReportsContent() {
               <div className="bg-white rounded-2xl shadow-lg border border-gray-100">
                 <div className="p-6 border-b border-gray-100">
                   <div className="flex items-center space-x-3 mb-4">
-                    <div className="w-8 h-8 rounded-full bg-mint_green-500 text-white flex items-center justify-center text-sm font-medium">
+                    <div className="w-8 h-8 rounded-full bg-mint_success-500 text-white flex items-center justify-center text-sm font-medium">
                       2
                     </div>
                     <h3 className="text-lg font-semibold text-gray-800">輸入您的問題</h3>
@@ -1252,7 +1252,7 @@ export default function ReportsContent() {
                     已選擇：
                     <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ml-2 ${selectedCategory === 'product' ? 'bg-sky_blue-100 text-sky_blue-800' :
                       selectedCategory === 'order' ? 'bg-periwinkle-100 text-periwinkle-800' :
-                        'bg-mint_green-100 text-mint_green-800'
+                        'bg-mint_success-100 text-mint_green-800'
                       }`}>
                       {selectedCategory === 'product' ? 'A. 商品銷售問題' :
                         selectedCategory === 'order' ? 'B. 訂單問題' :
@@ -1305,7 +1305,7 @@ export default function ReportsContent() {
                     <button
                       onClick={handleSendMessage}
                       disabled={!chatInput.trim() || !selectedCategory || loadingChat}
-                      className="px-6 py-4 bg-mint_green-600 text-white rounded-xl hover:bg-mint_green-700 transition-colors flex items-center space-x-2 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="px-6 py-4 bg-mint_success-600 text-white rounded-xl hover:bg-mint_success-700 transition-colors flex items-center space-x-2 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {loadingChat ? (
                         <svg className="w-5 h-5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1328,7 +1328,7 @@ export default function ReportsContent() {
               <div className="bg-white rounded-2xl shadow-lg border border-gray-100">
                 <div className="p-6 border-b border-gray-100">
                   <div className="flex items-center space-x-3">
-                    <div className="w-8 h-8 rounded-full bg-mint_green-500 text-white flex items-center justify-center text-sm font-medium">
+                    <div className="w-8 h-8 rounded-full bg-mint_success-500 text-white flex items-center justify-center text-sm font-medium">
                       3
                     </div>
                     <h3 className="text-lg font-semibold text-gray-800">AI 分析結果</h3>
@@ -1339,19 +1339,19 @@ export default function ReportsContent() {
                   {/* 載入狀態 */}
                   {loadingChat && (
                     <div className="flex items-start space-x-3">
-                      <div className="w-10 h-10 rounded-full flex items-center justify-center bg-mint_green-200">
+                      <div className="w-10 h-10 rounded-full flex items-center justify-center bg-mint_success-200">
                         <svg className="w-5 h-5 text-gray-800 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                         </svg>
                       </div>
                       <div className="flex-1">
-                        <div className="p-4 rounded-xl bg-mint_green-50 border border-mint_green-200">
+                        <div className="p-4 rounded-xl bg-mint_success-50 border border-mint_success-200">
                           <p className="text-gray-800 font-medium">🔍 正在獲取餐廳數據並分析您的問題...</p>
                           <div className="flex items-center space-x-2 mt-2 text-sm text-gray-600">
                             <div className="flex space-x-1">
-                              <div className="w-1 h-1 bg-mint_green-400 rounded-full animate-bounce"></div>
-                              <div className="w-1 h-1 bg-mint_green-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                              <div className="w-1 h-1 bg-mint_green-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                              <div className="w-1 h-1 bg-mint_success-400 rounded-full animate-bounce"></div>
+                              <div className="w-1 h-1 bg-mint_success-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                              <div className="w-1 h-1 bg-mint_success-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
                             </div>
                             <span>AI正在處理中</span>
                           </div>
@@ -1363,7 +1363,7 @@ export default function ReportsContent() {
                   {/* 回答顯示 */}
                   {answer && !loadingChat && (
                     <div className="flex items-start space-x-3">
-                      <div className="w-10 h-10 rounded-full flex items-center justify-center bg-mint_green-500">
+                      <div className="w-10 h-10 rounded-full flex items-center justify-center bg-mint_success-500">
                         <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
                         </svg>
@@ -1383,7 +1383,7 @@ export default function ReportsContent() {
                               setAnswer('')
                               setChatInput('')
                             }}
-                            className="text-xs text-mint_green-600 hover:text-mint_green-700 font-medium"
+                            className="text-xs text-mint_success-600 hover:text-mint_success-700 font-medium"
                           >
                             重新提問
                           </button>
@@ -1399,8 +1399,8 @@ export default function ReportsContent() {
             {!selectedCategory && !loadingChat && !answer && (
               <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-12">
                 <div className="text-center">
-                  <div className="w-20 h-20 rounded-full bg-mint_green-100 mx-auto mb-4 flex items-center justify-center">
-                    <svg className="w-10 h-10 text-mint_green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="w-20 h-20 rounded-full bg-mint_success-100 mx-auto mb-4 flex items-center justify-center">
+                    <svg className="w-10 h-10 text-mint_success-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                   </div>
@@ -1644,8 +1644,8 @@ export default function ReportsContent() {
                       <div className="text-2xl font-bold text-primary-600">{formatNumber(rankingData.totals.totalQuantity)}</div>
                       <div className="text-sm text-gray-600 mt-1">總銷量</div>
                     </div>
-                    <div className="text-center p-4 bg-green-50 rounded-xl">
-                      <div className="text-2xl font-bold text-green-600">NT$ {formatNumber(rankingData.totals.totalAmount)}</div>
+                    <div className="text-center p-4 bg-success-50 rounded-xl">
+                      <div className="text-2xl font-bold text-success-600">NT$ {formatNumber(rankingData.totals.totalAmount)}</div>
                       <div className="text-sm text-gray-600 mt-1">總銷額</div>
                     </div>
                     <div className="text-center p-4 bg-accent-50 rounded-xl">
@@ -1890,7 +1890,7 @@ export default function ReportsContent() {
                               <span
                                 className={`text-xs font-medium px-2 py-1 rounded-full ${customer.hasReturnedAfterNew
                                   ? 'text-secondary-700 bg-secondary-100'
-                                  : 'text-green-600 bg-green-100'
+                                  : 'text-success-600 bg-success-100'
                                   }`}
                                 title={customer.hasReturnedAfterNew ? "新客戶且已回訪" : "新客戶"}
                               >
@@ -1999,7 +1999,7 @@ export default function ReportsContent() {
                               <span
                                 className={`text-xs font-medium px-2 py-1 rounded-full ${customer.hasReturnedAfterNew
                                   ? 'text-secondary-700 bg-secondary-100'
-                                  : 'text-green-600 bg-green-100'
+                                  : 'text-success-600 bg-success-100'
                                   }`}
                                 title={customer.hasReturnedAfterNew ? "新客戶且已回訪" : "新客戶"}
                               >

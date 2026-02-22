@@ -1,131 +1,99 @@
 @import "tailwindcss";
 
-/* 餐廳管理系統 - 設計系統色彩變數 */
-:root {
-  /* 背景系統 */
-  --background: #ffffff;
-  --foreground: #1F2937;
-  /* gray-800 */
-
-  /* 你的 10 色設計系統變數 (已轉換為 Vanny Design System - Morandi 風格) */
-  --lemon-chiffon: #FEC89A;
-  /* 暖陽橘 */
-  --fawn: #EDE9E1;
-  /* 沙地米底 */
-  --melon: #FFD7D5;
-  /* 櫻花粉紅 */
-  --lavender-blush: #FCD5CE;
-  /* 柔霧水蜜桃 */
-  --mauve: #BFACC8;
-  /* 薰衣草紫 */
-  --periwinkle: #9DBEDB;
-  /* 柔霧海藍 */
-  --sky-blue: #5E7182;
-  /* 深石板藍 */
-  --aquamarine: #708898;
-  /* 共和國藍 */
-  --mint-green: #AEC2D1;
-  /* 淺霧藍 */
-  --tea-green: #E9ECEF;
-  /* 中性灰底 */
-
-  /* 語意化顏色 */
-  --primary: var(--sky-blue);
-  --secondary: var(--periwinkle);
-  --accent: var(--melon);
-  --success: var(--aquamarine);
-  --warning: var(--lemon-chiffon);
-  --error: var(--melon);
-  --info: var(--sky-blue);
-}
-
 
 @theme {
-  --color-primary: #5E7182;
-  --color-primary-50: #EFF1F3;
-  --color-primary-100: #DFE3E6;
-  --color-primary-200: #BFC6CD;
-  --color-primary-300: #9EAAB4;
-  --color-primary-400: #7E8D9B;
-  --color-primary-500: #5E7182;
-  --color-primary-600: #475562;
-  --color-primary-700: #2F3941;
-  --color-primary-800: #181C21;
-  --color-primary-900: #000000;
-
-  --color-secondary: #9DBEDB;
-  --color-secondary-50: #F5F9FB;
-  --color-secondary-100: #EBF2F8;
-  --color-secondary-200: #D8E5F1;
-  --color-secondary-300: #C4D8E9;
-  --color-secondary-400: #B1CBE2;
-  --color-secondary-500: #9DBEDB;
-  --color-secondary-600: #768FA4;
-  --color-secondary-700: #4F5F6E;
-  --color-secondary-800: #273037;
-  --color-secondary-900: #000000;
-
-  --color-accent: #FFD7D5;
-  --color-accent-50: #FFFBFB;
-  --color-accent-100: #FFF7F7;
-  --color-accent-200: #FFEFEE;
-  --color-accent-300: #FFE7E6;
-  --color-accent-400: #FFDFDD;
-  --color-accent-500: #FFD7D5;
-  --color-accent-600: #BFA1A0;
-  --color-accent-700: #806C6B;
-  --color-accent-800: #403635;
-  --color-accent-900: #000000;
-
-  --color-success: #708898;
-  --color-success-50: #F1F3F5;
-  --color-success-100: #E2E7EA;
-  --color-success-200: #C6CFD6;
-  --color-success-300: #A9B8C1;
-  --color-success-400: #8DA0AD;
-  --color-success-500: #708898;
-  --color-success-600: #546672;
-  --color-success-700: #38444C;
-  --color-success-800: #1C2226;
-  --color-success-900: #000000;
-
-  --color-warning: #FEC89A;
-  --color-warning-50: #FFFAF5;
-  --color-warning-100: #FFF4EB;
-  --color-warning-200: #FFE9D7;
-  --color-warning-300: #FEDEC2;
-  --color-warning-400: #FED3AE;
+  --color-white: #FFFFFF;
+  --color-black: #000000;
+  --color-gray-100: #bbc2d0;
+  --color-gray-200: #a7aebc;
+  --color-gray-300: #939aa8;
+  --color-gray-400: #7f8694;
+  --color-gray-500: #6b7280;
+  --color-gray-600: #575e6c;
+  --color-gray-700: #434a58;
+  --color-gray-800: #2f3644;
+  --color-gray-900: #1b2230;
+  --color-primary-50: #c8f4ff;
+  --color-primary-100: #b9e5f8;
+  --color-primary-200: #a0ccdf;
+  --color-primary-300: #87b3c6;
+  --color-primary-400: #78a4b7;
+  --color-primary-500: #6e9aad;
+  --color-primary-600: #5f8b9e;
+  --color-primary-700: #507c8f;
+  --color-primary-800: #416d80;
+  --color-primary-900: #325e71;
+  --color-primary: #6e9aad;
+  --color-secondary-50: #eaffff;
+  --color-secondary-100: #dbffff;
+  --color-secondary-200: #c2ebfc;
+  --color-secondary-300: #a9d2e3;
+  --color-secondary-400: #9ac3d4;
+  --color-secondary-500: #90b9ca;
+  --color-secondary-600: #81aabb;
+  --color-secondary-700: #729bac;
+  --color-secondary-800: #638c9d;
+  --color-secondary-900: #547d8e;
+  --color-secondary: #90b9ca;
+  --color-accent-50: #ffffff;
+  --color-accent-100: #fdffff;
+  --color-accent-200: #e4feff;
+  --color-accent-300: #cbe5ef;
+  --color-accent-400: #bcd6e0;
+  --color-accent-500: #b2ccd6;
+  --color-accent-600: #a3bdc7;
+  --color-accent-700: #94aeb8;
+  --color-accent-800: #859fa9;
+  --color-accent-900: #76909a;
+  --color-accent: #b2ccd6;
+  --color-success-50: #e9ffff;
+  --color-success-100: #daffff;
+  --color-success-200: #c1efec;
+  --color-success-300: #a8d6d3;
+  --color-success-400: #99c7c4;
+  --color-success-500: #8FBDBA;
+  --color-success-600: #80aeab;
+  --color-success-700: #719f9c;
+  --color-success-800: #62908d;
+  --color-success-900: #53817e;
+  --color-success: #8FBDBA;
+  --color-warning-50: #fffff4;
+  --color-warning-100: #ffffe5;
+  --color-warning-200: #fffacc;
+  --color-warning-300: #ffe1b3;
+  --color-warning-400: #ffd2a4;
   --color-warning-500: #FEC89A;
-  --color-warning-600: #BF9674;
-  --color-warning-700: #7F644D;
-  --color-warning-800: #403227;
-  --color-warning-900: #000000;
-
-  --color-error: #FFD7D5;
-  --color-error-50: #FFFBFB;
-  --color-error-100: #FFF7F7;
-  --color-error-200: #FFEFEE;
-  --color-error-300: #FFE7E6;
-  --color-error-400: #FFDFDD;
-  --color-error-500: #FFD7D5;
-  --color-error-600: #BFA1A0;
-  --color-error-700: #806C6B;
-  --color-error-800: #403635;
-  --color-error-900: #000000;
-
-  --color-info: #5E7182;
-  --color-info-50: #EFF1F3;
-  --color-info-100: #DFE3E6;
-  --color-info-200: #BFC6CD;
-  --color-info-300: #9EAAB4;
-  --color-info-400: #7E8D9B;
-  --color-info-500: #5E7182;
-  --color-info-600: #475562;
-  --color-info-700: #2F3941;
-  --color-info-800: #181C21;
-  --color-info-900: #000000;
+  --color-warning-600: #efb98b;
+  --color-warning-700: #e0aa7c;
+  --color-warning-800: #d19b6d;
+  --color-warning-900: #c28c5e;
+  --color-warning: #FEC89A;
+  --color-error-50: #fff2f2;
+  --color-error-100: #ffe3e3;
+  --color-error-200: #eecaca;
+  --color-error-300: #d5b1b1;
+  --color-error-400: #c6a2a2;
+  --color-error-500: #BC9898;
+  --color-error-600: #ad8989;
+  --color-error-700: #9e7a7a;
+  --color-error-800: #8f6b6b;
+  --color-error-900: #805c5c;
+  --color-error: #BC9898;
+  --color-info-50: #eaffff;
+  --color-info-100: #dbffff;
+  --color-info-200: #c2ebfc;
+  --color-info-300: #a9d2e3;
+  --color-info-400: #9ac3d4;
+  --color-info-500: #90b9ca;
+  --color-info-600: #81aabb;
+  --color-info-700: #729bac;
+  --color-info-800: #638c9d;
+  --color-info-900: #547d8e;
+  --color-info: #90b9ca;
 }
 
+
+/* Vanny Design System - Core Setup */
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -133,10 +101,18 @@
   --font-mono: var(--font-geist-mono);
 }
 
+:root {
+  --background: #F2F4F8; /* 霧藍灰 */
+  --foreground: #1F2937;
+  --primary: #6e9aad;
+  --secondary: #90b9ca;
+  --accent: #b2ccd6;
+}
+
 /* 禁用暗模式 - 保持設計系統一致性 */
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #ffffff;
+    --background: #F2F4F8;
     --foreground: #1F2937;
   }
 }
@@ -144,92 +120,36 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: 'Noto Sans TC', Arial, Helvetica, sans-serif;
 }
 
-/* 強制覆蓋任何預設連結顏色 */
-a {
-  color: var(--primary);
-  text-decoration: none;
-}
-
-a:hover {
-  color: var(--sky-blue);
-  opacity: 0.8;
-}
-
-/* 強制覆蓋任何預設按鈕顏色 */
-button:not([class*="bg-"]) {
-  background-color: var(--primary);
-  color: white;
-}
-
-button:not([class*="bg-"]):hover {
-  background-color: var(--sky-blue);
-  opacity: 0.9;
-}
-
-/* 表單元素顏色強制 */
-input:focus,
-textarea:focus,
-select:focus {
-  border-color: var(--primary) !important;
-  outline-color: var(--primary) !important;
-  box-shadow: 0 0 0 3px rgba(144, 219, 244, 0.1) !important;
-}
-
-/* 禁用任何瀏覽器預設的藍色/紫色連結 */
-a:visited {
-  color: var(--primary);
-}
-
-/* 強制數字和重要文字使用你的色彩系統 */
-.text-blue-600,
-.text-blue-500,
-.text-indigo-600,
-.text-purple-600,
-.text-violet-600 {
-  color: var(--primary) !important;
-}
-
-.bg-blue-600,
-.bg-blue-500,
-.bg-indigo-600,
-.bg-purple-600,
-.bg-violet-600 {
-  background-color: var(--primary) !important;
-}
-
-/* 實用工具類別 */
-@layer utilities {
-  .text-restaurant-primary {
+/* 修復字色打架問題：放入 base 中確保 Tailwind 工具類可以覆寫 */
+@layer base {
+  a {
     color: var(--primary);
+    text-decoration: none;
   }
-
-  .text-restaurant-secondary {
+  
+  a:hover {
     color: var(--secondary);
   }
-
-  .text-restaurant-accent {
-    color: var(--accent);
-  }
-
-  .bg-restaurant-primary {
+  
+  button:not([class*="bg-"]) {
     background-color: var(--primary);
+    color: white;
   }
-
-  .bg-restaurant-secondary {
+  
+  button:not([class*="bg-"]):hover {
     background-color: var(--secondary);
   }
 
-  .bg-restaurant-accent {
-    background-color: var(--accent);
-  }
-
-  .bg-page-gradient {
-    background: linear-gradient(135deg,
-        var(--lemon-chiffon) 0%,
-        var(--fawn) 50%,
-        var(--melon) 100%);
+  /* 表單元素顏色強制 */
+  input:focus,
+  textarea:focus,
+  select:focus {
+    border-color: var(--primary) !important;
+    outline-color: var(--primary) !important;
+    box-shadow: 0 0 0 3px rgba(110, 154, 173, 0.15) !important;
   }
 }
+

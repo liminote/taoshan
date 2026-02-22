@@ -55,11 +55,11 @@ export default function HistoryPage() {
       'Allen': 'bg-melon text-white',
       'Luis': 'bg-fawn text-gray-800',
       '香師傅': 'bg-lemon_chiffon text-gray-800',
-      'Vanny': 'bg-green-200 text-green-800',
+      'Vanny': 'bg-success-200 text-green-800',
       '店長': 'bg-periwinkle text-white',
       '經理': 'bg-lavender_blush text-gray-800',
       '會計': 'bg-mauve text-white',
-      '廚師': 'bg-green-200 text-green-800',
+      '廚師': 'bg-success-200 text-green-800',
       '服務員': 'bg-sky_blue text-white'
     }
     return colors[assignee as keyof typeof colors] || 'bg-gray-100 text-gray-800'
@@ -124,8 +124,8 @@ export default function HistoryPage() {
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="flex items-center space-x-3 mb-2">
-                          <div className="w-6 h-6 bg-green-200 rounded-full flex items-center justify-center">
-                            <svg className="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                          <div className="w-6 h-6 bg-success-200 rounded-full flex items-center justify-center">
+                            <svg className="w-4 h-4 text-success-600" fill="currentColor" viewBox="0 0 20 20">
                               <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                             </svg>
                           </div>

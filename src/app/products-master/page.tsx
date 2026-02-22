@@ -197,7 +197,7 @@ export default function ProductsMasterPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-secondary-50 via-white to-green-50 py-8 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-br from-secondary-50 via-white to-success-50 py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
         {/* 標題區域 */}
         <div className="mb-8">
@@ -213,7 +213,7 @@ export default function ProductsMasterPage() {
           
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <div className="w-12 h-12 bg-gradient-to-r from-secondary-500 to-green-600 rounded-2xl flex items-center justify-center shadow-lg">
+              <div className="w-12 h-12 bg-gradient-to-r from-secondary-500 to-success-600 rounded-2xl flex items-center justify-center shadow-lg">
                 <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                 </svg>
@@ -271,7 +271,7 @@ export default function ProductsMasterPage() {
             <div className="flex items-end">
               <button
                 onClick={() => setShowAddForm(true)}
-                className="w-full px-6 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors shadow-lg flex items-center justify-center space-x-2"
+                className="w-full px-6 py-2 bg-success-600 text-white rounded-xl hover:bg-success-700 transition-colors shadow-lg flex items-center justify-center space-x-2"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -376,7 +376,7 @@ export default function ProductsMasterPage() {
                   <div className="text-sm text-gray-600">總商品數</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-green-600">{pagination.page}</div>
+                  <div className="text-2xl font-bold text-success-600">{pagination.page}</div>
                   <div className="text-sm text-gray-600">目前頁數</div>
                 </div>
                 <div className="text-center">
