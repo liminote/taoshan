@@ -14,39 +14,39 @@
   --color-gray-700: #3c4653;
   --color-gray-800: #282e38;
   --color-gray-900: #14171c;
-  --color-primary-50: #f1f5f7;
-  --color-primary-100: #e2ebef;
-  --color-primary-200: #c5d7de;
-  --color-primary-300: #a8c2ce;
-  --color-primary-400: #8baebd;
-  --color-primary-500: #6e9aad;
-  --color-primary-600: #587b8a;
-  --color-primary-700: #425c68;
-  --color-primary-800: #2c3e45;
-  --color-primary-900: #161f23;
-  --color-primary: #6e9aad;
-  --color-secondary-50: #f4f8fa;
-  --color-secondary-100: #e9f1f4;
-  --color-secondary-200: #d3e3ea;
-  --color-secondary-300: #bcd5df;
-  --color-secondary-400: #a6c7d5;
-  --color-secondary-500: #90b9ca;
-  --color-secondary-600: #7394a2;
-  --color-secondary-700: #566f79;
-  --color-secondary-800: #3a4a51;
-  --color-secondary-900: #1d2528;
-  --color-secondary: #90b9ca;
-  --color-accent-50: #f7fafb;
-  --color-accent-100: #f0f5f7;
-  --color-accent-200: #e0ebef;
-  --color-accent-300: #d1e0e6;
-  --color-accent-400: #c1d6de;
-  --color-accent-500: #b2ccd6;
-  --color-accent-600: #8ea3ab;
-  --color-accent-700: #6b7a80;
-  --color-accent-800: #475256;
-  --color-accent-900: #24292b;
-  --color-accent: #b2ccd6;
+  --color-primary-50: #fffaf5;
+  --color-primary-100: #fff4eb;
+  --color-primary-200: #ffe9d7;
+  --color-primary-300: #fedec2;
+  --color-primary-400: #fed3ae;
+  --color-primary-500: #FEC89A;
+  --color-primary-600: #cba07b;
+  --color-primary-700: #98785c;
+  --color-primary-800: #66503e;
+  --color-primary-900: #33281f;
+  --color-primary: #FEC89A;
+  --color-secondary-50: #fffbfb;
+  --color-secondary-100: #fff7f7;
+  --color-secondary-200: #ffefee;
+  --color-secondary-300: #ffe7e6;
+  --color-secondary-400: #ffdfdd;
+  --color-secondary-500: #FFD7D5;
+  --color-secondary-600: #ccacaa;
+  --color-secondary-700: #998180;
+  --color-secondary-800: #665655;
+  --color-secondary-900: #332b2b;
+  --color-secondary: #FFD7D5;
+  --color-accent-50: #f5f9fb;
+  --color-accent-100: #ebf2f8;
+  --color-accent-200: #d8e5f1;
+  --color-accent-300: #c4d8e9;
+  --color-accent-400: #b1cbe2;
+  --color-accent-500: #9DBEDB;
+  --color-accent-600: #7e98af;
+  --color-accent-700: #5e7283;
+  --color-accent-800: #3f4c58;
+  --color-accent-900: #1f262c;
+  --color-accent: #9DBEDB;
   --color-success-50: #f4f8f8;
   --color-success-100: #e9f2f1;
   --color-success-200: #d2e5e3;
@@ -80,17 +80,17 @@
   --color-error-800: #4b3d3d;
   --color-error-900: #261e1e;
   --color-error: #BC9898;
-  --color-info-50: #f4f8fa;
-  --color-info-100: #e9f1f4;
-  --color-info-200: #d3e3ea;
-  --color-info-300: #bcd5df;
-  --color-info-400: #a6c7d5;
-  --color-info-500: #90b9ca;
-  --color-info-600: #7394a2;
-  --color-info-700: #566f79;
-  --color-info-800: #3a4a51;
-  --color-info-900: #1d2528;
-  --color-info: #90b9ca;
+  --color-info-50: #f5f9fb;
+  --color-info-100: #ebf2f8;
+  --color-info-200: #d8e5f1;
+  --color-info-300: #c4d8e9;
+  --color-info-400: #b1cbe2;
+  --color-info-500: #9DBEDB;
+  --color-info-600: #7e98af;
+  --color-info-700: #5e7283;
+  --color-info-800: #3f4c58;
+  --color-info-900: #1f262c;
+  --color-info: #9DBEDB;
 }
 
 
@@ -103,18 +103,18 @@
 }
 
 :root {
-  --background: #F2F4F8; /* 霧藍灰 */
-  --foreground: #1F2937;
-  --primary: #6e9aad;
-  --secondary: #90b9ca;
-  --accent: #b2ccd6;
+  --background: #FDF9F3; /* changed background to a very soft, warm cream to match the vibrant warm primary colors, rather than the cool gray */ 
+  --foreground: #2d3748; /* softer dark gray instead of 1f2937 */
+  --primary: #FEC89A;
+  --secondary: #FFD7D5;
+  --accent: #9DBEDB;
 }
 
 /* 禁用暗模式 - 保持設計系統一致性 */
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #F2F4F8;
-    --foreground: #1F2937;
+    --background: #FDF9F3;
+    --foreground: #2d3748;
   }
 }
 
@@ -127,17 +127,17 @@ body {
 /* 修復字色打架問題：放入 base 中確保 Tailwind 工具類可以覆寫 */
 @layer base {
   a {
-    color: var(--primary);
+    color: var(--color-gray-800);
     text-decoration: none;
   }
   
   a:hover {
-    color: var(--secondary);
+    color: var(--primary);
   }
   
   button:not([class*="bg-"]) {
     background-color: var(--primary);
-    color: white;
+    color: var(--color-gray-900);
   }
   
   button:not([class*="bg-"]):hover {
@@ -150,7 +150,7 @@ body {
   select:focus {
     border-color: var(--primary) !important;
     outline-color: var(--primary) !important;
-    box-shadow: 0 0 0 3px rgba(110, 154, 173, 0.15) !important;
+    box-shadow: 0 0 0 3px rgba(254, 200, 154, 0.25) !important;
   }
 }
 
@@ -163,4 +163,3 @@ body {
     color: var(--color-secondary-800) !important;
   }
 }
-
