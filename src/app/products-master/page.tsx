@@ -197,13 +197,13 @@ export default function ProductsMasterPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 py-8 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-br from-secondary-50 via-white to-green-50 py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
         {/* 標題區域 */}
         <div className="mb-8">
           <Link 
             href="/" 
-            className="inline-flex items-center text-gray-600 hover:text-emerald-600 transition-colors mb-6 group"
+            className="inline-flex items-center text-gray-600 hover:text-primary-600 transition-colors mb-6 group"
           >
             <svg className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -213,7 +213,7 @@ export default function ProductsMasterPage() {
           
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-green-600 rounded-2xl flex items-center justify-center shadow-lg">
+              <div className="w-12 h-12 bg-gradient-to-r from-secondary-500 to-green-600 rounded-2xl flex items-center justify-center shadow-lg">
                 <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                 </svg>
@@ -229,11 +229,11 @@ export default function ProductsMasterPage() {
         </div>
 
         {error && (
-          <div className="mb-6 bg-red-50 border border-red-200 rounded-xl p-4">
-            <div className="text-red-600">❌ {error}</div>
+          <div className="mb-6 bg-error-50 border border-error-200 rounded-xl p-4">
+            <div className="text-error-600">❌ {error}</div>
             <button 
               onClick={() => setError('')}
-              className="mt-2 text-sm text-red-500 hover:text-red-700"
+              className="mt-2 text-sm text-error-500 hover:text-error-700"
             >
               關閉
             </button>
@@ -250,7 +250,7 @@ export default function ProductsMasterPage() {
                 value={search}
                 onChange={(e) => handleSearch(e.target.value)}
                 placeholder="輸入商品名稱搜尋..."
-                className="w-full px-4 py-2 bg-white/50 border border-gray-200/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent"
+                className="w-full px-4 py-2 bg-white/50 border border-gray-200/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-secondary-500/50 focus:border-transparent"
               />
             </div>
             <div>
@@ -258,7 +258,7 @@ export default function ProductsMasterPage() {
               <select
                 value={selectedCategory}
                 onChange={(e) => handleCategoryFilter(e.target.value)}
-                className="w-full px-4 py-2 bg-white/50 border border-gray-200/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent"
+                className="w-full px-4 py-2 bg-white/50 border border-gray-200/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-secondary-500/50 focus:border-transparent"
               >
                 <option value="all">所有分類</option>
                 {categories.map((category) => (
@@ -296,7 +296,7 @@ export default function ProductsMasterPage() {
                   value={formData.original_name}
                   onChange={(e) => handleProductNameChange(e.target.value)}
                   placeholder="輸入商品名稱..."
-                  className="w-full px-4 py-2 bg-white/50 border border-gray-200/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent"
+                  className="w-full px-4 py-2 bg-white/50 border border-gray-200/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-secondary-500/50 focus:border-transparent"
                 />
               </div>
               <div>
@@ -306,7 +306,7 @@ export default function ProductsMasterPage() {
                   value={formData.new_name}
                   onChange={(e) => setFormData(prev => ({ ...prev, new_name: e.target.value }))}
                   placeholder="自動生成：商品名稱-"
-                  className="w-full px-4 py-2 bg-white/50 border border-gray-200/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent"
+                  className="w-full px-4 py-2 bg-white/50 border border-gray-200/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-secondary-500/50 focus:border-transparent"
                 />
               </div>
               <div>
@@ -314,7 +314,7 @@ export default function ProductsMasterPage() {
                 <select
                   value={formData.category_id}
                   onChange={(e) => setFormData(prev => ({ ...prev, category_id: e.target.value, subcategory_id: '' }))}
-                  className="w-full px-4 py-2 bg-white/50 border border-gray-200/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent"
+                  className="w-full px-4 py-2 bg-white/50 border border-gray-200/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-secondary-500/50 focus:border-transparent"
                 >
                   <option value="">請選擇大分類</option>
                   {categories.map((category) => (
@@ -330,7 +330,7 @@ export default function ProductsMasterPage() {
                   value={formData.subcategory_id}
                   onChange={(e) => setFormData(prev => ({ ...prev, subcategory_id: e.target.value }))}
                   disabled={!formData.category_id}
-                  className="w-full px-4 py-2 bg-white/50 border border-gray-200/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent disabled:opacity-50"
+                  className="w-full px-4 py-2 bg-white/50 border border-gray-200/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-secondary-500/50 focus:border-transparent disabled:opacity-50"
                 >
                   <option value="">請選擇小分類</option>
                   {categories
@@ -353,7 +353,7 @@ export default function ProductsMasterPage() {
               <button
                 onClick={handleSubmit}
                 disabled={!formData.original_name.trim() || actionLoading}
-                className="px-6 py-2 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-6 py-2 bg-primary-600 text-white rounded-xl hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {actionLoading ? '處理中...' : (editingProduct ? '更新' : '新增')}
               </button>
@@ -363,7 +363,7 @@ export default function ProductsMasterPage() {
 
         {loading ? (
           <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600 mx-auto mb-4"></div>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto mb-4"></div>
             <p className="text-gray-600">載入中...</p>
           </div>
         ) : (
@@ -372,7 +372,7 @@ export default function ProductsMasterPage() {
             <div className="bg-white/70 backdrop-blur-sm border border-white/50 rounded-2xl p-6 shadow-lg mb-6">
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-emerald-600">{pagination.total}</div>
+                  <div className="text-2xl font-bold text-primary-600">{pagination.total}</div>
                   <div className="text-sm text-gray-600">總商品數</div>
                 </div>
                 <div className="text-center">
@@ -380,7 +380,7 @@ export default function ProductsMasterPage() {
                   <div className="text-sm text-gray-600">目前頁數</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-purple-600">{pagination.totalPages}</div>
+                  <div className="text-2xl font-bold text-accent-600">{pagination.totalPages}</div>
                   <div className="text-sm text-gray-600">總頁數</div>
                 </div>
               </div>
@@ -418,7 +418,7 @@ export default function ProductsMasterPage() {
                           <div className="flex space-x-2">
                             <button
                               onClick={() => handleEdit(product)}
-                              className="p-2 text-emerald-600 hover:text-emerald-800 hover:bg-emerald-50 rounded-lg transition-colors"
+                              className="p-2 text-primary-600 hover:text-primary-800 hover:bg-primary-50 rounded-lg transition-colors"
                               title="編輯"
                             >
                               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -427,7 +427,7 @@ export default function ProductsMasterPage() {
                             </button>
                             <button
                               onClick={() => handleDelete(product)}
-                              className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg transition-colors"
+                              className="p-2 text-error-600 hover:text-error-800 hover:bg-error-50 rounded-lg transition-colors"
                               title="刪除"
                             >
                               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -459,7 +459,7 @@ export default function ProductsMasterPage() {
                       >
                         上一頁
                       </button>
-                      <span className="px-4 py-2 bg-emerald-600 text-white rounded-lg">
+                      <span className="px-4 py-2 bg-primary-600 text-white rounded-lg">
                         {pagination.page}
                       </span>
                       <button

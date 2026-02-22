@@ -262,7 +262,7 @@ export default function Home() {
         {notification && (
           <div className={`fixed top-4 right-4 z-50 px-4 py-3 rounded-lg shadow-lg transition-all duration-300 ${notification.type === 'success'
             ? 'bg-green-500 text-white'
-            : 'bg-red-500 text-white'
+            : 'bg-error-500 text-white'
             }`}>
             <div className="flex items-center space-x-2">
               {notification.type === 'success' ? (
@@ -316,7 +316,7 @@ export default function Home() {
               </div>
               <button
                 onClick={() => setShowAddForm(!showAddForm)}
-                className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 hover:shadow-lg transition-all duration-300 hover:scale-105 flex items-center space-x-2"
+                className="px-4 py-2 bg-secondary-600 text-white text-sm rounded-lg hover:bg-secondary-700 hover:shadow-lg transition-all duration-300 hover:scale-105 flex items-center space-x-2"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -420,7 +420,7 @@ export default function Home() {
                   </button>
                   <button
                     type="submit"
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-md font-medium"
+                    className="px-4 py-2 bg-secondary-600 text-white rounded-lg hover:bg-secondary-700 transition-colors shadow-md font-medium"
                   >
                     儲存
                   </button>
@@ -468,7 +468,7 @@ export default function Home() {
                           items.map(item => (
                             <div
                               key={item.id}
-                              className="relative flex flex-col bg-white border border-gray-200 rounded-xl shadow-sm p-4 cursor-pointer hover:border-blue-300 transition-colors"
+                              className="relative flex flex-col bg-white border border-gray-200 rounded-xl shadow-sm p-4 cursor-pointer hover:border-secondary-300 transition-colors"
                               onClick={() => openEditModal(item)}
                             >
                               <p className="text-gray-900 font-medium whitespace-pre-line pr-10">{item.content.replace(/^\*/, '').trim()}</p>
@@ -487,7 +487,7 @@ export default function Home() {
                                   e.stopPropagation()
                                   handleToggleComplete(item.id)
                                 }}
-                                className="absolute top-3 right-3 inline-flex items-center px-2 py-1 text-xs font-medium bg-emerald-500 hover:bg-emerald-600 text-white rounded-md transition-colors"
+                                className="absolute top-3 right-3 inline-flex items-center px-2 py-1 text-xs font-medium bg-primary-500 hover:bg-primary-600 text-white rounded-md transition-colors"
                               >
                                 完成
                               </button>
@@ -581,7 +581,7 @@ export default function Home() {
               <button
                 onClick={handleEditSave}
                 disabled={isSavingEdit}
-                className={`px-4 py-2 rounded-lg text-white ${isSavingEdit ? 'bg-blue-300 cursor-not-allowed' : 'bg-blue-500 hover:bg-blue-600'}`}
+                className={`px-4 py-2 rounded-lg text-white ${isSavingEdit ? 'bg-secondary-300 cursor-not-allowed' : 'bg-secondary-500 hover:bg-secondary-600'}`}
               >
                 {isSavingEdit ? '儲存中...' : '儲存'}
               </button>

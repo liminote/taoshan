@@ -858,7 +858,7 @@ export default function ReportsContent() {
       <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-6xl mx-auto">
           <div className="text-center">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-purple-400 rounded-2xl mb-4 shadow-lg animate-pulse">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-accent-400 rounded-2xl mb-4 shadow-lg animate-pulse">
               <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
               </svg>
@@ -877,7 +877,7 @@ export default function ReportsContent() {
         <div className="mb-8">
           <Link
             href="/"
-            className="inline-flex items-center text-gray-600 hover:text-emerald-600 transition-colors mb-6 group"
+            className="inline-flex items-center text-gray-600 hover:text-primary-600 transition-colors mb-6 group"
           >
             <svg className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -887,7 +887,7 @@ export default function ReportsContent() {
 
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <div className="w-12 h-12 bg-purple-400 rounded-2xl flex items-center justify-center shadow-lg">
+              <div className="w-12 h-12 bg-accent-400 rounded-2xl flex items-center justify-center shadow-lg">
                 <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                 </svg>
@@ -930,7 +930,7 @@ export default function ReportsContent() {
               <button
                 onClick={handleManualRefresh}
                 disabled={isManualRefreshing}
-                className="inline-flex items-center px-4 py-2 bg-purple-500 text-white rounded-xl shadow-sm hover:shadow-md transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                className="inline-flex items-center px-4 py-2 bg-accent-500 text-white rounded-xl shadow-sm hover:shadow-md transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
               >
                 <svg
                   className={`w-4 h-4 mr-2 ${isManualRefreshing ? 'animate-spin' : ''}`}
@@ -1429,7 +1429,7 @@ export default function ReportsContent() {
                   id="month-select"
                   value={selectedMonth}
                   onChange={(e) => setSelectedMonth(e.target.value)}
-                  className="px-4 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-transparent text-gray-900 min-w-[140px]"
+                  className="px-4 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-500/50 focus:border-transparent text-gray-900 min-w-[140px]"
                 >
                   {/* 生成最近13個月的選項 */}
                   {Array.from({ length: 13 }, (_, i) => {
@@ -1640,16 +1640,16 @@ export default function ReportsContent() {
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div className="text-center p-4 bg-emerald-50 rounded-xl">
-                      <div className="text-2xl font-bold text-emerald-600">{formatNumber(rankingData.totals.totalQuantity)}</div>
+                    <div className="text-center p-4 bg-primary-50 rounded-xl">
+                      <div className="text-2xl font-bold text-primary-600">{formatNumber(rankingData.totals.totalQuantity)}</div>
                       <div className="text-sm text-gray-600 mt-1">總銷量</div>
                     </div>
                     <div className="text-center p-4 bg-green-50 rounded-xl">
                       <div className="text-2xl font-bold text-green-600">NT$ {formatNumber(rankingData.totals.totalAmount)}</div>
                       <div className="text-sm text-gray-600 mt-1">總銷額</div>
                     </div>
-                    <div className="text-center p-4 bg-purple-50 rounded-xl">
-                      <div className="text-2xl font-bold text-purple-600">{formatNumber(rankingData.totals.totalProducts)}</div>
+                    <div className="text-center p-4 bg-accent-50 rounded-xl">
+                      <div className="text-2xl font-bold text-accent-600">{formatNumber(rankingData.totals.totalProducts)}</div>
                       <div className="text-sm text-gray-600 mt-1">商品種類</div>
                     </div>
                   </div>
@@ -1675,7 +1675,7 @@ export default function ReportsContent() {
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-200">
                           {rankingData.quantityRanking.slice(0, 20).map((item, index) => (
-                            <tr key={index} className={`${index < 3 ? 'bg-emerald-50' : ''} hover:bg-gray-50 transition-colors`}>
+                            <tr key={index} className={`${index < 3 ? 'bg-primary-50' : ''} hover:bg-gray-50 transition-colors`}>
                               <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
                                 {index < 3 ? (
                                   <span className="inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold text-white"
@@ -1719,7 +1719,7 @@ export default function ReportsContent() {
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-200">
                           {rankingData.amountRanking.slice(0, 20).map((item, index) => (
-                            <tr key={index} className={`${index < 3 ? 'bg-red-50' : ''} hover:bg-gray-50 transition-colors`}>
+                            <tr key={index} className={`${index < 3 ? 'bg-error-50' : ''} hover:bg-gray-50 transition-colors`}>
                               <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
                                 {index < 3 ? (
                                   <span className="inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold text-white"
@@ -1816,7 +1816,7 @@ export default function ReportsContent() {
                   id="customer-month-select"
                   value={customerAnalysisMonth}
                   onChange={(e) => setCustomerAnalysisMonth(e.target.value)}
-                  className="px-4 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-transparent text-gray-900 min-w-[140px]"
+                  className="px-4 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-500/50 focus:border-transparent text-gray-900 min-w-[140px]"
                 >
                   {/* 生成最近13個月的選項 */}
                   {Array.from({ length: 13 }, (_, i) => {
@@ -1863,7 +1863,7 @@ export default function ReportsContent() {
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
                       {customerSpendingRanking.slice(0, 30).map((customer, index) => (
-                        <tr key={customer.customerPhone} className={`${index < 3 ? 'bg-emerald-50' : ''} hover:bg-gray-50 transition-colors`}>
+                        <tr key={customer.customerPhone} className={`${index < 3 ? 'bg-primary-50' : ''} hover:bg-gray-50 transition-colors`}>
                           <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
                             {index < 3 ? (
                               <span className="inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold text-white"
@@ -1889,7 +1889,7 @@ export default function ReportsContent() {
                             {customer.isNewCustomer && (
                               <span
                                 className={`text-xs font-medium px-2 py-1 rounded-full ${customer.hasReturnedAfterNew
-                                  ? 'text-blue-700 bg-blue-100'
+                                  ? 'text-secondary-700 bg-secondary-100'
                                   : 'text-green-600 bg-green-100'
                                   }`}
                                 title={customer.hasReturnedAfterNew ? "新客戶且已回訪" : "新客戶"}
@@ -1901,7 +1901,7 @@ export default function ReportsContent() {
                           <td className="px-4 py-3 text-center">
                             {!customer.isNewCustomer && customer.hasReturnedAfterOld && (
                               <span
-                                className="text-xs font-medium px-2 py-1 rounded-full text-orange-700 bg-orange-100"
+                                className="text-xs font-medium px-2 py-1 rounded-full text-warning-700 bg-warning-100"
                                 title="舊客戶且有回訪"
                               >
                                 舊回
@@ -1925,7 +1925,7 @@ export default function ReportsContent() {
                           </td>
                           <td className="px-4 py-3 text-center">
                             <button
-                              className="text-emerald-600 hover:text-emerald-700 transition-colors hover:bg-transparent"
+                              className="text-primary-600 hover:text-primary-700 transition-colors hover:bg-transparent"
                               onClick={() => handleViewCustomerDetails(customer.customerPhone, customer.customerName)}
                               title="查看消費明細"
                             >
@@ -1972,7 +1972,7 @@ export default function ReportsContent() {
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
                       {customerFrequencyRanking.slice(0, 30).map((customer, index) => (
-                        <tr key={customer.customerPhone} className={`${index < 3 ? 'bg-red-50' : ''} hover:bg-gray-50 transition-colors`}>
+                        <tr key={customer.customerPhone} className={`${index < 3 ? 'bg-error-50' : ''} hover:bg-gray-50 transition-colors`}>
                           <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
                             {index < 3 ? (
                               <span className="inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold text-white"
@@ -1998,7 +1998,7 @@ export default function ReportsContent() {
                             {customer.isNewCustomer && (
                               <span
                                 className={`text-xs font-medium px-2 py-1 rounded-full ${customer.hasReturnedAfterNew
-                                  ? 'text-blue-700 bg-blue-100'
+                                  ? 'text-secondary-700 bg-secondary-100'
                                   : 'text-green-600 bg-green-100'
                                   }`}
                                 title={customer.hasReturnedAfterNew ? "新客戶且已回訪" : "新客戶"}
@@ -2010,7 +2010,7 @@ export default function ReportsContent() {
                           <td className="px-4 py-3 text-center">
                             {!customer.isNewCustomer && customer.hasReturnedAfterOld && (
                               <span
-                                className="text-xs font-medium px-2 py-1 rounded-full text-orange-700 bg-orange-100"
+                                className="text-xs font-medium px-2 py-1 rounded-full text-warning-700 bg-warning-100"
                                 title="舊客戶且有回訪"
                               >
                                 舊回
@@ -2034,7 +2034,7 @@ export default function ReportsContent() {
                           </td>
                           <td className="px-4 py-3 text-center">
                             <button
-                              className="text-emerald-600 hover:text-emerald-700 transition-colors hover:bg-transparent"
+                              className="text-primary-600 hover:text-primary-700 transition-colors hover:bg-transparent"
                               onClick={() => handleViewCustomerDetails(customer.customerPhone, customer.customerName)}
                               title="查看消費明細"
                             >
@@ -2087,7 +2087,7 @@ export default function ReportsContent() {
               {loadingCustomerDetails ? (
                 <div className="flex items-center justify-center py-12">
                   <div className="flex items-center space-x-3">
-                    <svg className="w-6 h-6 text-purple-600 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-6 h-6 text-accent-600 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                     </svg>
                     <span className="text-gray-600">載入消費明細中...</span>
@@ -2097,12 +2097,12 @@ export default function ReportsContent() {
                 <div className="space-y-6">
                   {/* 摘要統計 */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="text-center p-4 bg-emerald-50 rounded-xl">
-                      <div className="text-2xl font-bold text-emerald-600">{customerDetails.summary.totalOrders}</div>
+                    <div className="text-center p-4 bg-primary-50 rounded-xl">
+                      <div className="text-2xl font-bold text-primary-600">{customerDetails.summary.totalOrders}</div>
                       <div className="text-sm text-gray-600 mt-1">總訂單數</div>
                     </div>
-                    <div className="text-center p-4 bg-purple-50 rounded-xl">
-                      <div className="text-2xl font-bold text-purple-600">NT$ {Math.round(customerDetails.summary.totalAmount).toLocaleString()}</div>
+                    <div className="text-center p-4 bg-accent-50 rounded-xl">
+                      <div className="text-2xl font-bold text-accent-600">NT$ {Math.round(customerDetails.summary.totalAmount).toLocaleString()}</div>
                       <div className="text-sm text-gray-600 mt-1">總金額</div>
                     </div>
                   </div>
@@ -2136,7 +2136,7 @@ export default function ReportsContent() {
                               <span className="text-sm font-medium text-gray-900 col-span-3 text-right font-mono">
                                 NT$ {item.price}
                               </span>
-                              <span className="text-sm text-emerald-600 font-medium col-span-2 text-center font-mono">
+                              <span className="text-sm text-primary-600 font-medium col-span-2 text-center font-mono">
                                 {item.quantity > 1 ? `x${item.quantity}` : ''}
                               </span>
                             </div>

@@ -462,7 +462,7 @@ export default function ProductsMasterSheetsPage() {
             </div>
           ) : error ? (
             <div className="p-8 text-center">
-              <div className="text-red-600 mb-4">❌ {error}</div>
+              <div className="text-error-600 mb-4">❌ {error}</div>
               <button 
                 onClick={() => fetchProducts()}
                 className="px-4 py-2 text-white rounded-lg hover:opacity-80 transition-opacity"
@@ -589,14 +589,14 @@ export default function ProductsMasterSheetsPage() {
         </div>
         
         {/* 說明卡片 */}
-        <div className="mt-6 bg-fawn-50 border-l-4 border-orange-400 rounded-2xl p-6 shadow-lg">
+        <div className="mt-6 bg-fawn-50 border-l-4 border-warning-400 rounded-2xl p-6 shadow-lg">
           <div className="flex items-center space-x-3 mb-3">
             <div className="w-6 h-6 rounded-full flex items-center justify-center" style={{ backgroundColor: '#FDE4CF' }}>
               <svg className="w-4 h-4 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
-            <h3 className="text-lg font-semibold text-orange-900">使用說明</h3>
+            <h3 className="text-lg font-semibold text-warning-900">使用說明</h3>
           </div>
           <div className="text-gray-800 space-y-2 text-sm">
             <p>• <strong>資料來源：</strong>直接從 Google Sheets 商品主檔讀取</p>

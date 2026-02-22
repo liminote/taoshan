@@ -79,10 +79,10 @@ export default function CategoriesPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-pink-50 via-orange-50 to-yellow-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="min-h-screen bg-gradient-to-br from-accent-50 via-warning-50 to-warning-50 py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto">
           <div className="text-center">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-pink-400 to-orange-400 rounded-2xl mb-4 shadow-lg animate-pulse">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-accent-400 to-warning-400 rounded-2xl mb-4 shadow-lg animate-pulse">
               <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
               </svg>
@@ -95,13 +95,13 @@ export default function CategoriesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-pink-50 via-orange-50 to-yellow-50 py-8 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-br from-accent-50 via-warning-50 to-warning-50 py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto">
         {/* 標題區域 */}
         <div className="mb-8">
           <Link 
             href="/reports" 
-            className="inline-flex items-center text-gray-600 hover:text-emerald-600 transition-colors mb-6 group"
+            className="inline-flex items-center text-gray-600 hover:text-primary-600 transition-colors mb-6 group"
           >
             <svg className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -110,7 +110,7 @@ export default function CategoriesPage() {
           </Link>
           
           <div className="flex items-center space-x-4">
-            <div className="w-12 h-12 bg-gradient-to-r from-pink-400 to-orange-400 rounded-2xl flex items-center justify-center shadow-lg">
+            <div className="w-12 h-12 bg-gradient-to-r from-accent-400 to-warning-400 rounded-2xl flex items-center justify-center shadow-lg">
               <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
               </svg>
@@ -141,14 +141,14 @@ export default function CategoriesPage() {
               value={newCategoryName}
               onChange={(e) => setNewCategoryName(e.target.value)}
               placeholder="輸入分類名稱"
-              className="flex-1 px-4 py-3 bg-white/50 border border-orange-200/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-pink-500/50 focus:border-transparent placeholder-gray-500 transition-all text-gray-900"
+              className="flex-1 px-4 py-3 bg-white/50 border border-warning-200/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-accent-500/50 focus:border-transparent placeholder-gray-500 transition-all text-gray-900"
               onKeyPress={(e) => e.key === 'Enter' && addCategory()}
               disabled={adding}
             />
             <button
               onClick={addCategory}
               disabled={adding || !newCategoryName.trim()}
-              className="px-6 py-3 bg-gradient-to-r from-pink-400 to-orange-400 text-white rounded-xl hover:shadow-lg transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+              className="px-6 py-3 bg-gradient-to-r from-accent-400 to-warning-400 text-white rounded-xl hover:shadow-lg transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
             >
               {adding ? (
                 <svg className="w-5 h-5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -168,7 +168,7 @@ export default function CategoriesPage() {
               <div key={category.id} className="bg-white/70 backdrop-blur-sm border border-white/50 rounded-2xl p-6 shadow-lg hover:bg-white/90 transition-all duration-300">
                 <div className="flex justify-between items-start mb-4">
                   <div className="flex items-center space-x-3">
-                    <div className="w-8 h-8 bg-gradient-to-r from-orange-400 to-pink-400 rounded-lg flex items-center justify-center">
+                    <div className="w-8 h-8 bg-gradient-to-r from-warning-400 to-accent-400 rounded-lg flex items-center justify-center">
                       <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
                       </svg>
@@ -177,7 +177,7 @@ export default function CategoriesPage() {
                   </div>
                   <button
                     onClick={() => deleteCategory(category.id, category.name)}
-                    className="group px-4 py-2 bg-red-50 text-red-600 rounded-xl hover:bg-red-400 hover:text-white transition-all duration-300"
+                    className="group px-4 py-2 bg-error-50 text-error-600 rounded-xl hover:bg-error-400 hover:text-white transition-all duration-300"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -197,7 +197,7 @@ export default function CategoriesPage() {
                       {category.subcategories.map((sub) => (
                         <span
                           key={sub.id}
-                          className="px-3 py-1 bg-gradient-to-r from-emerald-100 to-green-100 text-gray-700 text-sm rounded-lg border border-emerald-200/50"
+                          className="px-3 py-1 bg-gradient-to-r from-primary-100 to-green-100 text-gray-700 text-sm rounded-lg border border-primary-200/50"
                         >
                           {sub.name}
                         </span>
@@ -215,8 +215,8 @@ export default function CategoriesPage() {
               </div>
             ))
           ) : (
-            <div className="bg-gradient-to-r from-gray-50 to-blue-50 border border-gray-200/50 rounded-2xl p-12 text-center backdrop-blur-sm">
-              <div className="w-16 h-16 bg-gradient-to-r from-gray-400 to-blue-500 rounded-2xl flex items-center justify-center mx-auto mb-4 opacity-50">
+            <div className="bg-gradient-to-r from-gray-50 to-secondary-50 border border-gray-200/50 rounded-2xl p-12 text-center backdrop-blur-sm">
+              <div className="w-16 h-16 bg-gradient-to-r from-gray-400 to-secondary-500 rounded-2xl flex items-center justify-center mx-auto mb-4 opacity-50">
                 <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
                 </svg>

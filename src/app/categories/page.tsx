@@ -206,7 +206,7 @@ export default function CategoriesPage() {
         <div className="mb-8">
           <Link 
             href="/" 
-            className="inline-flex items-center text-gray-600 hover:text-purple-600 transition-colors mb-6 group"
+            className="inline-flex items-center text-gray-600 hover:text-accent-600 transition-colors mb-6 group"
           >
             <svg className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -216,7 +216,7 @@ export default function CategoriesPage() {
           
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-600 rounded-2xl flex items-center justify-center shadow-lg">
+              <div className="w-12 h-12 bg-gradient-to-r from-accent-500 to-accent-600 rounded-2xl flex items-center justify-center shadow-lg">
                 <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
                 </svg>
@@ -233,15 +233,15 @@ export default function CategoriesPage() {
 
         {loading ? (
           <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mx-auto mb-4"></div>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent-600 mx-auto mb-4"></div>
             <p className="text-gray-600">載入中...</p>
           </div>
         ) : error ? (
           <div className="text-center py-12">
-            <div className="text-red-600 mb-4">❌ {error}</div>
+            <div className="text-error-600 mb-4">❌ {error}</div>
             <button 
               onClick={fetchCategories}
-              className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+              className="px-4 py-2 bg-accent-600 text-white rounded-lg hover:bg-accent-700 transition-colors"
             >
               重新載入
             </button>
@@ -252,17 +252,17 @@ export default function CategoriesPage() {
             <div className="bg-white/70 backdrop-blur-sm border border-white/50 rounded-2xl p-6 shadow-lg mb-6">
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-purple-600">{categories.length}</div>
+                  <div className="text-2xl font-bold text-accent-600">{categories.length}</div>
                   <div className="text-sm text-gray-600">主分類</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-pink-600">
+                  <div className="text-2xl font-bold text-accent-600">
                     {categories.reduce((total, cat) => total + (cat.subcategories?.length || 0), 0)}
                   </div>
                   <div className="text-sm text-gray-600">子分類</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-indigo-600">{expandedCategories.size}</div>
+                  <div className="text-2xl font-bold text-secondary-600">{expandedCategories.size}</div>
                   <div className="text-sm text-gray-600">展開的分類</div>
                 </div>
               </div>
@@ -299,7 +299,7 @@ export default function CategoriesPage() {
                             e.stopPropagation()
                             deleteCategory(category.id, category.name)
                           }}
-                          className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
+                          className="p-2 text-error-500 hover:text-error-700 hover:bg-error-50 rounded-lg transition-colors"
                           title="刪除主分類"
                         >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -330,7 +330,7 @@ export default function CategoriesPage() {
                       <div className="mb-4 flex justify-end">
                         <button
                           onClick={() => setShowAddSubcategory(category.id)}
-                          className="px-4 py-2 bg-emerald-600 text-white text-sm rounded-lg hover:bg-emerald-700 transition-colors flex items-center space-x-2"
+                          className="px-4 py-2 bg-primary-600 text-white text-sm rounded-lg hover:bg-primary-700 transition-colors flex items-center space-x-2"
                         >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -349,13 +349,13 @@ export default function CategoriesPage() {
                               value={newSubcategoryName}
                               onChange={(e) => setNewSubcategoryName(e.target.value)}
                               placeholder="輸入子分類名稱..."
-                              className="flex-1 px-3 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent text-sm"
+                              className="flex-1 px-3 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-secondary-500/50 focus:border-transparent text-sm"
                               onKeyPress={(e) => e.key === 'Enter' && addSubcategory(category.id)}
                             />
                             <button
                               onClick={() => addSubcategory(category.id)}
                               disabled={!newSubcategoryName.trim() || actionLoading}
-                              className="px-4 py-2 bg-emerald-600 text-white text-sm rounded-lg hover:bg-emerald-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                              className="px-4 py-2 bg-primary-600 text-white text-sm rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                               {actionLoading ? '新增中...' : '確認'}
                             </button>
@@ -392,7 +392,7 @@ export default function CategoriesPage() {
                               </div>
                               <button
                                 onClick={() => deleteSubcategory(subcategory.id, subcategory.name)}
-                                className="p-1 text-red-500 hover:text-red-700 hover:bg-red-50 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                                className="p-1 text-error-500 hover:text-error-700 hover:bg-error-50 rounded opacity-0 group-hover:opacity-100 transition-opacity"
                                 title="刪除子分類"
                               >
                                 <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -419,13 +419,13 @@ export default function CategoriesPage() {
                     value={newCategoryName}
                     onChange={(e) => setNewCategoryName(e.target.value)}
                     placeholder="輸入主分類名稱..."
-                    className="flex-1 px-4 py-2 bg-white/50 border border-gray-200/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-transparent"
+                    className="flex-1 px-4 py-2 bg-white/50 border border-gray-200/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-accent-500/50 focus:border-transparent"
                     onKeyPress={(e) => e.key === 'Enter' && addCategory()}
                   />
                   <button
                     onClick={addCategory}
                     disabled={!newCategoryName.trim() || actionLoading}
-                    className="px-6 py-2 bg-purple-600 text-white rounded-xl hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-6 py-2 bg-accent-600 text-white rounded-xl hover:bg-accent-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {actionLoading ? '新增中...' : '確認'}
                   </button>
@@ -455,7 +455,7 @@ export default function CategoriesPage() {
               </button>
               <button 
                 onClick={() => setExpandedCategories(new Set(categories.map(c => c.id)))}
-                className="px-6 py-3 bg-purple-600 text-white rounded-xl hover:bg-purple-700 transition-colors shadow-lg"
+                className="px-6 py-3 bg-accent-600 text-white rounded-xl hover:bg-accent-700 transition-colors shadow-lg"
               >
                 展開所有分類
               </button>

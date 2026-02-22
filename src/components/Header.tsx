@@ -106,7 +106,7 @@ export default function Header() {
                     href={item.href}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 text-gray-600 hover:text-emerald-600 hover:bg-emerald-50"
+                    className="inline-flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 text-gray-600 hover:text-primary-600 hover:bg-primary-50"
                   >
                     {item.icon}
                     <span>{item.name}</span>
@@ -122,8 +122,8 @@ export default function Header() {
                   key={item.name}
                   href={item.href}
                   className={`inline-flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${isActive
-                    ? 'bg-emerald-600 text-white shadow-sm'
-                    : 'text-gray-600 hover:text-emerald-600 hover:bg-emerald-50'
+                    ? 'bg-primary-600 text-white shadow-sm'
+                    : 'text-gray-600 hover:text-primary-600 hover:bg-primary-50'
                     }`}
                 >
                   {item.icon}
@@ -138,7 +138,7 @@ export default function Header() {
             <button
               type="button"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500"
+              className="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-secondary-500"
             >
               {isMobileMenuOpen ? (
                 <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -170,7 +170,7 @@ export default function Header() {
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={() => setIsMobileMenuOpen(false)}
-                    className="flex items-center space-x-3 px-3 py-3 rounded-md text-base font-medium text-gray-600 hover:text-emerald-600 hover:bg-emerald-50"
+                    className="flex items-center space-x-3 px-3 py-3 rounded-md text-base font-medium text-gray-600 hover:text-primary-600 hover:bg-primary-50"
                   >
                     {item.icon}
                     <span>{item.name}</span>
@@ -187,8 +187,8 @@ export default function Header() {
                   href={item.href}
                   onClick={() => setIsMobileMenuOpen(false)}
                   className={`flex items-center space-x-3 px-3 py-3 rounded-md text-base font-medium ${isActive
-                    ? 'bg-emerald-600 text-white'
-                    : 'text-gray-600 hover:text-emerald-600 hover:bg-emerald-50'
+                    ? 'bg-primary-600 text-white'
+                    : 'text-gray-600 hover:text-primary-600 hover:bg-primary-50'
                     }`}
                 >
                   {item.icon}

@@ -272,7 +272,7 @@ export default function MeetingRecordsPage() {
               placeholder="Tag 過濾"
               className="w-40 px-4 py-2 border border-gray-300 rounded-lg text-sm"
             />
-            <button type="submit" className="px-4 py-2 bg-blue-500 text-white rounded-lg text-sm hover:bg-blue-600">
+            <button type="submit" className="px-4 py-2 bg-secondary-500 text-white rounded-lg text-sm hover:bg-secondary-600">
               搜尋
             </button>
           </form>
@@ -294,7 +294,7 @@ export default function MeetingRecordsPage() {
               setShowUploadModal(true)
               fetchVideoList()
             }}
-            className="px-4 py-2 bg-indigo-500 text-white rounded-lg text-sm hover:bg-indigo-600"
+            className="px-4 py-2 bg-secondary-500 text-white rounded-lg text-sm hover:bg-secondary-600"
           >
             音檔上傳
           </button>
@@ -367,8 +367,8 @@ export default function MeetingRecordsPage() {
                       file:mr-4 file:py-2 file:px-4
                       file:rounded-full file:border-0
                       file:text-sm file:font-semibold
-                      file:bg-indigo-50 file:text-indigo-700
-                      hover:file:bg-indigo-100"
+                      file:bg-secondary-50 file:text-secondary-700
+                      hover:file:bg-secondary-100"
                   />
                 </div>
               </div>
@@ -379,7 +379,7 @@ export default function MeetingRecordsPage() {
                   <div className="text-center py-12 text-gray-500">載入影片列表中...</div>
                 ) : isProcessingVideo ? (
                   <div className="text-center py-12 text-gray-500 flex flex-col items-center gap-4">
-                    <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-500"></div>
+                    <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-secondary-500"></div>
                     <p>正在處理影片並生成會議記錄...</p>
                     <p className="text-sm text-gray-400">這可能需要幾分鐘，請勿關閉視窗</p>
                   </div>
@@ -389,7 +389,7 @@ export default function MeetingRecordsPage() {
                   </div>
                 ) : (
                   <div className="space-y-2">
-                    <div className="bg-yellow-50 p-3 rounded-lg text-sm text-yellow-800 mb-4">
+                    <div className="bg-warning-50 p-3 rounded-lg text-sm text-warning-800 mb-4">
                       <p>⚠️ 注意：免費版伺服器有 10 秒執行限制。</p>
                       <p>若影片過大（建議小於 50MB），處理將會失敗。建議使用純音檔或較短的影片。</p>
                     </div>
@@ -401,22 +401,22 @@ export default function MeetingRecordsPage() {
                         <button
                           key={file.id}
                           onClick={() => handleVideoSelect(file.id, file.name)}
-                          className={`w-full text-left p-4 border rounded-lg transition flex justify-between items-center group ${isLarge ? 'border-red-200 bg-red-50 hover:bg-red-100' : 'border-gray-200 hover:bg-indigo-50'
+                          className={`w-full text-left p-4 border rounded-lg transition flex justify-between items-center group ${isLarge ? 'border-error-200 bg-error-50 hover:bg-error-100' : 'border-gray-200 hover:bg-secondary-50'
                             }`}
                         >
                           <div>
-                            <div className={`font-medium ${isLarge ? 'text-red-700' : 'text-gray-900 group-hover:text-indigo-700'}`}>
+                            <div className={`font-medium ${isLarge ? 'text-error-700' : 'text-gray-900 group-hover:text-secondary-700'}`}>
                               {file.name}
                             </div>
                             <div className="text-xs text-gray-500 mt-1 flex gap-2">
                               <span>{new Date(file.createdTime).toLocaleString()}</span>
-                              <span className={`font-mono ${isLarge ? 'text-red-600 font-bold' : ''}`}>
+                              <span className={`font-mono ${isLarge ? 'text-error-600 font-bold' : ''}`}>
                                 {sizeMb} MB
                               </span>
                               {file.mimeType && <span className="text-gray-400">({file.mimeType.split('/')[1]})</span>}
                             </div>
                           </div>
-                          <div className={`${isLarge ? 'text-red-500' : 'text-indigo-500'} opacity-0 group-hover:opacity-100 transition`}>
+                          <div className={`${isLarge ? 'text-error-500' : 'text-secondary-500'} opacity-0 group-hover:opacity-100 transition`}>
                             {isLarge ? '嘗試處理 →' : '選擇 →'}
                           </div>
                         </button>
@@ -531,7 +531,7 @@ export default function MeetingRecordsPage() {
                     {rec.tags && rec.tags.length > 0 && (
                       <div className="mt-2 flex flex-wrap gap-1">
                         {rec.tags.map(tag => (
-                          <span key={tag} className="inline-block px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded">
+                          <span key={tag} className="inline-block px-2 py-1 bg-secondary-100 text-secondary-700 text-xs rounded">
                             {tag}
                           </span>
                         ))}
@@ -617,9 +617,9 @@ export default function MeetingRecordsPage() {
               ) : (
                 <div className="space-y-6">
                   {selected.summary && (
-                    <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-100">
-                      <h3 className="text-sm font-medium text-yellow-800 mb-2">重點摘要</h3>
-                      <div className="text-sm text-yellow-900 whitespace-pre-line leading-relaxed">
+                    <div className="bg-warning-50 p-4 rounded-lg border border-warning-100">
+                      <h3 className="text-sm font-medium text-warning-800 mb-2">重點摘要</h3>
+                      <div className="text-sm text-warning-900 whitespace-pre-line leading-relaxed">
                         {selected.summary}
                       </div>
                     </div>
@@ -637,7 +637,7 @@ export default function MeetingRecordsPage() {
                       <h3 className="text-sm font-medium text-gray-700 mb-2">標籤</h3>
                       <div className="flex flex-wrap gap-2">
                         {selected.tags.map(tag => (
-                          <span key={tag} className="inline-block px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full">
+                          <span key={tag} className="inline-block px-2 py-1 bg-secondary-100 text-secondary-700 text-xs rounded-full">
                             {tag}
                           </span>
                         ))}
@@ -659,7 +659,7 @@ export default function MeetingRecordsPage() {
                     <button
                       onClick={saveDetail}
                       disabled={isSaving}
-                      className={`px-4 py-2 text-white rounded-lg transition-colors ${isSaving ? 'bg-blue-300 cursor-not-allowed' : 'bg-blue-500 hover:bg-blue-600'
+                      className={`px-4 py-2 text-white rounded-lg transition-colors ${isSaving ? 'bg-secondary-300 cursor-not-allowed' : 'bg-secondary-500 hover:bg-secondary-600'
                         }`}
                     >
                       {isSaving ? '儲存中...' : '儲存變更'}
@@ -670,7 +670,7 @@ export default function MeetingRecordsPage() {
                     <button
                       onClick={deleteRecord}
                       disabled={isDeleting}
-                      className="px-4 py-2 border border-red-200 text-red-600 rounded-lg hover:bg-red-50 disabled:opacity-50 mr-auto"
+                      className="px-4 py-2 border border-error-200 text-error-600 rounded-lg hover:bg-error-50 disabled:opacity-50 mr-auto"
                     >
                       {isDeleting ? '刪除中...' : '刪除記錄'}
                     </button>
@@ -682,7 +682,7 @@ export default function MeetingRecordsPage() {
                     </button>
                     <button
                       onClick={() => setIsEditing(true)}
-                      className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+                      className="px-4 py-2 bg-secondary-500 text-white rounded-lg hover:bg-secondary-600"
                     >
                       編輯
                     </button>
