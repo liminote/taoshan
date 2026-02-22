@@ -285,7 +285,7 @@ export default function ProductsMasterPage() {
         {/* 新增/編輯表單 */}
         {showAddForm && (
           <div className="bg-white/70 backdrop-blur-sm border border-white/50 rounded-2xl p-6 shadow-lg mb-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+            <h3 className="text-lg font-semibold text-[#2d3748] mb-4">
               {editingProduct ? '編輯商品' : '新增商品'}
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -402,7 +402,7 @@ export default function ProductsMasterPage() {
                   <tbody className="divide-y divide-gray-200/50">
                     {products.map((product) => (
                       <tr key={product.id} className="hover:bg-gray-50/50">
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-[#2d3748]">
                           {product.original_name}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">

@@ -53,16 +53,16 @@ export default function HistoryPage() {
   const getAssigneeColor = (assignee: string) => {
     const colors = {
       'Allen': 'bg-melon text-white',
-      'Luis': 'bg-fawn text-gray-800',
-      '香師傅': 'bg-lemon_chiffon text-gray-800',
+      'Luis': 'bg-fawn text-[#4a5568]',
+      '香師傅': 'bg-lemon_chiffon text-[#4a5568]',
       'Vanny': 'bg-success-200 text-green-800',
       '店長': 'bg-periwinkle text-white',
-      '經理': 'bg-lavender_blush text-gray-800',
+      '經理': 'bg-lavender_blush text-[#4a5568]',
       '會計': 'bg-mauve text-white',
       '廚師': 'bg-success-200 text-green-800',
       '服務員': 'bg-sky_blue text-white'
     }
-    return colors[assignee as keyof typeof colors] || 'bg-gray-100 text-gray-800'
+    return colors[assignee as keyof typeof colors] || 'bg-gray-100 text-[#4a5568]'
   }
 
   return (
@@ -75,7 +75,7 @@ export default function HistoryPage() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           </div>
-          <h1 className="text-4xl font-bold text-gray-800 mb-3">
+          <h1 className="text-4xl font-bold text-[#4a5568] mb-3">
             歷史記錄
           </h1>
           <p className="text-gray-600 text-lg">已完成的重要事項記錄</p>
@@ -97,7 +97,7 @@ export default function HistoryPage() {
         {/* 歷史記錄列表 */}
         <div className="bg-white border border-gray-200 rounded-2xl shadow-lg">
           <div className="p-6 border-b border-gray-200">
-            <h2 className="text-xl font-semibold text-gray-900 flex items-center space-x-2">
+            <h2 className="text-xl font-semibold text-[#2d3748] flex items-center space-x-2">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
               </svg>
@@ -129,7 +129,7 @@ export default function HistoryPage() {
                               <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                             </svg>
                           </div>
-                          <span className="text-lg font-medium text-gray-900">{item.content}</span>
+                          <span className="text-lg font-medium text-[#2d3748]">{item.content}</span>
                         </div>
                         
                         <div className="flex items-center space-x-4 text-sm text-gray-600">

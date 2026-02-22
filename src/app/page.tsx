@@ -218,13 +218,13 @@ export default function Home() {
 
   const getAssigneeColor = (assignee: string) => {
     const colors = {
-      'Allen': 'bg-melon-100 text-gray-800',
-      'Luis': 'bg-fawn-100 text-gray-800',
-      '香師傅': 'bg-lemon_chiffon-100 text-gray-800',
-      '馬姐': 'bg-mint_success-100 text-gray-800',
-      'All': 'bg-lavender_blush-100 text-gray-800'
+      'Allen': 'bg-melon-100 text-[#4a5568]',
+      'Luis': 'bg-fawn-100 text-[#4a5568]',
+      '香師傅': 'bg-lemon_chiffon-100 text-[#4a5568]',
+      '馬姐': 'bg-mint_success-100 text-[#4a5568]',
+      'All': 'bg-lavender_blush-100 text-[#4a5568]'
     }
-    return colors[assignee as keyof typeof colors] || 'bg-gray-100 text-gray-800'
+    return colors[assignee as keyof typeof colors] || 'bg-gray-100 text-[#4a5568]'
   }
 
   const formatDueDate = (value?: string) => (value && value.trim().length > 0 ? value : '未設定')
@@ -289,7 +289,7 @@ export default function Home() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </div>
-                <h2 className="text-xl font-semibold text-gray-900">近期重要事項</h2>
+                <h2 className="text-xl font-semibold text-[#2d3748]">近期重要事項</h2>
                 <span className="text-sm text-gray-500">({pendingItems.length} 項待處理)</span>
 
                 {/* 刷新按鈕 */}
@@ -336,7 +336,7 @@ export default function Home() {
                       value={formData.date}
                       onChange={(e) => setFormData({ ...formData, date: e.target.value })}
                       placeholder="例如：下週起、11/30 前"
-                      className="w-full p-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-gray-900"
+                      className="w-full p-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-[#2d3748]"
                       required
                     />
                   </div>
@@ -347,7 +347,7 @@ export default function Home() {
                       value={formData.content}
                       onChange={(e) => setFormData({ ...formData, content: e.target.value })}
                       placeholder="請輸入重要事項內容..."
-                      className="w-full p-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-gray-900 placeholder-gray-500"
+                      className="w-full p-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-[#2d3748] placeholder-gray-500"
                       required
                     />
                   </div>
@@ -387,7 +387,7 @@ export default function Home() {
                           value={newTag}
                           onChange={(e) => setNewTag(e.target.value)}
                           placeholder="輸入新標籤名稱..."
-                          className="flex-1 p-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky_blue focus:border-transparent text-sm text-gray-900 placeholder-gray-500"
+                          className="flex-1 p-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky_blue focus:border-transparent text-sm text-[#2d3748] placeholder-gray-500"
                           onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addNewTag())}
                         />
                         <button
@@ -455,7 +455,7 @@ export default function Home() {
                     <div key={section} className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
                       <div className="flex items-center justify-between mb-4 border-b border-gray-100 pb-2">
                         <div className="flex items-center space-x-2">
-                          <h3 className="text-lg font-semibold text-gray-900">{section}</h3>
+                          <h3 className="text-lg font-semibold text-[#2d3748]">{section}</h3>
                           <span className="text-sm text-gray-500">({items.length} 項)</span>
                         </div>
                       </div>
@@ -471,13 +471,13 @@ export default function Home() {
                               className="relative flex flex-col bg-white border border-gray-200 rounded-xl shadow-sm p-4 cursor-pointer hover:border-secondary-300 transition-colors"
                               onClick={() => openEditModal(item)}
                             >
-                              <p className="text-gray-900 font-medium whitespace-pre-line pr-10">{item.content.replace(/^\*/, '').trim()}</p>
+                              <p className="text-[#2d3748] font-medium whitespace-pre-line pr-10">{item.content.replace(/^\*/, '').trim()}</p>
                               <span className={`mt-3 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getAssigneeColor(item.assignee)} w-fit`}>
                                 {item.assignee}
                               </span>
                               <div className="mt-4 text-sm text-gray-600 space-y-1">
                                 <div className="text-xs text-gray-500 uppercase tracking-wide">預計完成</div>
-                                <div className="text-base font-semibold text-gray-900">{formatDueDate(item.date)}</div>
+                                <div className="text-base font-semibold text-[#2d3748]">{formatDueDate(item.date)}</div>
                                 {item.createdAt && (
                                   <div className="text-xs text-gray-400">建立：{formatCreatedDate(item.createdAt)}</div>
                                 )}
@@ -523,7 +523,7 @@ export default function Home() {
             <div className="flex items-start justify-between mb-4">
               <div>
                 <div className="text-sm text-gray-500">編輯重要事項</div>
-                <h3 className="text-xl font-semibold text-gray-900">{editingItem.assignee}</h3>
+                <h3 className="text-xl font-semibold text-[#2d3748]">{editingItem.assignee}</h3>
               </div>
               <button
                 onClick={closeEditModal}

@@ -286,7 +286,7 @@ export default function CategoriesPage() {
                           {getCategoryIcon(category.name)}
                         </div>
                         <div>
-                          <h2 className="text-xl font-bold text-gray-900">{category.name}</h2>
+                          <h2 className="text-xl font-bold text-[#2d3748]">{category.name}</h2>
                           <p className="text-gray-600 text-sm">
                             {category.subcategories?.length || 0} 個子分類
                           </p>
@@ -342,7 +342,7 @@ export default function CategoriesPage() {
                       {/* 新增子分類表單 */}
                       {showAddSubcategory === category.id && (
                         <div className="mb-4 bg-white/50 rounded-xl p-4 border border-gray-200/50">
-                          <h4 className="font-medium text-gray-900 mb-3">新增子分類到「{category.name}」</h4>
+                          <h4 className="font-medium text-[#2d3748] mb-3">新增子分類到「{category.name}」</h4>
                           <div className="flex space-x-3">
                             <input
                               type="text"
@@ -386,7 +386,7 @@ export default function CategoriesPage() {
                                 </span>
                               </div>
                               <div className="flex-1">
-                                <h3 className="font-medium text-gray-900 text-sm leading-tight">
+                                <h3 className="font-medium text-[#2d3748] text-sm leading-tight">
                                   {subcategory.name}
                                 </h3>
                               </div>
@@ -412,7 +412,7 @@ export default function CategoriesPage() {
             {/* 新增主分類表單 */}
             {showAddCategory && (
               <div className="bg-white/70 backdrop-blur-sm border border-white/50 rounded-2xl p-6 shadow-lg mb-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">新增主分類</h3>
+                <h3 className="text-lg font-semibold text-[#2d3748] mb-4">新增主分類</h3>
                 <div className="flex space-x-4">
                   <input
                     type="text"

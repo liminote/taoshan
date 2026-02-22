@@ -234,7 +234,7 @@ export default function ProductsMasterSheetsPage() {
                 </svg>
               </div>
               <div>
-                <h1 className="text-3xl font-bold text-gray-800">
+                <h1 className="text-3xl font-bold text-[#4a5568]">
                   商品主檔管理
                 </h1>
                 <div className="flex items-center mt-1 space-x-4">
@@ -283,7 +283,7 @@ export default function ProductsMasterSheetsPage() {
                   }
                 }}
                 disabled={uncategorizedLoading}
-                className="inline-flex items-center px-4 py-2 text-gray-800 rounded-xl hover:shadow-lg transition-all duration-300 hover:scale-105 disabled:opacity-50"
+                className="inline-flex items-center px-4 py-2 text-[#4a5568] rounded-xl hover:shadow-lg transition-all duration-300 hover:scale-105 disabled:opacity-50"
                 style={{ backgroundColor: '#FDE4CF' }}
               >
                 <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -294,7 +294,7 @@ export default function ProductsMasterSheetsPage() {
               
               <button
                 onClick={() => setShowAddForm(!showAddForm)}
-                className="inline-flex items-center px-4 py-2 text-gray-800 rounded-xl hover:shadow-lg transition-all duration-300 hover:scale-105"
+                className="inline-flex items-center px-4 py-2 text-[#4a5568] rounded-xl hover:shadow-lg transition-all duration-300 hover:scale-105"
                 style={{ backgroundColor: '#B9FBC0' }}
               >
                 <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -310,7 +310,7 @@ export default function ProductsMasterSheetsPage() {
         {showUncategorized && (
           <div className="bg-lemon_chiffon-50 border-l-4 border-fawn rounded-2xl p-6 shadow-lg mb-6">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-semibold text-gray-800">未分類商品</h2>
+              <h2 className="text-xl font-semibold text-[#4a5568]">未分類商品</h2>
               <button
                 onClick={() => setShowUncategorized(false)}
                 className="text-fawn hover:text-fawn-700"
@@ -327,7 +327,7 @@ export default function ProductsMasterSheetsPage() {
                   <div key={index} className="bg-white/70 backdrop-blur-sm border border-white/50 rounded-lg p-3">
                     <div className="flex justify-between items-start">
                       <div className="flex-1">
-                        <p className="font-medium text-gray-900 text-sm mb-1">{product.productName}</p>
+                        <p className="font-medium text-[#2d3748] text-sm mb-1">{product.productName}</p>
                         <p className="text-xs text-gray-500">
                           {product.inMaster ? '在主檔中但未分類' : '不在主檔中'}
                         </p>
@@ -337,7 +337,7 @@ export default function ProductsMasterSheetsPage() {
                       </div>
                       <button
                         onClick={() => handleQuickAdd(product)}
-                        className="ml-2 px-2 py-1 text-gray-800 text-xs rounded hover:opacity-80 transition-opacity"
+                        className="ml-2 px-2 py-1 text-[#4a5568] text-xs rounded hover:opacity-80 transition-opacity"
                         style={{ backgroundColor: '#FDE4CF' }}
                       >
                         分類
@@ -369,14 +369,14 @@ export default function ProductsMasterSheetsPage() {
                 value={search}
                 onChange={(e) => handleSearch(e.target.value)}
                 placeholder="輸入商品名稱、分類等..."
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg bg-white/70 focus:ring-2 focus:ring-primary/50 focus:border-primary text-gray-900"
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg bg-white/70 focus:ring-2 focus:ring-primary/50 focus:border-primary text-[#2d3748]"
               />
             </div>
 
             {/* 新增/編輯表單 */}
             {showAddForm && (
               <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                <h3 className="text-lg font-semibold text-[#2d3748] mb-4">
                   {editingProduct ? '編輯商品' : '新增商品'}
                 </h3>
                 <form onSubmit={handleSubmit} className="space-y-3">
@@ -387,14 +387,14 @@ export default function ProductsMasterSheetsPage() {
                       onChange={(e) => setFormData({...formData, original_name: e.target.value})}
                       placeholder="商品名稱*"
                       required
-                      className="px-3 py-2 border border-gray-200 rounded-lg bg-white/70 focus:ring-2 focus:ring-primary/50 focus:border-primary text-sm text-gray-900"
+                      className="px-3 py-2 border border-gray-200 rounded-lg bg-white/70 focus:ring-2 focus:ring-primary/50 focus:border-primary text-sm text-[#2d3748]"
                     />
                     <input
                       type="text"
                       value={formData.new_name}
                       onChange={(e) => setFormData({...formData, new_name: e.target.value})}
                       placeholder="新商品名稱"
-                      className="px-3 py-2 border border-gray-200 rounded-lg bg-white/70 focus:ring-2 focus:ring-primary/50 focus:border-primary text-sm text-gray-900"
+                      className="px-3 py-2 border border-gray-200 rounded-lg bg-white/70 focus:ring-2 focus:ring-primary/50 focus:border-primary text-sm text-[#2d3748]"
                     />
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -407,7 +407,7 @@ export default function ProductsMasterSheetsPage() {
                           small_category: '' // 清空小分類選擇
                         })
                       }}
-                      className="px-3 py-2 border border-gray-200 rounded-lg bg-white/70 focus:ring-2 focus:ring-primary/50 focus:border-primary text-sm text-gray-900"
+                      className="px-3 py-2 border border-gray-200 rounded-lg bg-white/70 focus:ring-2 focus:ring-primary/50 focus:border-primary text-sm text-[#2d3748]"
                     >
                       <option value="">選擇大分類</option>
                       {categories.map((category) => (
@@ -420,7 +420,7 @@ export default function ProductsMasterSheetsPage() {
                       value={formData.small_category}
                       onChange={(e) => setFormData({...formData, small_category: e.target.value})}
                       disabled={!formData.category}
-                      className="px-3 py-2 border border-gray-200 rounded-lg bg-white/70 focus:ring-2 focus:ring-primary/50 focus:border-primary text-sm text-gray-900 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="px-3 py-2 border border-gray-200 rounded-lg bg-white/70 focus:ring-2 focus:ring-primary/50 focus:border-primary text-sm text-[#2d3748] disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <option value="">選擇小分類</option>
                       {formData.category && getSubcategories(formData.category).map((subcategory) => (
@@ -510,7 +510,7 @@ export default function ProductsMasterSheetsPage() {
                   <tbody className="divide-y divide-gray-200/50">
                     {products.map((product) => (
                       <tr key={product.id} className="hover:bg-gray-50/50 transition-colors">
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-[#2d3748]">
                           {product.original_name}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
@@ -519,8 +519,8 @@ export default function ProductsMasterSheetsPage() {
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                           <span className={`px-2 py-1 rounded-full text-xs ${
                             product.category && product.category !== '未分類' 
-                              ? 'bg-aquamarine-100 text-gray-800' 
-                              : 'bg-melon-100 text-gray-800'
+                              ? 'bg-aquamarine-100 text-[#4a5568]' 
+                              : 'bg-melon-100 text-[#4a5568]'
                           }`}>
                             {product.category || '未分類'}
                           </span>
@@ -592,13 +592,13 @@ export default function ProductsMasterSheetsPage() {
         <div className="mt-6 bg-fawn-50 border-l-4 border-warning-400 rounded-2xl p-6 shadow-lg">
           <div className="flex items-center space-x-3 mb-3">
             <div className="w-6 h-6 rounded-full flex items-center justify-center" style={{ backgroundColor: '#FDE4CF' }}>
-              <svg className="w-4 h-4 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4 text-[#4a5568]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
             <h3 className="text-lg font-semibold text-warning-900">使用說明</h3>
           </div>
-          <div className="text-gray-800 space-y-2 text-sm">
+          <div className="text-[#4a5568] space-y-2 text-sm">
             <p>• <strong>資料來源：</strong>直接從 Google Sheets 商品主檔讀取</p>
             <p>• <strong>未分類商品：</strong>自動偵測銷售資料中沒有分類的商品</p>
             <p>• <strong>即時更新：</strong>更新後會立即反映在報表分析中</p>

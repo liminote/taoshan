@@ -41,7 +41,7 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <div className="max-w-md w-full space-y-8 p-8">
         <div className="text-center">
-          <h2 className="text-3xl font-bold text-gray-900">
+          <h2 className="text-3xl font-bold text-[#2d3748]">
             餐廳管理系統
           </h2>
           <p className="mt-4 text-gray-600">
@@ -59,7 +59,7 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
               name="password"
               type="password"
               required
-              className="relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-secondary-500 focus:border-secondary-500 focus:z-10 sm:text-sm"
+              className="relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-[#2d3748] rounded-md focus:outline-none focus:ring-secondary-500 focus:border-secondary-500 focus:z-10 sm:text-sm"
               placeholder="請輸入密碼"
               value={password}
               onChange={(e) => setPassword(e.target.value)}

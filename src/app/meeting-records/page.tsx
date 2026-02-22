@@ -251,7 +251,7 @@ export default function MeetingRecordsPage() {
         {/* 標題與返回 */}
         <div className="mb-8 flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">會議記錄</h1>
+            <h1 className="text-3xl font-bold text-[#2d3748]">會議記錄</h1>
             <p className="text-gray-600 mt-1">建立、搜尋與管理會議紀錄</p>
           </div>
           <Link href="/" className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg">← 返回</Link>
@@ -405,7 +405,7 @@ export default function MeetingRecordsPage() {
                             }`}
                         >
                           <div>
-                            <div className={`font-medium ${isLarge ? 'text-error-700' : 'text-gray-900 group-hover:text-[#52525b] border border-[#e4e4e7]'}`}>
+                            <div className={`font-medium ${isLarge ? 'text-error-700' : 'text-[#2d3748] group-hover:text-[#52525b] border border-[#e4e4e7]'}`}>
                               {file.name}
                             </div>
                             <div className="text-xs text-gray-500 mt-1 flex gap-2">

@@ -128,11 +128,11 @@ export default function CategoriesPage() {
         <div className="bg-white/70 backdrop-blur-sm border border-white/50 rounded-2xl p-6 shadow-lg mb-8">
           <div className="flex items-center space-x-3 mb-6">
             <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: '#FDE4CF' }}>
-              <svg className="w-5 h-5 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 text-[#4a5568]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
               </svg>
             </div>
-            <h2 className="text-xl font-bold text-gray-900">新增大分類</h2>
+            <h2 className="text-xl font-bold text-[#2d3748]">新增大分類</h2>
           </div>
           
           <div className="flex gap-3">
@@ -141,7 +141,7 @@ export default function CategoriesPage() {
               value={newCategoryName}
               onChange={(e) => setNewCategoryName(e.target.value)}
               placeholder="輸入分類名稱"
-              className="flex-1 px-4 py-3 bg-white/50 border border-warning-200/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-accent-500/50 focus:border-transparent placeholder-gray-500 transition-all text-gray-900"
+              className="flex-1 px-4 py-3 bg-white/50 border border-warning-200/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-accent-500/50 focus:border-transparent placeholder-gray-500 transition-all text-[#2d3748]"
               onKeyPress={(e) => e.key === 'Enter' && addCategory()}
               disabled={adding}
             />
@@ -173,7 +173,7 @@ export default function CategoriesPage() {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
                       </svg>
                     </div>
-                    <h3 className="text-xl font-bold text-gray-900">{category.name}</h3>
+                    <h3 className="text-xl font-bold text-[#2d3748]">{category.name}</h3>
                   </div>
                   <button
                     onClick={() => deleteCategory(category.id, category.name)}
@@ -221,7 +221,7 @@ export default function CategoriesPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
                 </svg>
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-2">尚無分類資料</h3>
+              <h3 className="text-xl font-bold text-[#2d3748] mb-2">尚無分類資料</h3>
               <p className="text-gray-600 mb-4">
                 開始建立你的第一個商品分類，讓報表管理更有條理。
               </p>

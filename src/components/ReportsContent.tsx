@@ -890,7 +890,7 @@ export default function ReportsContent() {
                 </svg>
               </div>
               <div>
-                <h1 className="text-3xl font-bold text-gray-800">
+                <h1 className="text-3xl font-bold text-[#4a5568]">
                   報表管理
                 </h1>
                 <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-3 mt-1">
@@ -953,8 +953,8 @@ export default function ReportsContent() {
                   router.push('/reports?tab=trends', { scroll: false })
                 }}
                 className={`px-6 py-3 rounded-lg font-medium transition-all ${activeTab === 'trends'
-                  ? 'bg-secondary text-gray-800 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50'
+                  ? 'bg-secondary text-[#4a5568] shadow-sm'
+                  : 'text-gray-600 hover:text-[#4a5568] hover:bg-gray-50'
                   }`}
               >
                 趨勢觀測
@@ -965,8 +965,8 @@ export default function ReportsContent() {
                   router.push('/reports?tab=monthly', { scroll: false })
                 }}
                 className={`px-6 py-3 rounded-lg font-medium transition-all ${activeTab === 'monthly'
-                  ? 'bg-secondary text-gray-800 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50'
+                  ? 'bg-secondary text-[#4a5568] shadow-sm'
+                  : 'text-gray-600 hover:text-[#4a5568] hover:bg-gray-50'
                   }`}
               >
                 當月數字
@@ -977,8 +977,8 @@ export default function ReportsContent() {
                   router.push('/reports?tab=customer-analysis', { scroll: false })
                 }}
                 className={`px-6 py-3 rounded-lg font-medium transition-all ${activeTab === 'customer-analysis'
-                  ? 'bg-secondary text-gray-800 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50'
+                  ? 'bg-secondary text-[#4a5568] shadow-sm'
+                  : 'text-gray-600 hover:text-[#4a5568] hover:bg-gray-50'
                   }`}
               >
                 顧客分析
@@ -991,8 +991,8 @@ export default function ReportsContent() {
                   router.push('/reports?tab=ai-chat', { scroll: false })
                 }}
                 className={`px-6 py-3 rounded-lg font-medium transition-all flex items-center space-x-2 ${activeTab === 'ai-chat'
-                  ? 'text-gray-800 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50'
+                  ? 'text-[#4a5568] shadow-sm'
+                  : 'text-gray-600 hover:text-[#4a5568] hover:bg-gray-50'
                   }`}
                 style={activeTab === 'ai-chat' ? { backgroundColor: '#E9ECEF' } : {}}
               >
@@ -1012,11 +1012,11 @@ export default function ReportsContent() {
             <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
               <div className="flex items-center space-x-3 mb-6">
                 <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: '#9DBEDB' }}>
-                  <svg className="w-5 h-5 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 text-[#4a5568]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                   </svg>
                 </div>
-                <h2 className="text-xl font-bold text-gray-900">月銷售統計</h2>
+                <h2 className="text-xl font-bold text-[#2d3748]">月銷售統計</h2>
               </div>
 
               {generateBarChart(salesData, 'amount', 200, '#9DBEDB')}
@@ -1026,11 +1026,11 @@ export default function ReportsContent() {
             <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
               <div className="flex items-center space-x-3 mb-6">
                 <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: '#BFACC8' }}>
-                  <svg className="w-5 h-5 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 text-[#4a5568]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
                   </svg>
                 </div>
-                <h2 className="text-xl font-bold text-gray-900">訂單張數統計</h2>
+                <h2 className="text-xl font-bold text-[#2d3748]">訂單張數統計</h2>
               </div>
 
               {generateBarChart(salesData, 'orderCount', 200, '#BFACC8')}
@@ -1040,11 +1040,11 @@ export default function ReportsContent() {
             <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
               <div className="flex items-center space-x-3 mb-6">
                 <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: '#FFD7D5' }}>
-                  <svg className="w-5 h-5 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 text-[#4a5568]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
                   </svg>
                 </div>
-                <h2 className="text-xl font-bold text-gray-900">平均單價統計</h2>
+                <h2 className="text-xl font-bold text-[#2d3748]">平均單價統計</h2>
               </div>
 
               {generateBarChart(salesData, 'avgOrderValue', 200, '#FFD7D5')}
@@ -1054,11 +1054,11 @@ export default function ReportsContent() {
             <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
               <div className="flex items-center space-x-3 mb-6">
                 <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: '#FEC89A' }}>
-                  <svg className="w-5 h-5 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 text-[#4a5568]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
                   </svg>
                 </div>
-                <h2 className="text-xl font-bold text-gray-900">折扣金額統計</h2>
+                <h2 className="text-xl font-bold text-[#2d3748]">折扣金額統計</h2>
               </div>
 
               {generateBarChart(discountData, 'discountAmount', 200, '#FEC89A')}
@@ -1068,11 +1068,11 @@ export default function ReportsContent() {
             <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
               <div className="flex items-center space-x-3 mb-6">
                 <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: '#E9ECEF' }}>
-                  <svg className="w-5 h-5 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 text-[#4a5568]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                   </svg>
                 </div>
-                <h2 className="text-xl font-bold text-gray-900">商品品項數統計</h2>
+                <h2 className="text-xl font-bold text-[#2d3748]">商品品項數統計</h2>
               </div>
 
               {generateBarChart(salesData, 'productItemCount', 200, '#E9ECEF')}
@@ -1093,12 +1093,12 @@ export default function ReportsContent() {
             <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
               <div className="flex items-center justify-center space-x-3 mb-4">
                 <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ backgroundColor: '#E9ECEF' }}>
-                  <svg className="w-6 h-6 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-6 h-6 text-[#4a5568]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
                   </svg>
                 </div>
                 <div className="text-center">
-                  <h2 className="text-2xl font-bold text-gray-800">AI 智能問答（不能用）</h2>
+                  <h2 className="text-2xl font-bold text-[#4a5568]">AI 智能問答（不能用）</h2>
                   <p className="text-gray-600 mt-1">基於餐廳銷售數據的智能分析助手 • Powered by {availableModels.find(m => m.id === selectedModel)?.name || 'Gemini'}</p>
                 </div>
               </div>
@@ -1106,7 +1106,7 @@ export default function ReportsContent() {
               {/* 步驟指示器 */}
               <div className="flex items-center justify-center space-x-4 mt-6">
                 <div className="flex items-center space-x-2">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${selectedCategory ? 'bg-mint_success-500 text-white' : 'bg-mint_success-200 text-gray-800'
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${selectedCategory ? 'bg-mint_success-500 text-white' : 'bg-mint_success-200 text-[#4a5568]'
                     }`}>
                     1
                   </div>
@@ -1144,7 +1144,7 @@ export default function ReportsContent() {
                   <div className="w-8 h-8 rounded-full bg-mint_success-500 text-white flex items-center justify-center text-sm font-medium">
                     1
                   </div>
-                  <h3 className="text-lg font-semibold text-gray-800">選擇問題分類</h3>
+                  <h3 className="text-lg font-semibold text-[#4a5568]">選擇問題分類</h3>
                 </div>
                 <p className="text-sm text-gray-600 mb-4">請先選擇您想要查詢的問題類型，系統將根據您的選擇載入對應的數據源：</p>
               </div>
@@ -1166,7 +1166,7 @@ export default function ReportsContent() {
                         </svg>
                       </div>
                       <div>
-                        <div className="font-semibold text-gray-800">A. 商品銷售問題</div>
+                        <div className="font-semibold text-[#4a5568]">A. 商品銷售問題</div>
                         <div className="text-xs text-gray-600">Product Sales Analysis</div>
                       </div>
                     </div>
@@ -1193,7 +1193,7 @@ export default function ReportsContent() {
                         </svg>
                       </div>
                       <div>
-                        <div className="font-semibold text-gray-800">B. 訂單問題</div>
+                        <div className="font-semibold text-[#4a5568]">B. 訂單問題</div>
                         <div className="text-xs text-gray-600">Order Analysis</div>
                       </div>
                     </div>
@@ -1220,7 +1220,7 @@ export default function ReportsContent() {
                         </svg>
                       </div>
                       <div>
-                        <div className="font-semibold text-gray-800">C. 商品分類問題</div>
+                        <div className="font-semibold text-[#4a5568]">C. 商品分類問題</div>
                         <div className="text-xs text-gray-600">Category Analysis</div>
                       </div>
                     </div>
@@ -1243,7 +1243,7 @@ export default function ReportsContent() {
                     <div className="w-8 h-8 rounded-full bg-mint_success-500 text-white flex items-center justify-center text-sm font-medium">
                       2
                     </div>
-                    <h3 className="text-lg font-semibold text-gray-800">輸入您的問題</h3>
+                    <h3 className="text-lg font-semibold text-[#4a5568]">輸入您的問題</h3>
                   </div>
                   <p className="text-sm text-gray-600">
                     已選擇：
@@ -1267,7 +1267,7 @@ export default function ReportsContent() {
                     <select
                       value={selectedModel}
                       onChange={(e) => setSelectedModel(e.target.value)}
-                      className="w-full max-w-sm p-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:bg-white focus:ring-2 focus:ring-mint_green/50 focus:border-mint_green/50 transition-all text-gray-900"
+                      className="w-full max-w-sm p-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:bg-white focus:ring-2 focus:ring-mint_green/50 focus:border-mint_green/50 transition-all text-[#2d3748]"
                       disabled={loadingChat}
                     >
                       {availableModels.map((model) => (
@@ -1294,7 +1294,7 @@ export default function ReportsContent() {
                               '請輸入您想了解的訂單相關問題...' :
                               '請輸入您想了解的商品分類相關問題...'
                         }
-                        className="w-full p-4 bg-gray-50 border border-gray-200 rounded-xl resize-none focus:outline-none focus:bg-white focus:ring-2 focus:ring-mint_green/50 focus:border-mint_green/50 transition-all text-gray-900 placeholder-gray-500"
+                        className="w-full p-4 bg-gray-50 border border-gray-200 rounded-xl resize-none focus:outline-none focus:bg-white focus:ring-2 focus:ring-mint_green/50 focus:border-mint_green/50 transition-all text-[#2d3748] placeholder-gray-500"
                         rows={3}
                         disabled={loadingChat}
                       />
@@ -1328,7 +1328,7 @@ export default function ReportsContent() {
                     <div className="w-8 h-8 rounded-full bg-mint_success-500 text-white flex items-center justify-center text-sm font-medium">
                       3
                     </div>
-                    <h3 className="text-lg font-semibold text-gray-800">AI 分析結果</h3>
+                    <h3 className="text-lg font-semibold text-[#4a5568]">AI 分析結果</h3>
                   </div>
                 </div>
 
@@ -1337,13 +1337,13 @@ export default function ReportsContent() {
                   {loadingChat && (
                     <div className="flex items-start space-x-3">
                       <div className="w-10 h-10 rounded-full flex items-center justify-center bg-mint_success-200">
-                        <svg className="w-5 h-5 text-gray-800 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-5 h-5 text-[#4a5568] animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                         </svg>
                       </div>
                       <div className="flex-1">
                         <div className="p-4 rounded-xl bg-mint_success-50 border border-mint_success-200">
-                          <p className="text-gray-800 font-medium">🔍 正在獲取餐廳數據並分析您的問題...</p>
+                          <p className="text-[#4a5568] font-medium">🔍 正在獲取餐廳數據並分析您的問題...</p>
                           <div className="flex items-center space-x-2 mt-2 text-sm text-gray-600">
                             <div className="flex space-x-1">
                               <div className="w-1 h-1 bg-mint_success-400 rounded-full animate-bounce"></div>
@@ -1368,7 +1368,7 @@ export default function ReportsContent() {
                       <div className="flex-1">
                         <div className="p-4 rounded-xl bg-gray-50 border border-gray-200">
                           <div className="prose prose-sm max-w-none">
-                            <p className="whitespace-pre-wrap text-gray-800 leading-relaxed">{answer}</p>
+                            <p className="whitespace-pre-wrap text-[#4a5568] leading-relaxed">{answer}</p>
                           </div>
                         </div>
                         <div className="flex items-center justify-between mt-3">
@@ -1401,7 +1401,7 @@ export default function ReportsContent() {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                   </div>
-                  <h3 className="text-lg font-semibold text-gray-800 mb-2">開始您的數據分析之旅</h3>
+                  <h3 className="text-lg font-semibold text-[#4a5568] mb-2">開始您的數據分析之旅</h3>
                   <p className="text-gray-600 mb-4">請先在上方選擇問題分類，系統將為您載入對應的數據源</p>
                   <div className="text-sm text-gray-500">
                     💫 支援即時數據分析 • 🎯 精準問題解答 • 📊 多維度數據洞察
@@ -1426,7 +1426,7 @@ export default function ReportsContent() {
                   id="month-select"
                   value={selectedMonth}
                   onChange={(e) => setSelectedMonth(e.target.value)}
-                  className="px-4 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-500/50 focus:border-transparent text-gray-900 min-w-[140px]"
+                  className="px-4 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-500/50 focus:border-transparent text-[#2d3748] min-w-[140px]"
                 >
                   {/* 生成最近13個月的選項 */}
                   {Array.from({ length: 13 }, (_, i) => {
@@ -1448,11 +1448,11 @@ export default function ReportsContent() {
             <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
               <div className="flex items-center space-x-3 mb-6">
                 <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: '#9DBEDB' }}>
-                  <svg className="w-5 h-5 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 text-[#4a5568]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" />
                   </svg>
                 </div>
-                <h2 className="text-xl font-bold text-gray-900">大分類分布</h2>
+                <h2 className="text-xl font-bold text-[#2d3748]">大分類分布</h2>
               </div>
 
               <div className="flex flex-col lg:flex-row items-center lg:items-start space-y-6 lg:space-y-0 lg:space-x-8">
@@ -1472,7 +1472,7 @@ export default function ReportsContent() {
                           style={{ backgroundColor: chartColors[index % chartColors.length] }}
                         />
                         <div className="flex-1 min-w-0">
-                          <div className="font-medium text-gray-900 truncate">{item.category}</div>
+                          <div className="font-medium text-[#2d3748] truncate">{item.category}</div>
                           <div className="text-sm text-gray-600">
                             {Math.round(item.amount).toLocaleString()} ({item.percentage}%)
                           </div>
@@ -1488,11 +1488,11 @@ export default function ReportsContent() {
             <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
               <div className="flex items-center space-x-3 mb-6">
                 <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: '#BFACC8' }}>
-                  <svg className="w-5 h-5 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 text-[#4a5568]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" />
                   </svg>
                 </div>
-                <h2 className="text-xl font-bold text-gray-900">小分類分布</h2>
+                <h2 className="text-xl font-bold text-[#2d3748]">小分類分布</h2>
               </div>
 
               <div className="flex flex-col lg:flex-row items-center lg:items-start space-y-6 lg:space-y-0 lg:space-x-8">
@@ -1512,7 +1512,7 @@ export default function ReportsContent() {
                           style={{ backgroundColor: chartColors[index % chartColors.length] }}
                         />
                         <div className="flex-1 min-w-0">
-                          <div className="font-medium text-gray-900 truncate">{item.category}</div>
+                          <div className="font-medium text-[#2d3748] truncate">{item.category}</div>
                           <div className="text-sm text-gray-600">
                             {Math.round(item.amount).toLocaleString()} ({item.percentage}%)
                           </div>
@@ -1526,7 +1526,7 @@ export default function ReportsContent() {
                           style={{ backgroundColor: chartColors[8] }}
                         />
                         <div className="flex-1 min-w-0">
-                          <div className="font-medium text-gray-900 truncate">其他</div>
+                          <div className="font-medium text-[#2d3748] truncate">其他</div>
                           <div className="text-sm text-gray-600">
                             {Math.round(monthlySmallCategoryData.slice(8).reduce((sum, item) => sum + item.amount, 0)).toLocaleString()}
                             ({Math.round(monthlySmallCategoryData.slice(8).reduce((sum, item) => sum + item.percentage, 0) * 10) / 10}%)
@@ -1545,11 +1545,11 @@ export default function ReportsContent() {
               <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
                 <div className="flex items-center space-x-3 mb-6">
                   <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: '#EDE9E1' }}>
-                    <svg className="w-5 h-5 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-5 h-5 text-[#4a5568]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
                     </svg>
                   </div>
-                  <h2 className="text-xl font-bold text-gray-900">支付方式</h2>
+                  <h2 className="text-xl font-bold text-[#2d3748]">支付方式</h2>
                 </div>
 
                 <div className="flex flex-col lg:flex-row items-center lg:items-start space-y-6 lg:space-y-0 lg:space-x-8">
@@ -1569,7 +1569,7 @@ export default function ReportsContent() {
                             style={{ backgroundColor: chartColors[index % chartColors.length] }}
                           />
                           <div className="flex-1 min-w-0">
-                            <div className="font-medium text-gray-900">{item.method}</div>
+                            <div className="font-medium text-[#2d3748]">{item.method}</div>
                             <div className="text-sm text-gray-600">
                               {formatNumber(item.count)} 筆 ({item.percentage}%)
                             </div>
@@ -1585,11 +1585,11 @@ export default function ReportsContent() {
               <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
                 <div className="flex items-center space-x-3 mb-6">
                   <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: '#EDE9E1' }}>
-                    <svg className="w-5 h-5 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-5 h-5 text-[#4a5568]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                     </svg>
                   </div>
-                  <h2 className="text-xl font-bold text-gray-900">訂單類型</h2>
+                  <h2 className="text-xl font-bold text-[#2d3748]">訂單類型</h2>
                 </div>
 
                 <div className="flex flex-col lg:flex-row items-center lg:items-start space-y-6 lg:space-y-0 lg:space-x-8">
@@ -1609,7 +1609,7 @@ export default function ReportsContent() {
                             style={{ backgroundColor: chartColors[index % chartColors.length] }}
                           />
                           <div className="flex-1 min-w-0">
-                            <div className="font-medium text-gray-900">{item.type}</div>
+                            <div className="font-medium text-[#2d3748]">{item.type}</div>
                             <div className="text-sm text-gray-600">
                               {formatNumber(item.count)} 筆 ({item.percentage}%)
                             </div>
@@ -1629,11 +1629,11 @@ export default function ReportsContent() {
                 <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
                   <div className="flex items-center space-x-3 mb-6">
                     <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: '#FCD5CE' }}>
-                      <svg className="w-5 h-5 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-5 h-5 text-[#4a5568]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                       </svg>
                     </div>
-                    <h2 className="text-xl font-bold text-gray-900">銷售總計</h2>
+                    <h2 className="text-xl font-bold text-[#2d3748]">銷售總計</h2>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -1658,7 +1658,7 @@ export default function ReportsContent() {
                   {/* 銷量排名 */}
                   <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
                     <div className="px-6 py-4" style={{ backgroundColor: '#9DBEDB' }}>
-                      <h3 className="text-lg font-semibold text-gray-900">銷量排名 TOP 20</h3>
+                      <h3 className="text-lg font-semibold text-[#2d3748]">銷量排名 TOP 20</h3>
                     </div>
                     <div className="overflow-x-auto">
                       <table className="w-full">
@@ -1673,7 +1673,7 @@ export default function ReportsContent() {
                         <tbody className="bg-white divide-y divide-gray-200">
                           {rankingData.quantityRanking.slice(0, 20).map((item, index) => (
                             <tr key={index} className={`${index < 3 ? 'bg-[#F5F5F7]' : ''} hover:bg-gray-50 transition-colors`}>
-                              <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
+                              <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-[#2d3748]">
                                 {index < 3 ? (
                                   <span className="inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold text-white"
                                     style={{ backgroundColor: index === 0 ? '#FFD700' : index === 1 ? '#C0C0C0' : '#CD7F32' }}>
@@ -1683,10 +1683,10 @@ export default function ReportsContent() {
                                   `${item.rank}.`
                                 )}
                               </td>
-                              <td className="px-4 py-3 text-sm text-gray-900 max-w-xs truncate" title={item.name}>
+                              <td className="px-4 py-3 text-sm text-[#2d3748] max-w-xs truncate" title={item.name}>
                                 {item.name}
                               </td>
-                              <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 text-right font-medium">
+                              <td className="px-4 py-3 whitespace-nowrap text-sm text-[#2d3748] text-right font-medium">
                                 {formatNumber(item.quantity)}
                               </td>
                               <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600 text-right">
@@ -1702,7 +1702,7 @@ export default function ReportsContent() {
                   {/* 銷額排名 */}
                   <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
                     <div className="px-6 py-4" style={{ backgroundColor: '#FFD7D5' }}>
-                      <h3 className="text-lg font-semibold text-gray-900">銷額排名 TOP 20</h3>
+                      <h3 className="text-lg font-semibold text-[#2d3748]">銷額排名 TOP 20</h3>
                     </div>
                     <div className="overflow-x-auto">
                       <table className="w-full">
@@ -1717,7 +1717,7 @@ export default function ReportsContent() {
                         <tbody className="bg-white divide-y divide-gray-200">
                           {rankingData.amountRanking.slice(0, 20).map((item, index) => (
                             <tr key={index} className={`${index < 3 ? 'bg-error-50' : ''} hover:bg-gray-50 transition-colors`}>
-                              <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
+                              <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-[#2d3748]">
                                 {index < 3 ? (
                                   <span className="inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold text-white"
                                     style={{ backgroundColor: index === 0 ? '#FFD700' : index === 1 ? '#C0C0C0' : '#CD7F32' }}>
@@ -1727,13 +1727,13 @@ export default function ReportsContent() {
                                   `${item.rank}.`
                                 )}
                               </td>
-                              <td className="px-4 py-3 text-sm text-gray-900 max-w-xs truncate" title={item.name}>
+                              <td className="px-4 py-3 text-sm text-[#2d3748] max-w-xs truncate" title={item.name}>
                                 {item.name}
                               </td>
                               <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600 text-right">
                                 {formatNumber(item.quantity)}
                               </td>
-                              <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 text-right font-medium">
+                              <td className="px-4 py-3 whitespace-nowrap text-sm text-[#2d3748] text-right font-medium">
                                 {formatNumber(item.amount)}
                               </td>
                             </tr>
@@ -1749,7 +1749,7 @@ export default function ReportsContent() {
                 {rankingData.alcoholRanking && rankingData.alcoholRanking.length > 0 && (
                   <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
                     <div className="px-6 py-4" style={{ backgroundColor: '#E9ECEF' }}>
-                      <h3 className="text-lg font-semibold text-gray-900">酒水排名 TOP 20（總金額最高）</h3>
+                      <h3 className="text-lg font-semibold text-[#2d3748]">酒水排名 TOP 20（總金額最高）</h3>
                       <p className="text-sm text-gray-700 mt-1">大分類為 6酒水，按總金額排序</p>
                     </div>
                     <div className="overflow-x-auto">
@@ -1766,7 +1766,7 @@ export default function ReportsContent() {
                         <tbody className="bg-white divide-y divide-gray-200">
                           {rankingData.alcoholRanking.slice(0, 20).map((item, index) => (
                             <tr key={index} className={`${index < 3 ? 'bg-teal-50' : ''} hover:bg-gray-50 transition-colors`}>
-                              <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
+                              <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-[#2d3748]">
                                 {index < 3 ? (
                                   <span className="inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold text-white"
                                     style={{ backgroundColor: index === 0 ? '#FFD700' : index === 1 ? '#C0C0C0' : '#CD7F32' }}>
@@ -1776,13 +1776,13 @@ export default function ReportsContent() {
                                   `${item.rank}.`
                                 )}
                               </td>
-                              <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                              <td className="px-4 py-3 whitespace-nowrap text-sm text-[#2d3748]">
                                 {item.category}
                               </td>
-                              <td className="px-4 py-3 text-sm text-gray-900 max-w-xs truncate" title={item.name}>
+                              <td className="px-4 py-3 text-sm text-[#2d3748] max-w-xs truncate" title={item.name}>
                                 {item.name}
                               </td>
-                              <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 text-right font-medium">
+                              <td className="px-4 py-3 whitespace-nowrap text-sm text-[#2d3748] text-right font-medium">
                                 {formatNumber(item.quantity)}
                               </td>
                               <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600 text-right">
@@ -1813,7 +1813,7 @@ export default function ReportsContent() {
                   id="customer-month-select"
                   value={customerAnalysisMonth}
                   onChange={(e) => setCustomerAnalysisMonth(e.target.value)}
-                  className="px-4 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-500/50 focus:border-transparent text-gray-900 min-w-[140px]"
+                  className="px-4 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-500/50 focus:border-transparent text-[#2d3748] min-w-[140px]"
                 >
                   {/* 生成最近13個月的選項 */}
                   {Array.from({ length: 13 }, (_, i) => {
@@ -1837,7 +1837,7 @@ export default function ReportsContent() {
               {/* 客戶消費金額 Top 30 */}
               <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
                 <div className="px-6 py-4" style={{ backgroundColor: '#9DBEDB' }}>
-                  <h3 className="text-lg font-semibold text-gray-900">客戶消費金額 TOP 30</h3>
+                  <h3 className="text-lg font-semibold text-[#2d3748]">客戶消費金額 TOP 30</h3>
                   <p className="text-sm text-gray-700 mt-1">依訂單總金額排序</p>
                 </div>
                 <div className="overflow-x-auto">
@@ -1861,7 +1861,7 @@ export default function ReportsContent() {
                     <tbody className="bg-white divide-y divide-gray-200">
                       {customerSpendingRanking.slice(0, 30).map((customer, index) => (
                         <tr key={customer.customerPhone} className={`${index < 3 ? 'bg-[#F5F5F7]' : ''} hover:bg-gray-50 transition-colors`}>
-                          <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
+                          <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-[#2d3748]">
                             {index < 3 ? (
                               <span className="inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold text-white"
                                 style={{ backgroundColor: index === 0 ? '#FFD700' : index === 1 ? '#C0C0C0' : '#CD7F32' }}>
@@ -1871,7 +1871,7 @@ export default function ReportsContent() {
                               `${customer.rank}.`
                             )}
                           </td>
-                          <td className="px-4 py-3 text-sm text-gray-900 max-w-xs truncate" title={customer.customerName}>
+                          <td className="px-4 py-3 text-sm text-[#2d3748] max-w-xs truncate" title={customer.customerName}>
                             {customer.customerName}
                           </td>
                           <td className="px-4 py-3 text-sm text-gray-600">
@@ -1905,13 +1905,13 @@ export default function ReportsContent() {
                               </span>
                             )}
                           </td>
-                          <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 text-right">
+                          <td className="px-4 py-3 whitespace-nowrap text-sm text-[#2d3748] text-right">
                             {formatNumber(customer.orderCount)}
                           </td>
                           <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600 text-right">
                             {formatNumber(customer.averageOrderAmount)}
                           </td>
-                          <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 text-right font-medium">
+                          <td className="px-4 py-3 whitespace-nowrap text-sm text-[#2d3748] text-right font-medium">
                             {formatNumber(customer.totalOrderAmount)}
                           </td>
                           <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600 text-right">
@@ -1946,7 +1946,7 @@ export default function ReportsContent() {
               {/* 客戶消費次數 Top 30 */}
               <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
                 <div className="px-6 py-4" style={{ backgroundColor: '#FFD7D5' }}>
-                  <h3 className="text-lg font-semibold text-gray-900">客戶消費次數 TOP 30</h3>
+                  <h3 className="text-lg font-semibold text-[#2d3748]">客戶消費次數 TOP 30</h3>
                   <p className="text-sm text-gray-700 mt-1">依訂單張數排序</p>
                 </div>
                 <div className="overflow-x-auto">
@@ -1970,7 +1970,7 @@ export default function ReportsContent() {
                     <tbody className="bg-white divide-y divide-gray-200">
                       {customerFrequencyRanking.slice(0, 30).map((customer, index) => (
                         <tr key={customer.customerPhone} className={`${index < 3 ? 'bg-error-50' : ''} hover:bg-gray-50 transition-colors`}>
-                          <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
+                          <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-[#2d3748]">
                             {index < 3 ? (
                               <span className="inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold text-white"
                                 style={{ backgroundColor: index === 0 ? '#FFD700' : index === 1 ? '#C0C0C0' : '#CD7F32' }}>
@@ -1980,7 +1980,7 @@ export default function ReportsContent() {
                               `${customer.rank}.`
                             )}
                           </td>
-                          <td className="px-4 py-3 text-sm text-gray-900 max-w-xs truncate" title={customer.customerName}>
+                          <td className="px-4 py-3 text-sm text-[#2d3748] max-w-xs truncate" title={customer.customerName}>
                             {customer.customerName}
                           </td>
                           <td className="px-4 py-3 text-sm text-gray-600">
@@ -2014,13 +2014,13 @@ export default function ReportsContent() {
                               </span>
                             )}
                           </td>
-                          <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 text-right font-medium">
+                          <td className="px-4 py-3 whitespace-nowrap text-sm text-[#2d3748] text-right font-medium">
                             {formatNumber(customer.orderCount)}
                           </td>
                           <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600 text-right">
                             {formatNumber(customer.averageOrderAmount)}
                           </td>
-                          <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 text-right">
+                          <td className="px-4 py-3 whitespace-nowrap text-sm text-[#2d3748] text-right">
                             {formatNumber(customer.totalOrderAmount)}
                           </td>
                           <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600 text-right">
@@ -2063,7 +2063,7 @@ export default function ReportsContent() {
           <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-hidden">
             <div className="flex items-center justify-between p-6 border-b border-gray-200">
               <div>
-                <h3 className="text-xl font-semibold text-gray-900">
+                <h3 className="text-xl font-semibold text-[#2d3748]">
                   客戶消費明細
                 </h3>
                 <p className="text-sm text-gray-600 mt-1">
@@ -2106,12 +2106,12 @@ export default function ReportsContent() {
 
                   {/* 訂單明細 */}
                   <div className="space-y-4">
-                    <h4 className="text-lg font-semibold text-gray-800">訂單明細</h4>
+                    <h4 className="text-lg font-semibold text-[#4a5568]">訂單明細</h4>
                     {customerDetails.orders.map((order: any, index: number) => (
                       <div key={index} className="border border-gray-200 rounded-xl p-4">
                         <div className="flex items-center justify-between mb-3">
                           <div>
-                            <div className="font-medium text-gray-900">
+                            <div className="font-medium text-[#2d3748]">
                               訂單編號: {order.orderId}
                             </div>
                             <div className="text-sm text-gray-600">
@@ -2119,7 +2119,7 @@ export default function ReportsContent() {
                             </div>
                           </div>
                           <div className="text-right">
-                            <div className="text-lg font-bold text-gray-900">
+                            <div className="text-lg font-bold text-[#2d3748]">
                               NT$ {Math.round(order.totalAmount).toLocaleString()}
                             </div>
                           </div>
@@ -2130,7 +2130,7 @@ export default function ReportsContent() {
                           {order.items.map((item: any, itemIndex: number) => (
                             <div key={itemIndex} className="grid grid-cols-12 gap-2 items-center p-2 bg-gray-50 rounded">
                               <span className="text-sm text-gray-700 col-span-7">{item.name}</span>
-                              <span className="text-sm font-medium text-gray-900 col-span-3 text-right font-mono">
+                              <span className="text-sm font-medium text-[#2d3748] col-span-3 text-right font-mono">
                                 NT$ {item.price}
                               </span>
                               <span className="text-sm text-primary-600 font-medium col-span-2 text-center font-mono">
