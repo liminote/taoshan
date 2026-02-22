@@ -151,18 +151,13 @@ export default function ReportsContent() {
 
   // 設計系統 10 色配色盤
   const chartColors = [
-    '#90b9ca',
-    '#FEC89A',
-    '#B0BCCC',
-    '#FFD7D5',
-    '#BFACC8',
-    '#8FBDBA',
-    '#C4B498',
-    '#FCD5CE',
-    '#C4B8D8',
-    '#D8E2DC',
-    '#EDE9E1',
-    '#FAE1DD'
+    '#9DBEDB', // 工作藍底
+    '#EDE9E1', // 沙地米底
+    '#FFD7D5', // 櫻花粉紅
+    '#FCD5CE', // 柔霧水蜜桃
+    '#BFACC8', // 薰衣草紫
+    '#FEC89A', // 暖陽橘
+    '#E9ECEF'  // 中性灰底
   ]
 
   // 格式化數字（四捨五入至整數）
@@ -999,7 +994,7 @@ export default function ReportsContent() {
                   ? 'text-gray-800 shadow-sm'
                   : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50'
                   }`}
-                style={activeTab === 'ai-chat' ? { backgroundColor: '#8FBDBA' } : {}}
+                style={activeTab === 'ai-chat' ? { backgroundColor: '#E9ECEF' } : {}}
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
@@ -1016,7 +1011,7 @@ export default function ReportsContent() {
             {/* 月銷售統計 */}
             <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
               <div className="flex items-center space-x-3 mb-6">
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: '#90b9ca' }}>
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: '#9DBEDB' }}>
                   <svg className="w-5 h-5 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                   </svg>
@@ -1024,7 +1019,7 @@ export default function ReportsContent() {
                 <h2 className="text-xl font-bold text-gray-900">月銷售統計</h2>
               </div>
 
-              {generateBarChart(salesData, 'amount', 200, '#90b9ca')}
+              {generateBarChart(salesData, 'amount', 200, '#9DBEDB')}
             </div>
 
             {/* 訂單張數統計 */}
@@ -1072,7 +1067,7 @@ export default function ReportsContent() {
             {/* 商品品項數統計 */}
             <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
               <div className="flex items-center space-x-3 mb-6">
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: '#8FBDBA' }}>
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: '#E9ECEF' }}>
                   <svg className="w-5 h-5 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                   </svg>
@@ -1080,7 +1075,7 @@ export default function ReportsContent() {
                 <h2 className="text-xl font-bold text-gray-900">商品品項數統計</h2>
               </div>
 
-              {generateBarChart(salesData, 'productItemCount', 200, '#8FBDBA')}
+              {generateBarChart(salesData, 'productItemCount', 200, '#E9ECEF')}
             </div>
 
             {lastRefreshTime && (
@@ -1097,7 +1092,7 @@ export default function ReportsContent() {
             {/* AI 問答界面標題 */}
             <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
               <div className="flex items-center justify-center space-x-3 mb-4">
-                <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ backgroundColor: '#8FBDBA' }}>
+                <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ backgroundColor: '#E9ECEF' }}>
                   <svg className="w-6 h-6 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
                   </svg>
@@ -1452,7 +1447,7 @@ export default function ReportsContent() {
             {/* 大分類分布 */}
             <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
               <div className="flex items-center space-x-3 mb-6">
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: '#B0BCCC' }}>
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: '#9DBEDB' }}>
                   <svg className="w-5 h-5 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" />
                   </svg>
@@ -1492,7 +1487,7 @@ export default function ReportsContent() {
             {/* 小分類分布 */}
             <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
               <div className="flex items-center space-x-3 mb-6">
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: '#C4B8D8' }}>
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: '#BFACC8' }}>
                   <svg className="w-5 h-5 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" />
                   </svg>
@@ -1549,7 +1544,7 @@ export default function ReportsContent() {
               {/* 支付方式分布 */}
               <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
                 <div className="flex items-center space-x-3 mb-6">
-                  <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: '#D8E2DC' }}>
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: '#EDE9E1' }}>
                     <svg className="w-5 h-5 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
                     </svg>
@@ -1589,7 +1584,7 @@ export default function ReportsContent() {
               {/* 訂單類型分布 */}
               <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
                 <div className="flex items-center space-x-3 mb-6">
-                  <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: '#C4B498' }}>
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: '#EDE9E1' }}>
                     <svg className="w-5 h-5 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                     </svg>
@@ -1662,7 +1657,7 @@ export default function ReportsContent() {
 
                   {/* 銷量排名 */}
                   <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
-                    <div className="px-6 py-4" style={{ backgroundColor: '#90b9ca' }}>
+                    <div className="px-6 py-4" style={{ backgroundColor: '#9DBEDB' }}>
                       <h3 className="text-lg font-semibold text-gray-900">銷量排名 TOP 20</h3>
                     </div>
                     <div className="overflow-x-auto">
@@ -1753,7 +1748,7 @@ export default function ReportsContent() {
                 {/* 酒水排名 */}
                 {rankingData.alcoholRanking && rankingData.alcoholRanking.length > 0 && (
                   <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
-                    <div className="px-6 py-4" style={{ backgroundColor: '#8FBDBA' }}>
+                    <div className="px-6 py-4" style={{ backgroundColor: '#E9ECEF' }}>
                       <h3 className="text-lg font-semibold text-gray-900">酒水排名 TOP 20（總金額最高）</h3>
                       <p className="text-sm text-gray-700 mt-1">大分類為 6酒水，按總金額排序</p>
                     </div>
@@ -1841,7 +1836,7 @@ export default function ReportsContent() {
 
               {/* 客戶消費金額 Top 30 */}
               <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
-                <div className="px-6 py-4" style={{ backgroundColor: '#90b9ca' }}>
+                <div className="px-6 py-4" style={{ backgroundColor: '#9DBEDB' }}>
                   <h3 className="text-lg font-semibold text-gray-900">客戶消費金額 TOP 30</h3>
                   <p className="text-sm text-gray-700 mt-1">依訂單總金額排序</p>
                 </div>
