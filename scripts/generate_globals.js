@@ -3,69 +3,64 @@ const path = require('path');
 
 const cssFile = path.join(__dirname, '../src/app/globals.css');
 
-// Calculate shades function for dynamic hex colors
-function lightenDarken(col, amt) {
-    let usePound = false;
-    if (col[0] === "#") {
-        col = col.slice(1);
-        usePound = true;
-    }
-    const num = parseInt(col, 16);
-    let r = (num >> 16) + amt;
-    if (r > 255) r = 255;
-    else if (r < 0) r = 0;
-    let b = ((num >> 8) & 0x00FF) + amt;
-    if (b > 255) b = 255;
-    else if (b < 0) b = 0;
-    let g = (num & 0x0000FF) + amt;
-    if (g > 255) g = 255;
-    else if (g < 0) g = 0;
-    return (usePound ? "#" : "") + (g | (b << 8) | (r << 16)).toString(16).padStart(6, '0');
+function blend(hexColor, targetColor, weight) {
+  const r1 = parseInt(hexColor.substring(1, 3), 16);
+  const g1 = parseInt(hexColor.substring(3, 5), 16);
+  const b1 = parseInt(hexColor.substring(5, 7), 16);
+
+  const r2 = parseInt(targetColor.substring(1, 3), 16);
+  const g2 = parseInt(targetColor.substring(3, 5), 16);
+  const b2 = parseInt(targetColor.substring(5, 7), 16);
+
+  const r = Math.round(r1 * weight + r2 * (1 - weight));
+  const g = Math.round(g1 * weight + g2 * (1 - weight));
+  const b = Math.round(b1 * weight + b2 * (1 - weight));
+
+  return '#' + (1 << 24 | r << 16 | g << 8 | b).toString(16).slice(1);
 }
 
 // Teller / Liminote New Colors
 const baseColors = {
-    primary: '#6e9aad', // 品牌深藍灰
-    secondary: '#90b9ca', // 品牌主藍灰
-    accent: '#b2ccd6', // 品牌淺藍灰
-    success: '#8FBDBA', // 霧青綠 / 好順
-    warning: '#FEC89A', // 暖陽橘
-    error: '#BC9898', // 暖玫瑰 / 壞逆
-    info: '#90b9ca' // same as secondary
+  primary: '#6e9aad', // 品牌深藍灰
+  secondary: '#90b9ca', // 品牌主藍灰
+  accent: '#b2ccd6', // 品牌淺藍灰
+  success: '#8FBDBA', // 霧青綠 / 好順
+  warning: '#FEC89A', // 暖陽橘
+  error: '#BC9898', // 暖玫瑰 / 壞逆
+  info: '#90b9ca' // same as secondary
 };
 
 function generateShades(baseHex) {
-    return {
-        50: lightenDarken(baseHex, 90),
-        100: lightenDarken(baseHex, 75),
-        200: lightenDarken(baseHex, 50),
-        300: lightenDarken(baseHex, 25),
-        400: lightenDarken(baseHex, 10),
-        500: baseHex,
-        600: lightenDarken(baseHex, -15),
-        700: lightenDarken(baseHex, -30),
-        800: lightenDarken(baseHex, -45),
-        900: lightenDarken(baseHex, -60),
-    };
+  return {
+    50: blend(baseHex, '#FFFFFF', 0.1),
+    100: blend(baseHex, '#FFFFFF', 0.2),
+    200: blend(baseHex, '#FFFFFF', 0.4),
+    300: blend(baseHex, '#FFFFFF', 0.6),
+    400: blend(baseHex, '#FFFFFF', 0.8),
+    500: baseHex,
+    600: blend(baseHex, '#000000', 0.8),
+    700: blend(baseHex, '#000000', 0.6),
+    800: blend(baseHex, '#000000', 0.4),
+    900: blend(baseHex, '#000000', 0.2),
+  };
 }
 
 let themeCSS = '\n@theme {\n';
-// Basic colors
 themeCSS += '  --color-white: #FFFFFF;\n';
 themeCSS += '  --color-black: #000000;\n';
 
-// Gray shades
-for (let i = 1; i <= 9; i++) {
-    const val = i * 100;
-    themeCSS += `  --color-gray-${val}: #` + lightenDarken('#6B7280', (5 - i) * 20).replace('#', '') + ';\n';
+// Gray shades (using Slate as base #64748b)
+const grayShades = generateShades('#64748b');
+for (const [shade, val] of Object.entries(grayShades)) {
+  themeCSS += `  --color-gray-${shade}: ${val};\n`;
 }
 
 for (const [name, hex] of Object.entries(baseColors)) {
-    const shades = generateShades(hex);
-    for (const [shade, val] of Object.entries(shades)) {
-        themeCSS += `  --color-${name}-${shade}: ${val};\n`;
-    }
-    themeCSS += `  --color-${name}: ${hex};\n`;
+  const shades = generateShades(hex);
+  for (const [shade, val] of Object.entries(shades)) {
+    themeCSS += `  --color-${name}-${shade}: ${val};\n`;
+  }
+  themeCSS += `  --color-${name}: ${hex};\n`;
 }
 
 themeCSS += '}\n';
@@ -134,7 +129,17 @@ body {
   }
 }
 
+/* 修復會議記錄標籤太螢光的問題，強制覆寫 secondary-100 與 secondary-700 預設樣式 */
+@layer utilities {
+  .bg-secondary-100 {
+    background-color: var(--color-secondary-50) !important;
+  }
+  .text-secondary-700 {
+    color: var(--color-secondary-800) !important;
+  }
+}
+
 `;
 
 fs.writeFileSync(cssFile, globalCSSContent);
-console.log('Successfully re-generated globals.css with new Teller colors and fixed CSS specificity base layer');
+console.log('Successfully generated elegant shades using pure color blending');
