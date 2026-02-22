@@ -994,7 +994,7 @@ export default function ReportsContent() {
                   ? 'text-[#4a5568] shadow-sm'
                   : 'text-gray-600 hover:text-[#4a5568] hover:bg-gray-50'
                   }`}
-                style={activeTab === 'ai-chat' ? { backgroundColor: '#E9ECEF' } : {}}
+                style={activeTab === 'ai-chat' ? { backgroundColor: '#BFACC8' } : {}}
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
@@ -1011,7 +1011,7 @@ export default function ReportsContent() {
             {/* 月銷售統計 */}
             <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
               <div className="flex items-center space-x-3 mb-6">
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: '#9DBEDB' }}>
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: '#FEC89A' }}>
                   <svg className="w-5 h-5 text-[#4a5568]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                   </svg>
@@ -1019,13 +1019,13 @@ export default function ReportsContent() {
                 <h2 className="text-xl font-bold text-[#2d3748]">月銷售統計</h2>
               </div>
 
-              {generateBarChart(salesData, 'amount', 200, '#9DBEDB')}
+              {generateBarChart(salesData, 'amount', 200, '#FEC89A')}
             </div>
 
             {/* 訂單張數統計 */}
             <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
               <div className="flex items-center space-x-3 mb-6">
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: '#BFACC8' }}>
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: '#FFD7D5' }}>
                   <svg className="w-5 h-5 text-[#4a5568]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
                   </svg>
@@ -1033,13 +1033,13 @@ export default function ReportsContent() {
                 <h2 className="text-xl font-bold text-[#2d3748]">訂單張數統計</h2>
               </div>
 
-              {generateBarChart(salesData, 'orderCount', 200, '#BFACC8')}
+              {generateBarChart(salesData, 'orderCount', 200, '#FFD7D5')}
             </div>
 
             {/* 平均單價統計 */}
             <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
               <div className="flex items-center space-x-3 mb-6">
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: '#FFD7D5' }}>
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: '#9DBEDB' }}>
                   <svg className="w-5 h-5 text-[#4a5568]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
                   </svg>
@@ -1047,13 +1047,13 @@ export default function ReportsContent() {
                 <h2 className="text-xl font-bold text-[#2d3748]">平均單價統計</h2>
               </div>
 
-              {generateBarChart(salesData, 'avgOrderValue', 200, '#FFD7D5')}
+              {generateBarChart(salesData, 'avgOrderValue', 200, '#9DBEDB')}
             </div>
 
             {/* 折扣金額統計 */}
             <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
               <div className="flex items-center space-x-3 mb-6">
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: '#FEC89A' }}>
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: '#FCD5CE' }}>
                   <svg className="w-5 h-5 text-[#4a5568]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
                   </svg>
@@ -1061,13 +1061,13 @@ export default function ReportsContent() {
                 <h2 className="text-xl font-bold text-[#2d3748]">折扣金額統計</h2>
               </div>
 
-              {generateBarChart(discountData, 'discountAmount', 200, '#FEC89A')}
+              {generateBarChart(discountData, 'discountAmount', 200, '#FCD5CE')}
             </div>
 
             {/* 商品品項數統計 */}
             <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
               <div className="flex items-center space-x-3 mb-6">
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: '#E9ECEF' }}>
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: '#BFACC8' }}>
                   <svg className="w-5 h-5 text-[#4a5568]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                   </svg>
@@ -1075,7 +1075,7 @@ export default function ReportsContent() {
                 <h2 className="text-xl font-bold text-[#2d3748]">商品品項數統計</h2>
               </div>
 
-              {generateBarChart(salesData, 'productItemCount', 200, '#E9ECEF')}
+              {generateBarChart(salesData, 'productItemCount', 200, '#BFACC8')}
             </div>
 
             {lastRefreshTime && (
