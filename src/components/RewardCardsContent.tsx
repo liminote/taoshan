@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { useDropzone } from 'react-dropzone'
 
 export default function RewardCardsContent() {
     const router = useRouter()
@@ -10,8 +9,6 @@ export default function RewardCardsContent() {
 
     // Common loading states
     const [isManualRefreshing, setIsManualRefreshing] = useState(false)
-    const [isUploading, setIsUploading] = useState(false)
-    const [uploadStatus, setUploadStatus] = useState<{ type: 'success' | 'error', message: string } | null>(null)
 
     // Reward Cards Tab State
     const [rewardCardTab, setRewardCardTab] = useState<'overall' | 'card-history' | 'point-history' | 'instruction'>('overall')
@@ -77,50 +74,9 @@ export default function RewardCardsContent() {
         fetchRewardCardData()
     }, [fetchRewardCardData])
 
-    const handleRefresh = useCallback(() => {
+    const handleRefresh = () => {
         fetchRewardCardData(true)
-    }, [fetchRewardCardData])
-
-    // Dropzone setup
-    const onDrop = useCallback(async (acceptedFiles: File[]) => {
-        if (acceptedFiles.length === 0) return
-
-        setIsUploading(true)
-        setUploadStatus(null)
-
-        const formData = new FormData()
-        acceptedFiles.forEach(file => {
-            formData.append('file', file)
-        })
-
-        try {
-            const res = await fetch('/api/upload/reward-cards', {
-                method: 'POST',
-                body: formData
-            })
-
-            const data = await res.json()
-            if (data.success) {
-                setUploadStatus({ type: 'success', message: `成功上傳 ${acceptedFiles.length} 個檔案！` })
-                handleRefresh()
-            } else {
-                setUploadStatus({ type: 'error', message: data.message || '上傳失敗，請檢查檔案格式' })
-            }
-        } catch (error) {
-            console.error('Upload Error:', error)
-            setUploadStatus({ type: 'error', message: '上傳發生例外錯誤' })
-        } finally {
-            setIsUploading(false)
-            setTimeout(() => setUploadStatus(null), 5000)
-        }
-    }, [handleRefresh])
-
-    const { getRootProps, getInputProps, isDragActive } = useDropzone({
-        onDrop,
-        accept: {
-            'text/csv': ['.csv']
-        }
-    })
+    }
 
     // Calculate Overall Dashboard Stats
     const overallStats = useMemo(() => {
@@ -249,48 +205,6 @@ export default function RewardCardsContent() {
                     >
                         使用說明
                     </button>
-                </div>
-
-                {/* CSV 上傳區塊 */}
-                <div
-                    {...getRootProps()}
-                    className={`mt-4 border-2 border-dashed rounded-xl p-8 text-center transition-all cursor-pointer ${isDragActive
-                            ? 'border-primary-500 bg-primary-50 scale-[1.01]'
-                            : 'border-gray-200 bg-white hover:border-primary-400 hover:bg-gray-50'
-                        }`}
-                >
-                    <input {...getInputProps()} />
-                    <div className="flex flex-col items-center justify-center space-y-3">
-                        <div className={`p-3 rounded-full ${isDragActive ? 'bg-primary-100' : 'bg-gray-100'}`}>
-                            {isUploading ? (
-                                <svg className="w-8 h-8 text-primary-500 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                                </svg>
-                            ) : (
-                                <svg className={`w-8 h-8 ${isDragActive ? 'text-primary-600' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                                </svg>
-                            )}
-                        </div>
-                        <div>
-                            {isUploading ? (
-                                <p className="text-sm font-semibold text-primary-600">上傳處理中...</p>
-                            ) : isDragActive ? (
-                                <p className="text-sm font-semibold text-primary-600">放開以開始上傳處理</p>
-                            ) : (
-                                <>
-                                    <p className="text-sm font-semibold text-gray-700">點擊或拖曳 LINE 集點卡 CSV 檔案至此</p>
-                                    <p className="text-xs text-gray-500 mt-1">上傳後系統會自動更新數據（僅接受 .csv 格式）</p>
-                                </>
-                            )}
-                        </div>
-                        {uploadStatus && (
-                            <div className={`mt-2 text-xs font-semibold px-3 py-1.5 rounded-full inline-block ${uploadStatus.type === 'success' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'
-                                }`}>
-                                {uploadStatus.message}
-                            </div>
-                        )}
-                    </div>
                 </div>
 
                 {loadingRewardCards ? (
