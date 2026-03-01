@@ -827,19 +827,19 @@ export default function ReportsContent() {
                 <g key={index}>
                   {/* Regular Bar */}
                   <rect x={regX} y={regY} width={barWidth} height={regHeight} fill={regularColor} className="hover:opacity-80 transition-opacity" />
-                  <text x={regX + barWidth / 2} y={regY - 18} textAnchor="middle" className="text-xs fill-gray-700 font-medium">
+                  <text x={regX + barWidth / 2} y={regY - 24} textAnchor="middle" className="text-sm fill-gray-700 font-semibold">
                     {Math.floor(regValue).toLocaleString()}
                   </text>
-                  <text x={regX + barWidth / 2} y={regY - 5} textAnchor="middle" className="text-[10px] fill-gray-500">
+                  <text x={regX + barWidth / 2} y={regY - 8} textAnchor="middle" className="text-xs fill-gray-500">
                     {regPct}%
                   </text>
 
                   {/* Night Owl Bar */}
                   <rect x={owlX} y={owlY} width={barWidth} height={owlHeight} fill={nightOwlColor} className="hover:opacity-80 transition-opacity" />
-                  <text x={owlX + barWidth / 2} y={owlY - 18} textAnchor="middle" className="text-xs fill-gray-700 font-medium">
+                  <text x={owlX + barWidth / 2} y={owlY - 24} textAnchor="middle" className="text-sm fill-gray-700 font-semibold">
                     {Math.floor(owlValue).toLocaleString()}
                   </text>
-                  <text x={owlX + barWidth / 2} y={owlY - 5} textAnchor="middle" className="text-[10px] fill-gray-500">
+                  <text x={owlX + barWidth / 2} y={owlY - 8} textAnchor="middle" className="text-xs fill-gray-500">
                     {owlPct}%
                   </text>
 
