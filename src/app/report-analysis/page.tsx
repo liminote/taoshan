@@ -494,8 +494,10 @@ export default function ReportAnalysisPage() {
                                     <div>
                                         <div className="prose prose-sm md:prose max-w-none 
                                     prose-headings:text-[#2d3748] prose-p:text-gray-600 
-                                    prose-th:bg-secondary-50 prose-th:text-[#3f3f46] prose-th:px-4 prose-th:py-2 prose-th:border prose-th:border-gray-200
-                                    prose-td:px-4 prose-td:py-2 prose-td:border prose-td:border-gray-200">
+                                    prose-table:border-collapse prose-table:w-full prose-table:border prose-table:border-gray-200
+                                    prose-tr:border-b prose-tr:border-gray-200
+                                    prose-th:bg-gray-50 prose-th:text-gray-700 prose-th:px-4 prose-th:py-3 prose-th:border prose-th:border-gray-200 prose-th:font-semibold
+                                    prose-td:px-4 prose-td:py-3 prose-td:border prose-td:border-gray-200 prose-td:text-gray-600">
                                             <ReactMarkdown remarkPlugins={[remarkGfm]}>
                                                 {selected.content}
                                             </ReactMarkdown>
