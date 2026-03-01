@@ -212,84 +212,79 @@ export default function RewardCardsContent() {
             </div>
 
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8 space-y-6">
-                <div className="bg-white rounded-xl shadow-sm p-1 inline-flex">
-                    <button
-                        onClick={() => handleTabChange('overall')}
-                        className={`px-6 py-2.5 rounded-lg text-sm font-semibold transition-all ${rewardCardTab === 'overall'
-                            ? 'bg-primary-600 text-white shadow-md'
-                            : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
-                            }`}
-                    >
-                        整體統計
-                    </button>
-                    <button
-                        onClick={() => handleTabChange('card-history')}
-                        className={`px-6 py-2.5 rounded-lg text-sm font-semibold transition-all ${rewardCardTab === 'card-history'
-                            ? 'bg-primary-600 text-white shadow-md'
-                            : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
-                            }`}
-                    >
-                        卡片使用狀態歷史資料
-                    </button>
-                    <button
-                        onClick={() => handleTabChange('point-history')}
-                        className={`px-6 py-2.5 rounded-lg text-sm font-semibold transition-all ${rewardCardTab === 'point-history'
-                            ? 'bg-primary-600 text-white shadow-md'
-                            : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
-                            }`}
-                    >
-                        點數使用狀態歷史資料
-                    </button>
-                    <button
-                        onClick={() => handleTabChange('instruction')}
-                        className={`px-6 py-2.5 rounded-lg text-sm font-semibold transition-all ${rewardCardTab === 'instruction'
-                            ? 'bg-primary-600 text-white shadow-md'
-                            : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
-                            }`}
-                    >
-                        使用說明
-                    </button>
-                </div>
+                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                    <div className="bg-white rounded-xl shadow-sm p-1 flex items-center overflow-x-auto hide-scrollbar whitespace-nowrap w-full">
+                        <button
+                            onClick={() => handleTabChange('overall')}
+                            className={`px-4 sm:px-6 py-2.5 rounded-lg text-sm font-semibold transition-all ${rewardCardTab === 'overall'
+                                ? 'bg-primary-600 text-white shadow-md'
+                                : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                                }`}
+                        >
+                            整體統計
+                        </button>
+                        <button
+                            onClick={() => handleTabChange('card-history')}
+                            className={`px-4 sm:px-6 py-2.5 rounded-lg text-sm font-semibold transition-all ${rewardCardTab === 'card-history'
+                                ? 'bg-primary-600 text-white shadow-md'
+                                : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                                }`}
+                        >
+                            卡片使用狀態歷史資料
+                        </button>
+                        <button
+                            onClick={() => handleTabChange('point-history')}
+                            className={`px-4 sm:px-6 py-2.5 rounded-lg text-sm font-semibold transition-all ${rewardCardTab === 'point-history'
+                                ? 'bg-primary-600 text-white shadow-md'
+                                : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                                }`}
+                        >
+                            點數使用狀態歷史資料
+                        </button>
+                        <button
+                            onClick={() => handleTabChange('instruction')}
+                            className={`px-4 sm:px-6 py-2.5 rounded-lg text-sm font-semibold transition-all ${rewardCardTab === 'instruction'
+                                ? 'bg-primary-600 text-white shadow-md'
+                                : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                                }`}
+                        >
+                            使用說明
+                        </button>
 
-                {/* CSV 上傳區塊 */}
-                <div
-                    {...getRootProps()}
-                    className={`mt-4 border-2 border-dashed rounded-xl p-8 text-center transition-all cursor-pointer ${isDragActive
-                            ? 'border-primary-500 bg-primary-50 scale-[1.01]'
-                            : 'border-gray-200 bg-white hover:border-primary-400 hover:bg-gray-50'
-                        }`}
-                >
-                    <input {...getInputProps()} />
-                    <div className="flex flex-col items-center justify-center space-y-3">
-                        <div className={`p-3 rounded-full ${isDragActive ? 'bg-primary-100' : 'bg-gray-100'}`}>
+                        {/* Spacer */}
+                        <div className="flex-1 min-w-[20px]"></div>
+
+                        {/* 極簡版 CSV 上傳區塊 */}
+                        <div
+                            {...getRootProps()}
+                            className={`flex items-center px-4 py-2 mr-1 rounded-lg text-sm font-semibold transition-all cursor-pointer border border-dashed ${isDragActive
+                                ? 'border-primary-500 bg-primary-50 text-primary-600'
+                                : 'border-gray-300 text-gray-400 hover:text-gray-600 hover:bg-gray-50 hover:border-gray-400'
+                                }`}
+                        >
+                            <input {...getInputProps()} />
                             {isUploading ? (
-                                <svg className="w-8 h-8 text-primary-500 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                                </svg>
-                            ) : (
-                                <svg className={`w-8 h-8 ${isDragActive ? 'text-primary-600' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                                </svg>
-                            )}
-                        </div>
-                        <div>
-                            {isUploading ? (
-                                <p className="text-sm font-semibold text-primary-600">正在傳送資料至 Google Sheets...</p>
-                            ) : isDragActive ? (
-                                <p className="text-sm font-semibold text-primary-600">放開以開始上傳處理</p>
+                                <>
+                                    <svg className="w-4 h-4 mr-2 animate-spin text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                    </svg>
+                                    <span>上傳寫入中...</span>
+                                </>
                             ) : (
                                 <>
-                                    <p className="text-sm font-semibold text-gray-700">點擊或拖曳 LINE 集點卡 CSV 檔案至此</p>
-                                    <p className="text-xs text-gray-500 mt-1">上傳後系統會自動更新數據（僅接受 .csv 格式）</p>
+                                    <svg className={`w-4 h-4 mr-2 ${isDragActive ? 'text-primary-600' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                                    </svg>
+                                    <span>{isDragActive ? '放開以寫入' : '拖曳 / 點擊以上傳最新 CSV 檔案'}</span>
                                 </>
                             )}
+                            {uploadStatus && (
+                                <span className={`ml-3 px-2 py-0.5 text-[10px] rounded-full inline-flex items-center whitespace-nowrap ${uploadStatus.type === 'success' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'
+                                    }`}>
+                                    {uploadStatus.message}
+                                </span>
+                            )}
                         </div>
-                        {uploadStatus && (
-                            <div className={`mt-2 text-xs font-semibold px-3 py-1.5 rounded-full inline-block ${uploadStatus.type === 'success' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'
-                                }`}>
-                                {uploadStatus.message}
-                            </div>
-                        )}
                     </div>
                 </div>
 
