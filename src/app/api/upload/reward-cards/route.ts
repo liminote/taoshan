@@ -18,6 +18,7 @@ export async function POST(request: Request) {
         }
 
         const uploadResults = []
+        const combinedPayload: { cards?: any[], points?: any[] } = {}
 
         for (const file of files) {
             if (!file.name.endsWith('.csv')) {
@@ -42,15 +43,11 @@ export async function POST(request: Request) {
             // Parse CSV dynamically
             const rows = parseCsv(text)
 
-            // Expected that rows contains headers in row 0, data in row 1+
             if (rows.length < 2) {
                 uploadResults.push({ name: file.name, success: false, message: '檔案內容過短或空白' })
                 continue
             }
 
-            // We want to send all rows (except header because the GAS script logic usually apps values, but Google Sheets needs us to append just the data)
-            // Wait, the Google Sheet already has headers at row 1.
-            // We should only append data rows.
             const dataRows = rows.slice(1).filter(row => row.length > 0 && row.some(cell => cell.trim() !== ''))
 
             if (dataRows.length === 0) {
@@ -58,13 +55,6 @@ export async function POST(request: Request) {
                 continue
             }
 
-            // Extract the date from the filename to inject into the rows if needed?
-            // "rewardcards_stats_xxx_YYYYMMDD.csv"
-            // Wait! Our old Google Sheet structure for cards had "Data_Date" in the first column!
-            // Line 1 of _cards_: "name,validCards,issuedCards..."
-            // But in Google Sheet, it's "Data_Date, name, validCards..."
-
-            // Let's parse the exact date from the filename
             const dateMatch = file.name.match(/(\d{8})/)
             const rawDate = dateMatch ? dateMatch[0] : ''
 
@@ -73,31 +63,66 @@ export async function POST(request: Request) {
                 continue
             }
 
-            // We need to inject the rawDate into the 0th index of EVERY row before sending to Google Sheets!
             const augmentedDataRows = dataRows.map(row => {
                 return [rawDate, ...row]
             })
 
-            // Send payload to Google Apps Script
-            const payload = {
-                type: type,
-                rows: augmentedDataRows
+            if (type === 'cards') {
+                if (!combinedPayload.cards) combinedPayload.cards = []
+                combinedPayload.cards.push(...augmentedDataRows)
+            } else if (type === 'points') {
+                if (!combinedPayload.points) combinedPayload.points = []
+                combinedPayload.points.push(...augmentedDataRows)
             }
 
-            const res = await fetch(GAS_WEB_APP_URL, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(payload)
-            })
+            uploadResults.push({ name: file.name, success: true })
+        }
 
-            const gasResponse = await res.json()
+        // If we have anything to send, make exactly one request to GAS to avoid race conditions/locks
+        if (combinedPayload.cards?.length || combinedPayload.points?.length) {
+            console.log('Sending payload to GAS:', JSON.stringify({
+                cardsCount: combinedPayload.cards?.length || 0,
+                pointsCount: combinedPayload.points?.length || 0
+            }))
 
-            if (gasResponse.success) {
-                uploadResults.push({ name: file.name, success: true })
-            } else {
-                uploadResults.push({ name: file.name, success: false, message: gasResponse.error || '寫入 Google Sheets 失敗' })
+            try {
+                // Google Apps Script requires following redirects for POST Web Apps
+                const res = await fetch(GAS_WEB_APP_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(combinedPayload),
+                    redirect: 'follow'
+                })
+
+                console.log('GAS Response Status:', res.status, res.statusText)
+                const textOutput = await res.text()
+                console.log('GAS Raw Text:', textOutput)
+
+                let gasResponse;
+                try {
+                    gasResponse = JSON.parse(textOutput)
+                } catch (e) {
+                    throw new Error(`Failed to parse GAS response: ${textOutput}`)
+                }
+
+                if (!gasResponse.success) {
+                    uploadResults.forEach(r => {
+                        if (r.success) {
+                            r.success = false;
+                            r.message = gasResponse.error || '寫入 Google Sheets 失敗';
+                        }
+                    })
+                }
+            } catch (err: any) {
+                console.error('Fetch to GAS failed:', err)
+                uploadResults.forEach(r => {
+                    if (r.success) {
+                        r.success = false;
+                        r.message = '與 Google Apps Script 連線失敗: ' + err.message;
+                    }
+                })
             }
         }
 
