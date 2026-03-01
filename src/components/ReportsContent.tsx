@@ -550,8 +550,8 @@ export default function ReportsContent() {
   const generateBarChart = (data: MonthlySalesData[] | DiscountData[], dataKey: string, height: number = 200, color: string) => {
     if (!data || data.length === 0) return null
 
-    // 取最新13個月並反轉順序（最新在左邊）
-    const chartData = data.slice(-13).reverse()
+    // 取最新13個月，並確保最新月份在最左邊（因為原 API 返回是由新到舊，即 index 0 是最新）
+    const chartData = data.slice(0, 13)
     const maxValue = Math.max(...chartData.map(item => (item as unknown as Record<string, number>)[dataKey]))
 
     return (
