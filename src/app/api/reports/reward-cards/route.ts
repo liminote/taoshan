@@ -45,21 +45,23 @@ function getPeriodInfo(dateStr: string) {
     return { type: 'Other', label: `${year}/${String(month + 1).padStart(2, '0')}/${day}`, start: fileDate, end: fileDate };
 }
 
+import { createClient } from '@supabase/supabase-js'
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
+const supabase = createClient(supabaseUrl, supabaseServiceKey)
+
 export async function GET() {
     try {
-        // 1. Fetch data from Google Sheets instead of local files
-        const [cardRes, pointRes, orderRes] = await Promise.all([
-            fetch(REWARD_CARDS_URL, { cache: 'no-store' }),
-            fetch(REWARD_POINTS_URL, { cache: 'no-store' }),
-            fetch(ORDER_SHEET_URL, { cache: 'no-store' })
-        ])
+        // Fetch Orders for Inflow Rate Baseline
+        let orderCsv = ''
+        try {
+            const orderRes = await fetch(ORDER_SHEET_URL, { cache: 'no-store' })
+            if (orderRes.ok) orderCsv = await orderRes.text()
+        } catch (e) {
+            console.error('Failed to fetch Orders', e)
+        }
 
-        const cardCsv = await cardRes.text()
-        const pointCsv = await pointRes.text()
-        const orderCsv = await orderRes.text()
-
-        const cardRows = parseCsv(cardCsv)
-        const pointRows = parseCsv(pointCsv)
         const orderRows = parseCsv(orderCsv)
 
         // Process Orders for Inflow Rate (Tue-Thu)
@@ -73,32 +75,54 @@ export async function GET() {
             }).filter(o => o !== null) as { date: Date, day: number }[]
         }
 
-        // Process Cards
-        const rawCardData: any[] = []
-        if (cardRows.length > 1) {
-            const h = cardRows[0].map(s => s.trim())
-            cardRows.slice(1).forEach(row => {
-                const dateStr = row[0] // Data_Date
-                const record: any = { date: `${dateStr.slice(0, 4)}/${dateStr.slice(4, 6)}/${dateStr.slice(6, 8)}`, fileDateStr: dateStr }
-                h.forEach((header, i) => { record[header] = row[i] })
-                rawCardData.push(record)
-            })
-        }
+        // Fetch CSV Files from Supabase
+        const { data: files, error } = await supabase.storage.from('reward_cards_csv').list()
 
-        // Process Points
+        const rawCardData: any[] = []
         const rawPointData: any[] = []
-        if (pointRows.length > 1) {
-            const h = pointRows[0].map(s => s.trim())
-            // Group by Data_Date
-            const groups: Record<string, any> = {}
-            pointRows.slice(1).forEach(row => {
-                const dateStr = row[0]
-                if (!groups[dateStr]) groups[dateStr] = { date: `${dateStr.slice(0, 4)}/${dateStr.slice(4, 6)}/${dateStr.slice(6, 8)}` }
-                const p = row[1] // point
-                const u = row[2] // users
-                groups[dateStr][`p${p}`] = u
-            })
-            Object.values(groups).forEach(g => rawPointData.push(g))
+
+        if (!error && files && files.length > 0) {
+            for (const file of files) {
+                if (!file.name.endsWith('.csv')) continue
+
+                const { data: fileData, error: downloadError } = await supabase.storage
+                    .from('reward_cards_csv')
+                    .download(file.name)
+
+                if (downloadError || !fileData) continue
+
+                const content = await fileData.text()
+                const rows = parseCsv(content)
+                if (rows.length < 2) continue
+
+                const headers = rows[0].map(h => h.trim())
+                const dataRows = rows.slice(1)
+
+                // Extract date from filename rewardcards_stats_xxx_YYYYMMDD.csv
+                const dateMatch = file.name.match(/(\d{8})/)
+                const dateStr = dateMatch ? dateMatch[0] : ''
+                const formattedDate = dateStr ? `${dateStr.slice(0, 4)}/${dateStr.slice(4, 6)}/${dateStr.slice(6, 8)}` : 'Unknown'
+
+                if (file.name.includes('_cards_')) {
+                    dataRows.forEach(row => {
+                        const record: any = { date: formattedDate, fileDateStr: dateStr }
+                        headers.forEach((header, index) => {
+                            record[header] = row[index] || ''
+                        })
+                        rawCardData.push(record)
+                    })
+                } else if (file.name.includes('_points_')) {
+                    const pointMap: { [key: string]: string | number } = { date: formattedDate, fileDateStr: dateStr }
+                    dataRows.forEach(row => {
+                        const point = row[headers.indexOf('point')]
+                        const users = row[headers.indexOf('users')]
+                        if (point !== undefined && users !== undefined) {
+                            pointMap[`p${point}`] = users
+                        }
+                    })
+                    rawPointData.push(pointMap)
+                }
+            }
         }
 
         // Calculate Deltas and Rates
