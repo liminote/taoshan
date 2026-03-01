@@ -820,18 +820,27 @@ export default function ReportsContent() {
               const owlX = groupX + barWidth + 4 // 4px gap between regular and owl
               const owlY = height - owlHeight + 20
 
+              const regPct = (regValue + owlValue) > 0 ? Math.round((regValue / (regValue + owlValue)) * 100) : 0
+              const owlPct = (regValue + owlValue) > 0 ? Math.round((owlValue / (regValue + owlValue)) * 100) : 0
+
               return (
                 <g key={index}>
                   {/* Regular Bar */}
                   <rect x={regX} y={regY} width={barWidth} height={regHeight} fill={regularColor} className="hover:opacity-80 transition-opacity" />
-                  <text x={regX + barWidth / 2} y={regY - 5} textAnchor="middle" className="text-xs fill-gray-700 font-medium">
+                  <text x={regX + barWidth / 2} y={regY - 18} textAnchor="middle" className="text-xs fill-gray-700 font-medium">
                     {Math.floor(regValue).toLocaleString()}
+                  </text>
+                  <text x={regX + barWidth / 2} y={regY - 5} textAnchor="middle" className="text-[10px] fill-gray-500">
+                    {regPct}%
                   </text>
 
                   {/* Night Owl Bar */}
                   <rect x={owlX} y={owlY} width={barWidth} height={owlHeight} fill={nightOwlColor} className="hover:opacity-80 transition-opacity" />
-                  <text x={owlX + barWidth / 2} y={owlY - 5} textAnchor="middle" className="text-xs fill-gray-700 font-medium">
+                  <text x={owlX + barWidth / 2} y={owlY - 18} textAnchor="middle" className="text-xs fill-gray-700 font-medium">
                     {Math.floor(owlValue).toLocaleString()}
+                  </text>
+                  <text x={owlX + barWidth / 2} y={owlY - 5} textAnchor="middle" className="text-[10px] fill-gray-500">
+                    {owlPct}%
                   </text>
 
                   {/* Month label */}
