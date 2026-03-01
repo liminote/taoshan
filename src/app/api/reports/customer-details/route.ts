@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-
+import { getBusinessDateAndPeriod } from '@/lib/dateUtils'
 interface OrderItem {
   name: string
   price: string
@@ -83,12 +83,9 @@ export async function GET(request: NextRequest) {
 
     // 篩選指定月份的訂單
     const monthlyOrders = orderData.filter(record => {
-      const dateStr = record.checkout_time.replace(/\//g, '-')
-      const date = new Date(dateStr)
-
-      if (!isNaN(date.getTime())) {
-        const orderMonth = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
-        return orderMonth === month
+      const businessInfo = getBusinessDateAndPeriod(record.checkout_time)
+      if (businessInfo) {
+        return businessInfo.businessMonthKey === month
       }
       return false
     })

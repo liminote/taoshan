@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { reportCache, CACHE_KEYS } from '@/lib/cache'
 import { parseCsv } from '@/lib/csv'
+import { getBusinessDateAndPeriod } from '@/lib/dateUtils'
 
 export async function GET() {
   try {
@@ -75,10 +76,10 @@ export async function GET() {
       const timeStr = row[timeIdx]
       if (!timeStr) return
 
-      const date = new Date(timeStr.replace(/\//g, '-'))
-      if (isNaN(date.getTime())) return
+      const businessInfo = getBusinessDateAndPeriod(timeStr)
+      if (!businessInfo) return
 
-      const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
+      const monthKey = businessInfo.businessMonthKey
       if (trends[monthKey]) {
         const rawAmount = row[amountIdx] || '0'
         const cleanAmount = rawAmount.replace(/[^-0-9.]/g, '') // 只保留數字相關字元
@@ -87,7 +88,8 @@ export async function GET() {
         trends[monthKey].amount += amt
         trends[monthKey].orderCount += 1
 
-        const dateStr = `${date.getFullYear()}/${String(date.getMonth() + 1).padStart(2, '0')}/${String(date.getDate()).padStart(2, '0')}`
+        const bd = businessInfo.businessDate
+        const dateStr = `${bd.getFullYear()}/${String(bd.getMonth() + 1).padStart(2, '0')}/${String(bd.getDate()).padStart(2, '0')}`
         if (dateStr > latestDate) latestDate = dateStr
       }
     })
@@ -102,10 +104,12 @@ export async function GET() {
       const timeStr = row[pTimeIdx]
       const name = row[pNameIdx]
       if (timeStr && name && trends) {
-        const date = new Date(timeStr.replace(/\//g, '-'))
-        const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
-        if (trends[monthKey]) {
-          trends[monthKey].productItems.add(name)
+        const businessInfo = getBusinessDateAndPeriod(timeStr)
+        if (businessInfo) {
+          const monthKey = businessInfo.businessMonthKey
+          if (trends[monthKey]) {
+            trends[monthKey].productItems.add(name)
+          }
         }
       }
     })

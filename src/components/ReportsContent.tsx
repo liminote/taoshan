@@ -13,6 +13,13 @@ interface MonthlySalesData {
   productItemCount: number
 }
 
+interface TimePeriodSalesData {
+  month: string
+  monthDisplay: string
+  regular: { amount: number, orderCount: number, avgOrderValue: number }
+  nightOwl: { amount: number, orderCount: number, avgOrderValue: number }
+}
+
 interface DiscountData {
   month: string
   monthDisplay: string
@@ -78,9 +85,9 @@ export default function ReportsContent() {
   const searchParams = useSearchParams()
 
   // Tab state with URL sync
-  const [activeTab, setActiveTab] = useState<'trends' | 'monthly' | 'customer-analysis' | 'ai-chat'>(() => {
+  const [activeTab, setActiveTab] = useState<'trends' | 'monthly' | 'time-periods' | 'customer-analysis' | 'ai-chat'>(() => {
     const tab = searchParams.get('tab')
-    const validTabs = ['monthly', 'trends', 'customer-analysis', 'ai-chat']
+    const validTabs = ['monthly', 'trends', 'time-periods', 'customer-analysis', 'ai-chat']
     return validTabs.includes(tab as any) ? tab as any : 'trends'
   })
 
@@ -95,6 +102,9 @@ export default function ReportsContent() {
   const [salesData, setSalesData] = useState<MonthlySalesData[]>([])
   const [discountData, setDiscountData] = useState<DiscountData[]>([])
   const [latestSalesDate, setLatestSalesDate] = useState<string>('')
+
+  // Time Periods tab data
+  const [timePeriodsData, setTimePeriodsData] = useState<TimePeriodSalesData[]>([])
 
   // Monthly tab data (filtered by selected month)
   const [selectedMonth, setSelectedMonth] = useState<string>(() => {
@@ -138,6 +148,7 @@ export default function ReportsContent() {
       spendingRanking: CustomerAnalysisData[]
       frequencyRanking: CustomerAnalysisData[]
     }>
+    timePeriodsData?: TimePeriodSalesData[]
     timestamp?: Date
   }>({})
 
@@ -209,12 +220,13 @@ export default function ReportsContent() {
       }
 
       // 更新緩存
-      setCachedData({
+      setCachedData(prev => ({
+        ...prev,
         salesData: newSalesData,
         latestSalesDate: newLatestSalesDate,
         discountData: newDiscountData,
         timestamp: now
-      })
+      }))
 
       setLastRefreshTime(now)
     } catch (error) {
@@ -222,6 +234,29 @@ export default function ReportsContent() {
     } finally {
       setLoading(false)
       setIsRefreshing(false)
+    }
+  }, [cachedData])
+
+  // Fetch time periods data
+  const fetchTimePeriodsData = useCallback(async (forceRefresh = false) => {
+    const now = new Date()
+    const cacheExpireTime = 5 * 60 * 1000
+
+    if (!forceRefresh && cachedData.timestamp && (now.getTime() - cachedData.timestamp.getTime() < cacheExpireTime) && cachedData.timePeriodsData) {
+      setTimePeriodsData(cachedData.timePeriodsData)
+      return
+    }
+
+    try {
+      const response = await fetch('/api/reports/time-periods')
+      if (response.ok) {
+        const result = await response.json()
+        const newData = result.data || []
+        setTimePeriodsData(newData)
+        setCachedData(prev => ({ ...prev, timePeriodsData: newData }))
+      }
+    } catch (error) {
+      console.error('獲取時段統計資料失敗:', error)
     }
   }, [cachedData])
 
@@ -385,7 +420,8 @@ export default function ReportsContent() {
   // Initial data fetch and setup
   useEffect(() => {
     fetchTrendsData()
-  }, [fetchTrendsData])
+    fetchTimePeriodsData()
+  }, [fetchTrendsData, fetchTimePeriodsData])
 
   // Fetch category data when selected month changes
   useEffect(() => {
@@ -504,6 +540,8 @@ export default function ReportsContent() {
           await fetchTrendsData(true)
         } else if (activeTab === 'monthly') {
           await fetchMonthlyCategoryData(selectedMonth, true)
+        } else if (activeTab === 'time-periods') {
+          await fetchTimePeriodsData(true)
         } else if (activeTab === 'customer-analysis') {
           await fetchCustomerAnalysisData(customerAnalysisMonth, true)
         }
@@ -527,6 +565,8 @@ export default function ReportsContent() {
       fetchTrendsData(true)
     } else if (activeTab === 'monthly') {
       fetchMonthlyCategoryData(selectedMonth, true)
+    } else if (activeTab === 'time-periods') {
+      fetchTimePeriodsData(true)
     } else if (activeTab === 'customer-analysis') {
       fetchCustomerAnalysisData(customerAnalysisMonth, true)
     }
@@ -673,6 +713,129 @@ export default function ReportsContent() {
                     textAnchor="middle"
                     className="text-sm fill-gray-600"
                   >
+                    {item.monthDisplay.replace('年', '/').replace('月', '')}
+                  </text>
+                </g>
+              )
+            })
+          })()}
+        </svg>
+      </div>
+    )
+  }
+
+  // Generate SVG grouped bar chart for TimePeriods
+  const generateGroupedBarChart = (data: TimePeriodSalesData[], dataKey: 'amount' | 'orderCount' | 'avgOrderValue', height: number = 200) => {
+    if (!data || data.length === 0) return null
+
+    // 取最新13個月
+    const chartData = data.slice(0, 13)
+    const maxValue = Math.max(...chartData.map(item => Math.max(item.regular[dataKey], item.nightOwl[dataKey])))
+
+    // Colors
+    const regularColor = '#9DBEDB' // 工作藍底
+    const nightOwlColor = '#BFACC8' // 薰衣草紫
+
+    return (
+      <div className="w-full">
+        {/* Legend */}
+        <div className="flex justify-end space-x-6 mb-4 px-8">
+          <div className="flex items-center space-x-2">
+            <div className="w-4 h-4 rounded" style={{ backgroundColor: regularColor }}></div>
+            <span className="text-sm text-gray-600">一般時段 (05:00 - 22:30)</span>
+          </div>
+          <div className="flex items-center space-x-2">
+            <div className="w-4 h-4 rounded" style={{ backgroundColor: nightOwlColor }}></div>
+            <span className="text-sm text-gray-600">夜貓時段 (22:30 - 05:00)</span>
+          </div>
+        </div>
+        <svg width="100%" height={height + 80} className="drop-shadow-sm" viewBox={`0 0 1700 ${height + 80}`}>
+          {/* Y axis labels */}
+          {(() => {
+            const getTickInterval = (max: number) => {
+              if (max === 0) return 10
+              const roughInterval = max / 5
+              const magnitude = Math.pow(10, Math.floor(Math.log10(roughInterval)))
+              const normalized = roughInterval / magnitude
+              let niceInterval
+              if (normalized <= 1) niceInterval = magnitude
+              else if (normalized <= 2) niceInterval = 2 * magnitude
+              else if (normalized <= 5) niceInterval = 5 * magnitude
+              else niceInterval = 10 * magnitude
+              return niceInterval
+            }
+
+            const tickInterval = getTickInterval(maxValue)
+            const tickCount = Math.ceil(maxValue / tickInterval)
+            const actualMax = tickCount * tickInterval || 1
+
+            const ticks = []
+            for (let i = 0; i <= tickCount; i++) {
+              ticks.push(i * tickInterval)
+            }
+
+            return ticks.map((tickValue, index) => {
+              const y = height - (tickValue / actualMax) * height + 20
+              return (
+                <g key={index}>
+                  <line x1="120" y1={y} x2="1620" y2={y} stroke="#e5e7eb" strokeWidth="1" />
+                  <text x="75" y={y + 4} textAnchor="end" className="text-sm fill-gray-500">
+                    {Math.floor(tickValue).toLocaleString()}
+                  </text>
+                </g>
+              )
+            })
+          })()}
+
+          {/* Bars */}
+          {(() => {
+            const actualMax = Math.max(1, (() => {
+              if (maxValue === 0) return 10
+              const roughInterval = maxValue / 5
+              const magnitude = Math.pow(10, Math.floor(Math.log10(roughInterval)))
+              const normalized = roughInterval / magnitude
+              let niceInterval
+              if (normalized <= 1) niceInterval = magnitude
+              else if (normalized <= 2) niceInterval = 2 * magnitude
+              else if (normalized <= 5) niceInterval = 5 * magnitude
+              else niceInterval = 10 * magnitude
+              return Math.ceil(maxValue / niceInterval) * niceInterval
+            })())
+
+            return chartData.map((item, index) => {
+              const regValue = item.regular[dataKey]
+              const owlValue = item.nightOwl[dataKey]
+
+              const regHeight = (regValue / actualMax) * height
+              const owlHeight = (owlValue / actualMax) * height
+
+              const groupWidth = 80
+              const barWidth = 38 // side by side Width
+              const spacing = 40
+              const groupX = 120 + index * (groupWidth + spacing)
+
+              const regX = groupX
+              const regY = height - regHeight + 20
+
+              const owlX = groupX + barWidth + 4 // 4px gap between regular and owl
+              const owlY = height - owlHeight + 20
+
+              return (
+                <g key={index}>
+                  {/* Regular Bar */}
+                  <rect x={regX} y={regY} width={barWidth} height={regHeight} fill={regularColor} className="hover:opacity-80 transition-opacity" />
+                  <text x={regX + barWidth / 2} y={regY - 5} textAnchor="middle" className="text-xs fill-gray-700 font-medium">
+                    {Math.floor(regValue).toLocaleString()}
+                  </text>
+
+                  {/* Night Owl Bar */}
+                  <rect x={owlX} y={owlY} width={barWidth} height={owlHeight} fill={nightOwlColor} className="hover:opacity-80 transition-opacity" />
+                  <text x={owlX + barWidth / 2} y={owlY - 5} textAnchor="middle" className="text-xs fill-gray-700 font-medium">
+                    {Math.floor(owlValue).toLocaleString()}
+                  </text>
+
+                  {/* Month label */}
+                  <text x={groupX + groupWidth / 2} y={height + 45} textAnchor="middle" className="text-sm fill-gray-600">
                     {item.monthDisplay.replace('年', '/').replace('月', '')}
                   </text>
                 </g>
@@ -970,6 +1133,18 @@ export default function ReportsContent() {
                   }`}
               >
                 當月數字
+              </button>
+              <button
+                onClick={() => {
+                  setActiveTab('time-periods')
+                  router.push('/reports?tab=time-periods', { scroll: false })
+                }}
+                className={`px-6 py-3 rounded-lg font-medium transition-all ${activeTab === 'time-periods'
+                  ? 'bg-secondary text-[#4a5568] shadow-sm'
+                  : 'text-gray-600 hover:text-[#4a5568] hover:bg-gray-50'
+                  }`}
+              >
+                時段統計
               </button>
               <button
                 onClick={() => {
@@ -1412,6 +1587,49 @@ export default function ReportsContent() {
           </div>
         )}
 
+        {/* Time Periods Tab Content */}
+        {activeTab === 'time-periods' && (
+          <div className="space-y-8">
+            {/* 時段營業額比較 */}
+            <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
+              <div className="flex items-center space-x-3 mb-6">
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: '#9DBEDB' }}>
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                  </svg>
+                </div>
+                <h2 className="text-xl font-bold text-[#2d3748]">時段營業額比較</h2>
+              </div>
+              {generateGroupedBarChart(timePeriodsData, 'amount', 200)}
+            </div>
+
+            {/* 時段訂單數比較 */}
+            <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
+              <div className="flex items-center space-x-3 mb-6">
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: '#BFACC8' }}>
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                  </svg>
+                </div>
+                <h2 className="text-xl font-bold text-[#2d3748]">時段訂單數比較</h2>
+              </div>
+              {generateGroupedBarChart(timePeriodsData, 'orderCount', 200)}
+            </div>
+
+            {/* 時段平均客單價比較 */}
+            <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
+              <div className="flex items-center space-x-3 mb-6">
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: '#FEC89A' }}>
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <h2 className="text-xl font-bold text-[#2d3748]">時段平均客單價比較</h2>
+              </div>
+              {generateGroupedBarChart(timePeriodsData, 'avgOrderValue', 200)}
+            </div>
+          </div>
+        )}
 
         {/* Monthly Tab Content */}
         {activeTab === 'monthly' && (

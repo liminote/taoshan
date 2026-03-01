@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { reportCache, CACHE_KEYS } from '@/lib/cache'
+import { getBusinessDateAndPeriod } from '@/lib/dateUtils'
 
 // 商品分類映射快取
 let productCategoryCache: Map<string, { large: string, small: string }> | null = null
@@ -299,11 +300,11 @@ export async function GET(request: NextRequest) {
 
     // 篩選指定月份的訂單並統計
     validOrderData.forEach(record => {
-      const dateStr = record.結帳時間.replace(/\//g, '-')
-      const date = new Date(dateStr)
+      const businessInfo = getBusinessDateAndPeriod(record.結帳時間)
 
-      if (!isNaN(date.getTime())) {
-        const orderMonth = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
+      if (businessInfo) {
+        const orderMonth = businessInfo.businessMonthKey
+        const date = businessInfo.businessDate
 
         // 只統計指定月份的數據
         if (orderMonth === month) {
@@ -377,12 +378,9 @@ export async function GET(request: NextRequest) {
     // 計算當月所有訂單總金額（不管有沒有電話號碼）
     const monthlyTotalAmount = orderData
       .filter(record => {
-        const dateStr = record.結帳時間.replace(/\//g, '-')
-        const date = new Date(dateStr)
-
-        if (!isNaN(date.getTime())) {
-          const orderMonth = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
-          return orderMonth === month
+        const businessInfo = getBusinessDateAndPeriod(record.結帳時間)
+        if (businessInfo) {
+          return businessInfo.businessMonthKey === month
         }
         return false
       })
@@ -398,8 +396,8 @@ export async function GET(request: NextRequest) {
       const customerOrders = validOrderData
         .filter(order => order.顧客電話 === phone)
         .map(order => {
-          const dateStr = order.結帳時間.replace(/\//g, '-')
-          return new Date(dateStr)
+          const businessInfo = getBusinessDateAndPeriod(order.結帳時間)
+          return businessInfo ? businessInfo.businessDate : new Date(NaN)
         })
         .filter(date => !isNaN(date.getTime()))
         .sort((a, b) => a.getTime() - b.getTime()) // 按日期排序，最早在前
@@ -427,11 +425,9 @@ export async function GET(request: NextRequest) {
         const futureOrders = validOrderData
           .filter(order => order.顧客電話 === phone)
           .map(order => {
-            const dateStr = order.結帳時間.replace(/\//g, '-')
-            const orderDate = new Date(dateStr)
-            if (!isNaN(orderDate.getTime())) {
-              const orderMonth = `${orderDate.getFullYear()}-${String(orderDate.getMonth() + 1).padStart(2, '0')}`
-              return { date: orderDate, month: orderMonth }
+            const businessInfo = getBusinessDateAndPeriod(order.結帳時間)
+            if (businessInfo) {
+              return { date: businessInfo.businessDate, month: businessInfo.businessMonthKey }
             }
             return null
           })
@@ -462,16 +458,10 @@ export async function GET(request: NextRequest) {
       // 查找該客戶在查詢月份之後的所有訂單
       const futureOrders = validOrderData.filter(record => {
         if (record.顧客電話 !== phone) return false
-
-        const dateStr = record.結帳時間.replace(/\//g, '-')
-        const date = new Date(dateStr)
-
-        if (isNaN(date.getTime())) return false
-
-        const orderMonth = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
-
+        const businessInfo = getBusinessDateAndPeriod(record.結帳時間)
+        if (!businessInfo) return false
         // 檢查是否為查詢月份之後的訂單
-        return orderMonth > month
+        return businessInfo.businessMonthKey > month
       })
 
       customer.hasReturnedAfterOld = futureOrders.length > 0

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { parseCsv } from '@/lib/csv'
+import { getBusinessDateAndPeriod } from '@/lib/dateUtils'
 
 export async function GET(request: Request) {
   try {
@@ -51,13 +52,10 @@ export async function GET(request: Request) {
       productSales = productSales.filter(record => {
         if (!record.checkoutTime) return false
 
-        const dateStr = record.checkoutTime.replace(/\//g, '-')
-        const date = new Date(dateStr)
+        const businessInfo = getBusinessDateAndPeriod(record.checkoutTime)
+        if (!businessInfo) return false
 
-        if (isNaN(date.getTime())) return false
-
-        const recordMonth = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
-        return recordMonth === selectedMonth
+        return businessInfo.businessMonthKey === selectedMonth
       })
     }
 

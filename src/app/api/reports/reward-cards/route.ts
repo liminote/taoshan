@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { parseCsv } from '@/lib/csv'
+import { getBusinessDateAndPeriod } from '@/lib/dateUtils'
 
 const REWARD_CARDS_URL = 'https://docs.google.com/spreadsheets/d/1EWPECWQp_Ehz43Lfks_I8lcvEig8gV9DjyjEIzC5EO4/export?format=csv&gid=1365932888'
 const REWARD_POINTS_URL = 'https://docs.google.com/spreadsheets/d/1EWPECWQp_Ehz43Lfks_I8lcvEig8gV9DjyjEIzC5EO4/export?format=csv&gid=995416755'
@@ -67,9 +68,9 @@ export async function GET() {
             const h = orderRows[0].map(s => s.trim())
             const tIdx = h.findIndex(s => /時間|結帳時間/.test(s))
             allOrders = orderRows.slice(1).map(r => {
-                const d = new Date(r[tIdx]?.replace(/\//g, '-'))
-                return { date: d, day: d.getDay() }
-            }).filter(o => !isNaN(o.date.getTime()))
+                const businessInfo = getBusinessDateAndPeriod(r[tIdx])
+                return businessInfo ? { date: businessInfo.businessDate, day: businessInfo.businessDate.getDay() } : null
+            }).filter(o => o !== null) as { date: Date, day: number }[]
         }
 
         // Process Cards

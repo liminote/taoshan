@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { reportCache, CACHE_KEYS } from '@/lib/cache'
 import { parseCsv } from '@/lib/csv'
-
+import { getBusinessDateAndPeriod } from '@/lib/dateUtils'
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
@@ -67,14 +67,9 @@ export async function GET(request: NextRequest) {
     // 篩選指定月份的商品銷售資料
     productSales = productSales.filter(record => {
       if (!record.checkoutTime) return false
-
-      const dateStr = record.checkoutTime.replace(/\//g, '-')
-      const date = new Date(dateStr)
-
-      if (isNaN(date.getTime())) return false
-
-      const recordMonth = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
-      return recordMonth === month
+      const businessInfo = getBusinessDateAndPeriod(record.checkoutTime)
+      if (!businessInfo) return false
+      return businessInfo.businessMonthKey === month
     })
 
     // 解析商品主檔 CSV
