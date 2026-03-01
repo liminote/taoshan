@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { parseCsv } from '@/lib/csv'
 import { getBusinessDateAndPeriod } from '@/lib/dateUtils'
+import fetch from 'node-fetch'
 
 const REWARD_CARDS_URL = 'https://docs.google.com/spreadsheets/d/1EWPECWQp_Ehz43Lfks_I8lcvEig8gV9DjyjEIzC5EO4/export?format=csv&gid=1365932888'
 const REWARD_POINTS_URL = 'https://docs.google.com/spreadsheets/d/1EWPECWQp_Ehz43Lfks_I8lcvEig8gV9DjyjEIzC5EO4/export?format=csv&gid=995416755'
@@ -47,20 +48,27 @@ function getPeriodInfo(dateStr: string) {
 
 export async function GET() {
     try {
+        console.log("Fetching from Google Sheets...")
         // 1. Fetch data from Google Sheets instead of local files
         const [cardRes, pointRes, orderRes] = await Promise.all([
-            fetch(REWARD_CARDS_URL, { cache: 'no-store' }),
-            fetch(REWARD_POINTS_URL, { cache: 'no-store' }),
-            fetch(ORDER_SHEET_URL, { cache: 'no-store' })
+            fetch(REWARD_CARDS_URL),
+            fetch(REWARD_POINTS_URL),
+            fetch(ORDER_SHEET_URL)
         ])
+
+        console.log("Cards ok:", cardRes.ok, cardRes.status)
 
         const cardCsv = await cardRes.text()
         const pointCsv = await pointRes.text()
         const orderCsv = await orderRes.text()
 
+        console.log("Card CSV len:", cardCsv.length)
+
         const cardRows = parseCsv(cardCsv)
         const pointRows = parseCsv(pointCsv)
         const orderRows = parseCsv(orderCsv)
+
+        console.log("Card rows:", cardRows.length)
 
         // Process Orders for Inflow Rate (Tue-Thu)
         let allOrders: { date: Date, day: number }[] = []
