@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { reportCache, CACHE_KEYS } from '@/lib/cache'
 import { getBusinessDateAndPeriod } from '@/lib/dateUtils'
+import { normalizePhone } from '@/lib/phoneUtils'
 
 // 商品分類映射快取
 let productCategoryCache: Map<string, { large: string, small: string }> | null = null
@@ -202,7 +203,7 @@ export async function GET(request: NextRequest) {
         結帳時間: values[checkoutTimeIndex] || '',
         結帳金額: isNaN(amt) ? 0 : amt,
         顧客姓名: values[customerNameIndex] || '',
-        顧客電話: values[customerPhoneIndex] || '',
+        顧客電話: normalizePhone(values[customerPhoneIndex]),
         品項: values[itemsIndex] || ''
       }
     })

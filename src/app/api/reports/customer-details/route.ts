@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getBusinessDateAndPeriod } from '@/lib/dateUtils'
+import { normalizePhone } from '@/lib/phoneUtils'
 interface OrderItem {
   name: string
   price: string
@@ -27,7 +28,7 @@ interface CustomerDetailsResponse {
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
-    const phone = searchParams.get('phone')
+    const phone = normalizePhone(searchParams.get('phone'))
     const month = searchParams.get('month')
 
     if (!phone || !month) {
@@ -67,7 +68,7 @@ export async function GET(request: NextRequest) {
       const record = {
         checkout_time: values[checkoutTimeIndex],
         customer_name: values[customerNameIndex] || '',
-        customer_phone: values[customerPhoneIndex] || '',
+        customer_phone: normalizePhone(values[customerPhoneIndex]),
         original_order_id: values[originalOrderIdIndex] || '',
         items: values[itemsIndex] || '',
         invoice_amount: parseFloat(values[invoiceAmountIndex]) || 0

@@ -1,5 +1,6 @@
 import { reportCache } from './cache'
 import { requestDeduplicator } from './request-deduplication'
+import { normalizePhone } from './phoneUtils'
 
 // Google Sheets 資料快取服務
 export class SheetsCache {
@@ -21,7 +22,7 @@ export class SheetsCache {
 
       console.log('📥 從 Google Sheets 載入訂單資料...')
       const orderSheetUrl = 'https://docs.google.com/spreadsheets/d/1EWPECWQp_Ehz43Lfks_I8lcvEig8gV9DjyjEIzC5EO4/export?format=csv&gid=0'
-      
+
       const response = await fetch(orderSheetUrl)
       if (!response.ok) {
         throw new Error('無法獲取訂單資料')
@@ -30,24 +31,24 @@ export class SheetsCache {
       const orderCsv = await response.text()
       const orderLines = orderCsv.split('\n').filter(line => line.trim())
       const orderHeaders = orderLines[0].split(',').map(h => h.replace(/"/g, '').trim())
-      
+
       const checkoutTimeIndex = orderHeaders.findIndex(h => h.includes('結帳時間'))
       const checkoutAmountIndex = orderHeaders.findIndex(h => h.includes('結帳金額'))
       const customerNameIndex = orderHeaders.findIndex(h => h.includes('顧客姓名'))
       const customerPhoneIndex = orderHeaders.findIndex(h => h.includes('顧客電話'))
-      
+
       const orderData = orderLines.slice(1).map(line => {
         const values = line.split(',').map(v => v.replace(/"/g, '').trim())
         return {
           checkout_time: values[checkoutTimeIndex],
           invoice_amount: parseFloat(values[checkoutAmountIndex]) || 0,
           customer_name: values[customerNameIndex] || '',
-          customer_phone: values[customerPhoneIndex] || ''
+          customer_phone: normalizePhone(values[customerPhoneIndex])
         }
       })
 
       console.log(`📊 訂單資料載入完成: ${orderData.length} 筆`)
-      
+
       // 快取 2 小時
       reportCache.set(this.CACHE_KEYS.ORDER_DATA, orderData)
       return orderData
@@ -66,7 +67,7 @@ export class SheetsCache {
 
       console.log('📥 從 Google Sheets 載入商品資料...')
       const productSheetUrl = 'https://docs.google.com/spreadsheets/d/1GeRbtCX_oHJBooYvZeRbREaSxJ4r8P8QoL-vHiSz2eo/export?format=csv&gid=0'
-      
+
       const response = await fetch(productSheetUrl)
       if (!response.ok) {
         throw new Error('無法獲取商品資料')
@@ -75,7 +76,7 @@ export class SheetsCache {
       const productCsv = await response.text()
       const productLines = productCsv.split('\n').filter(line => line.trim())
       const productHeaders = productLines[0].split(',').map(h => h.replace(/"/g, '').trim())
-      
+
       const productData = productLines.slice(1).map(line => {
         const values = line.split(',').map(v => v.replace(/"/g, '').trim())
         const record: Record<string, string> = {}
@@ -86,7 +87,7 @@ export class SheetsCache {
       }).filter(record => record['結帳時間'] && record['結帳時間'] !== '')
 
       console.log(`📊 商品資料載入完成: ${productData.length} 筆`)
-      
+
       // 快取 2 小時
       reportCache.set(this.CACHE_KEYS.PRODUCT_DATA, productData)
       return productData
@@ -104,10 +105,10 @@ export class SheetsCache {
       }
 
       console.log('📥 從 API 載入商品主檔資料...')
-      const baseUrl = process.env.VERCEL_URL 
-        ? `https://${process.env.VERCEL_URL}` 
+      const baseUrl = process.env.VERCEL_URL
+        ? `https://${process.env.VERCEL_URL}`
         : 'http://localhost:3000'
-      
+
       const response = await fetch(`${baseUrl}/api/products-master?limit=10000`)
       if (!response.ok) {
         throw new Error('無法獲取商品主檔資料')
@@ -115,7 +116,7 @@ export class SheetsCache {
 
       const productMasterData = await response.json()
       console.log(`📊 商品主檔載入完成: ${productMasterData.products?.length || 0} 筆`)
-      
+
       // 快取 4 小時（商品主檔變動較少）
       reportCache.set(this.CACHE_KEYS.PRODUCTS_MASTER, productMasterData)
       return productMasterData
